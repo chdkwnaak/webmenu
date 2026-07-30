@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>고급 오목 (Advanced Omok) - 완전판 AI 에디션</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --panel-bg: #2d2d2d;
+            --text-color: #ffffff;
+            --accent-color: #4ed9a8;
+            --board-color: #e4a853;
+            --board-line: #4a3000;
+            --cell-size: min(36px, calc((100vw - 88px) / 15));
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-weight: 400;
+            letter-spacing: 2px;
+            color: var(--accent-color);
+            text-shadow: 0 0 10px rgba(78, 217, 168, 0.3);
+        }
+
+        .control-panel {
+            background-color: var(--panel-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+            justify-content: center;
+            max-width: 620px;
+            width: 100%;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-group label {
+            font-size: 12px;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        select, button {
+            background-color: #3d3d3d;
+            color: var(--text-color);
+            border: 1px solid #555;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        select:focus, button:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        button:hover {
+            background-color: #4d4d4d;
+            border-color: #888;
+        }
+
+        button.primary {
+            background-color: var(--accent-color);
+            color: #111;
+            font-weight: bold;
+            border: none;
+        }
+
+        button.primary:hover {
+            background-color: #3bc294;
+            box-shadow: 0 0 12px rgba(78, 217, 168, 0.4);
+        }
+
+        button:disabled, select:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .status-display {
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            height: 27px;
+            color: #ddd;
+        }
+
+        .status-display.highlight {
+            color: var(--accent-color);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
+        .board-container {
+            position: relative;
+            background-color: var(--board-color);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,0,0,0.2);
+            border: 4px solid var(--board-line);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(15, var(--cell-size));
+            grid-template-rows: repeat(15, var(--cell-size));
+            position: relative;
+        }
+
+        .cell {
+            position: relative;
+            width: var(--cell-size);
+            height: var(--cell-size);
+            cursor: pointer;
+        }
+
+        .cell::before, .cell::after {
+            content: "";
+            position: absolute;
+            background-color: var(--board-line);
+        }
+
+        .cell::before {
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            transform: translateY(-50%);
+        }
+
+        .cell::after {
+            left: 50%;
+            top: 0;
+            width: 1px;
+            height: 100%;
+            transform: translateX(-50%);
+        }
+
+        .cell.top::after { top: 50%; height: 50%; }
+        .cell.bottom::after { height: 50%; }
+        .cell.left::before { left: 50%; width: 50%; }
+        .cell.right::before { width: 50%; }
+
+        .cell .star-dot {
+            position: absolute;
+            width: max(4px, calc(var(--cell-size) * 0.17));
+            height: max(4px, calc(var(--cell-size) * 0.17));
+            background-color: var(--board-line);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+        }
+
+        .stone {
+            position: absolute;
+            width: calc(var(--cell-size) * 0.88);
+            height: calc(var(--cell-size) * 0.88);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+            transition: all 0.1s ease;
+        }
+
+        .stone.black {
+            background: radial-gradient(circle at 30% 30%, #555 0%, #111 70%, #000 100%);
+        }
+
+        .stone.white {
+            background: radial-gradient(circle at 30% 30%, #fff 0%, #eee 60%, #ccc 100%);
+            border: 1px solid #bbb;
+        }
+
+        .cell:not(.has-stone):hover::after {
+            content: "";
+            position: absolute;
+            width: calc(var(--cell-size) * 0.83);
+            height: calc(var(--cell-size) * 0.83);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        body.turn-black .cell:not(.has-stone):hover::after {
+            background: #000;
+        }
+
+        body.turn-white .cell:not(.has-stone):hover::after {
+            background: #fff;
+            border: 1px solid #fff;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            background-color: #e74c3c;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 12px;
+            }
+
+            .board-container {
+                padding: 12px;
+                border-width: 3px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>고급 오목 (Omok Professional)</h1>
+
+    <div class="control-panel">
+        <div class="control-group">
+            <label for="gameMode">게임 모드</label>
+            <select id="gameMode">
+                <option value="pvp">2인용 로컬 (PvP)</option>
+                <option value="pve" selected>인공지능 대전 (PvE)</option>
+            </select>
+        </div>
+        <div class="control-group" id="playerColorGroup">
+            <label for="playerColor">플레이어 선택 (선공)</label>
+            <select id="playerColor">
+                <option value="1">흑돌 (선공)</option>
+                <option value="2">백돌 (후공)</option>
+            </select>
+        </div>
+        <div class="control-group" style="flex-direction: row; align-items: flex-end; gap: 10px;">
+            <button id="undoBtn" disabled>무르기</button>
+            <button id="restartBtn" class="primary">게임 재시작</button>
+        </div>
+    </div>
+
+    <div id="statusDisplay" class="status-display">흑돌 차례입니다.</div>
+
+    <div class="board-container">
+        <div id="board" class="board"></div>
+    </div>
+
+    <div id="toast" class="toast">33 금수 위치입니다!</div>
+
+    
+    <script>
+        // --- 상수 정의 ---
+        const BOARD_SIZE = 15;
+        const EMPTY = 0;
+        const BLACK = 1;
+        const WHITE = 2;
+
+        const STAR_POINTS = [[3, 3], [3, 11], [7, 7], [11, 3], [11, 11]];
+
+        const DIRS = [
+            [0, 1],   // 가로
+            [1, 0],   // 세로
+            [1, 1],   // 우하 대각선
+            [-1, 1]   // 우상 대각선
+        ];
+
+        const SCORE = {
+            FIVE: 100000,
+            OPEN_FOUR: 10000,
+            BLIND_FOUR: 1200,
+            OPEN_THREE: 1000,
+            BLIND_THREE: 150,
+            OPEN_TWO: 100,
+            BLIND_TWO: 10,
+            SINGLE: 1
+        };
+
+        // --- 게임 상태 변수 ---
+        let board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(EMPTY));
+        let currentTurn = BLACK;
+        let gameMode = 'pve';
+        let playerColor = BLACK;
+        let history = [];
+        let isGameOver = false;
+        let isAiThinking = false;
+        let aiTurnTimer = null;
+        let toastTimer = null;
+
+        let domCells = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(null));
+
+        // --- DOM 요소 ---
+        const boardEl = document.getElementById('board');
+        const statusDisplayEl = document.getElementById('statusDisplay');
+        const gameModeEl = document.getElementById('gameMode');
+        const playerColorEl = document.getElementById('playerColor');
+        const playerColorGroup = document.getElementById('playerColorGroup');
+        const undoBtn = document.getElementById('undoBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const toastEl = document.getElementById('toast');
+
+        initBoardDom();
+        resetGame();
+        initEventListeners();
+
+        function initBoardDom() {
+            boardEl.innerHTML = '';
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+
+                    if (r === 0) cell.classList.add('top');
+                    if (r === BOARD_SIZE - 1) cell.classList.add('bottom');
+                    if (c === 0) cell.classList.add('left');
+                    if (c === BOARD_SIZE - 1) cell.classList.add('right');
+
+                    if (STAR_POINTS.some(([sr, sc]) => sr === r && sc === c)) {
+                        const star = document.createElement('div');
+                        star.classList.add('star-dot');
+                        cell.appendChild(star);
+                    }
+
+                    boardEl.appendChild(cell);
+                    domCells[r][c] = cell;
+                }
+            }
+        }
+
+        function initEventListeners() {
+            boardEl.addEventListener('click', handleCellClick);
+            gameModeEl.addEventListener('change', (e) => {
+                gameMode = e.target.value;
+                playerColorGroup.style.display = gameMode === 'pve' ? 'flex' : 'none';
+                resetGame();
+            });
+            playerColorEl.addEventListener('change', (e) => {
+                playerColor = parseInt(e.target.value, 10);
+                resetGame();
+            });
+            restartBtn.addEventListener('click', resetGame);
+            undoBtn.addEventListener('click', handleUndo);
+        }
+
+        function clearAiTimer() {
+            if (aiTurnTimer) {
+                clearTimeout(aiTurnTimer);
+                aiTurnTimer = null;
+            }
+        }
+
+        function resetGame() {
+            clearAiTimer();
+
+            board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(EMPTY));
+            currentTurn = BLACK;
+            history = [];
+            isGameOver = false;
+            isAiThinking = false;
+
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    domCells[r][c].classList.remove('has-stone');
+                    const stone = domCells[r][c].querySelector('.stone');
+                    if (stone) stone.remove();
+                }
+            }
+
+            undoBtn.disabled = true;
+            updateBodyTurnClass();
+            updateStatus();
+
+            if (gameMode === 'pve' && playerColor === WHITE) {
+                triggerAiTurn();
+            }
+        }
+
+        function handleCellClick(e) {
+            const cell = e.target.closest('.cell');
+            if (!cell || isGameOver || isAiThinking) return;
+
+            const r = parseInt(cell.dataset.row, 10);
+            const c = parseInt(cell.dataset.col, 10);
+
+            if (board[r][c] !== EMPTY) return;
+            if (gameMode === 'pve' && currentTurn !== playerColor) return;
+
+            if (currentTurn === BLACK && checkDoubleThree(r, c, BLACK)) {
+                showToast('33 금수 위치입니다!');
+                return;
+            }
+
+            placeStone(r, c);
+
+            if (checkWin(r, c, board[r][c])) {
+                endGame(board[r][c] === BLACK ? '흑돌 승리!' : '백돌 승리!');
+                return;
+            }
+
+            if (isBoardFull()) {
+                endGame('무승부입니다.');
+                return;
+            }
+
+            currentTurn = currentTurn === BLACK ? WHITE : BLACK;
+            updateBodyTurnClass();
+            updateStatus();
+
+            if (gameMode === 'pve' && currentTurn !== playerColor) {
+                triggerAiTurn();
+            }
+        }
+
+        function placeStone(r, c) {
+            board[r][c] = currentTurn;
+            history.push({ r, c, color: currentTurn });
+            undoBtn.disabled = false;
+
+            const cell = domCells[r][c];
+            cell.classList.add('has-stone');
+
+            const stone = document.createElement('div');
+            stone.classList.add('stone', currentTurn === BLACK ? 'black' : 'white');
+            cell.appendChild(stone);
+        }
+
+        function updateBodyTurnClass() {
+            document.body.classList.remove('turn-black', 'turn-white');
+            if (!isGameOver) {
+                document.body.classList.add(currentTurn === BLACK ? 'turn-black' : 'turn-white');
+            }
+        }
+
+        function updateStatus() {
+            if (isGameOver) return;
+
+            if (gameMode === 'pve') {
+                if (currentTurn === playerColor) {
+                    statusDisplayEl.textContent = `당신의 차례입니다 (${playerColor === BLACK ? '흑돌' : '백돌'})`;
+                    statusDisplayEl.classList.remove('highlight');
+                } else {
+                    statusDisplayEl.textContent = 'AI가 연산 중입니다...';
+                    statusDisplayEl.classList.add('highlight');
+                }
+            } else {
+                statusDisplayEl.textContent = currentTurn === BLACK ? '흑돌 차례입니다.' : '백돌 차례입니다.';
+                statusDisplayEl.classList.remove('highlight');
+            }
+        }
+
+        function showToast(msg) {
+            toastEl.textContent = msg;
+            toastEl.classList.add('show');
+
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toastEl.classList.remove('show');
+                toastTimer = null;
+            }, 1800);
+        }
+
+        function handleUndo() {
+            if (history.length === 0 || isAiThinking) return;
+
+            clearAiTimer();
+            isGameOver = false;
+            statusDisplayEl.classList.remove('highlight');
+
+            if (gameMode === 'pvp') {
+                const lastMove = history.pop();
+                removeStoneDom(lastMove.r, lastMove.c);
+                currentTurn = lastMove.color;
+            } else {
+                const movesToUndo = history.length === 1 ? 1 : 2;
+                let restoreTurnColor = currentTurn;
+
+                for (let i = 0; i < movesToUndo; i++) {
+                    const lastMove = history.pop();
+                    if (!lastMove) break;
+                    removeStoneDom(lastMove.r, lastMove.c);
+                    restoreTurnColor = lastMove.color;
+                }
+
+                currentTurn = restoreTurnColor;
+            }
+
+            undoBtn.disabled = history.length === 0;
+            isAiThinking = false;
+            updateBodyTurnClass();
+            updateStatus();
+
+            if (gameMode === 'pve' && !isGameOver && currentTurn !== playerColor) {
+                triggerAiTurn();
+            }
+        }
+
+        function removeStoneDom(r, c) {
+            board[r][c] = EMPTY;
+            const cell = domCells[r][c];
+            cell.classList.remove('has-stone');
+            const stone = cell.querySelector('.stone');
+            if (stone) stone.remove();
+        }
+
+        function isBoardFull() {
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    if (board[r][c] === EMPTY) return false;
+                }
+            }
+            return true;
+        }
+
+        function checkWin(r, c, color) {
+            for (const [dr, dc] of DIRS) {
+                let count = 1;
+
+                let nr = r + dr;
+                let nc = c + dc;
+                while (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && board[nr][nc] === color) {
+                    count++;
+                    nr += dr;
+                    nc += dc;
+                }
+
+                nr = r - dr;
+                nc = c - dc;
+                while (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && board[nr][nc] === color) {
+                    count++;
+                    nr -= dr;
+                    nc -= dc;
+                }
+
+                if (count >= 5) return true;
+            }
+            return false;
+        }
+
+        function endGame(message) {
+            clearAiTimer();
+            isGameOver = true;
+            isAiThinking = false;
+            statusDisplayEl.textContent = message;
+            statusDisplayEl.classList.remove('highlight');
+            document.body.classList.remove('turn-black', 'turn-white');
+            undoBtn.disabled = true;
+        }
+
+        function checkDoubleThree(r, c, color) {
+            if (board[r][c] !== EMPTY) return false;
+
+            board[r][c] = color;
+            let openThreeCount = 0;
+
+            for (const [dr, dc] of DIRS) {
+                if (isOpenThree(r, c, dr, dc, color)) {
+                    openThreeCount++;
+                }
+            }
+
+            board[r][c] = EMPTY;
+            return openThreeCount >= 2;
+        }
+
+        function isOpenThree(r, c, dr, dc, color) {
+            let line = '';
+            const centerIndex = 4;
+            const openThreePatterns = ['01110', '010110', '011010'];
+
+            for (let i = -4; i <= 4; i++) {
+                const nr = r + i * dr;
+                const nc = c + i * dc;
+
+                if (nr < 0 || nr >= BOARD_SIZE || nc < 0 || nc >= BOARD_SIZE) {
+                    line += 'X';
+                } else if (board[nr][nc] === color) {
+                    line += '1';
+                } else if (board[nr][nc] === EMPTY) {
+                    line += '0';
+                } else {
+                    line += 'X';
+                }
+            }
+
+            for (const pattern of openThreePatterns) {
+                let index = line.indexOf(pattern);
+                while (index !== -1) {
+                    const centerInPattern = centerIndex - index;
+                    if (centerInPattern >= 0 && centerInPattern < pattern.length && pattern[centerInPattern] === '1') {
+                        return true;
+                    }
+                    index = line.indexOf(pattern, index + 1);
+                }
+            }
+
+            return false;
+        }
+
+        function wouldWinAt(r, c, color) {
+            if (board[r][c] !== EMPTY) return false;
+
+            board[r][c] = color;
+            const isWin = checkWin(r, c, color);
+            board[r][c] = EMPTY;
+
+            return isWin;
+        }
+
+        function triggerAiTurn() {
+            clearAiTimer();
+            isAiThinking = true;
+            updateStatus();
+
+            aiTurnTimer = setTimeout(() => {
+                aiTurnTimer = null;
+                const aiMove = selectBestMove();
+
+                if (!aiMove) {
+                    endGame('무승부입니다.');
+                    return;
+                }
+
+                placeStone(aiMove.r, aiMove.c);
+
+                if (checkWin(aiMove.r, aiMove.c, board[aiMove.r][aiMove.c])) {
+                    endGame(board[aiMove.r][aiMove.c] === BLACK ? 'AI(흑돌) 승리!' : 'AI(백돌) 승리!');
+                    return;
+                }
+
+                if (isBoardFull()) {
+                    endGame('무승부입니다.');
+                    return;
+                }
+
+                currentTurn = playerColor;
+                isAiThinking = false;
+                updateBodyTurnClass();
+                updateStatus();
+            }, 500);
+        }
+
+        function selectBestMove() {
+            let bestScore = -1;
+            let bestMoves = [];
+
+            const aiColor = playerColor === BLACK ? WHITE : BLACK;
+            const humanColor = playerColor;
+
+            let myFive = [];
+            let oppFive = [];
+            let myFour = [];
+            let oppFour = [];
+
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    if (board[r][c] !== EMPTY) continue;
+
+                    const aiForbidden = aiColor === BLACK && checkDoubleThree(r, c, BLACK);
+                    if (aiForbidden) continue;
+
+                    const humanForbidden = humanColor === BLACK && checkDoubleThree(r, c, BLACK);
+
+                    const myScore = evaluateCellScore(r, c, aiColor);
+                    const oppScore = humanForbidden ? 0 : evaluateCellScore(r, c, humanColor);
+
+                    if (wouldWinAt(r, c, aiColor)) myFive.push({ r, c });
+                    if (!humanForbidden && wouldWinAt(r, c, humanColor)) oppFive.push({ r, c });
+                    if (myScore >= SCORE.BLIND_FOUR) myFour.push({ r, c, s: myScore });
+                    if (oppScore >= SCORE.BLIND_FOUR) oppFour.push({ r, c, s: oppScore });
+                }
+            }
+
+            if (myFive.length > 0) return myFive[0];
+            if (oppFive.length > 0) return oppFive[0];
+            if (myFour.length > 0) {
+                myFour.sort((a, b) => b.s - a.s);
+                return myFour[0];
+            }
+            if (oppFour.length > 0) {
+                oppFour.sort((a, b) => b.s - a.s);
+                return oppFour[0];
+            }
+
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    if (board[r][c] !== EMPTY) continue;
+                    if (aiColor === BLACK && checkDoubleThree(r, c, BLACK)) continue;
+
+                    const attackScore = evaluateCellScore(r, c, aiColor);
+                    const humanForbidden = humanColor === BLACK && checkDoubleThree(r, c, BLACK);
+                    const defenseScore = humanForbidden ? 0 : evaluateCellScore(r, c, humanColor);
+                    const totalScore = attackScore + (defenseScore * 1.5);
+
+                    if (totalScore > bestScore) {
+                        bestScore = totalScore;
+                        bestMoves = [{ r, c }];
+                    } else if (totalScore === bestScore) {
+                        bestMoves.push({ r, c });
+                    }
+                }
+            }
+
+            if (bestMoves.length > 0) {
+                const center = Math.floor(BOARD_SIZE / 2);
+                bestMoves.sort((a, b) => {
+                    const distA = Math.abs(a.r - center) + Math.abs(a.c - center);
+                    const distB = Math.abs(b.r - center) + Math.abs(b.c - center);
+                    return distA - distB;
+                });
+                return bestMoves[0];
+            }
+
+            return null;
+        }
+
+        function evaluateCellScore(r, c, color) {
+            let totalWeight = 0;
+
+            for (const [dr, dc] of DIRS) {
+                const line = [];
+                for (let i = -4; i <= 4; i++) {
+                    const nr = r + i * dr;
+                    const nc = c + i * dc;
+
+                    if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE) {
+                        line.push(i === 0 ? color : board[nr][nc]);
+                    } else {
+                        line.push(-1);
+                    }
+                }
+                totalWeight += matchLinePattern(line, color);
+            }
+
+            return totalWeight;
+        }
+
+        function matchLinePattern(line, color) {
+            let str = '';
+            for (const val of line) {
+                if (val === color) str += '1';
+                else if (val === EMPTY) str += '0';
+                else str += 'X';
+            }
+
+            if (str.includes('11111')) return SCORE.FIVE;
+            if (str.includes('011110')) return SCORE.OPEN_FOUR;
+            if (str.includes('0101110') || str.includes('0110110') || str.includes('0111010')) return SCORE.OPEN_FOUR;
+
+            if (
+                str.includes('11110') || str.includes('01111') ||
+                str.includes('10111') || str.includes('11011') || str.includes('11101')
+            ) {
+                return SCORE.BLIND_FOUR;
+            }
+
+            if (str.includes('01110') || str.includes('010110') || str.includes('011010')) return SCORE.OPEN_THREE;
+
+            if (
+                str.includes('11100') || str.includes('00111') ||
+                str.includes('10110') || str.includes('01011') ||
+                str.includes('11001') || str.includes('10011')
+            ) {
+                return SCORE.BLIND_THREE;
+            }
+
+            if (str.includes('0110') || str.includes('01010')) return SCORE.OPEN_TWO;
+            if (str.includes('1100') || str.includes('0011') || str.includes('1010')) return SCORE.BLIND_TWO;
+            if (str.includes('1')) return SCORE.SINGLE;
+
+            return 0;
+        }
+    </script>
+
+</body>
+</html>

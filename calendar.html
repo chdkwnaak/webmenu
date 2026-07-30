@@ -1,0 +1,2902 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="나만의 완벽한 캘린더 - 일정, 메모, 스케줄이 통합된 프리미엄 생산성 앱">
+<title>My Calendar — 나만의 캘린더 & 체크리스트</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================
+   DESIGN SYSTEM & CSS VARIABLES
+   ============================================ */
+:root {
+  --bg-primary: #0a0a14;
+  --bg-secondary: #12121f;
+  --bg-card: rgba(255, 255, 255, 0.04);
+  --bg-glass: rgba(255, 255, 255, 0.06);
+  --bg-glass-hover: rgba(255, 255, 255, 0.10);
+  --bg-glass-active: rgba(255, 255, 255, 0.14);
+  --border-glass: rgba(255, 255, 255, 0.08);
+  --border-glass-hover: rgba(255, 255, 255, 0.15);
+  --text-primary: #f0f0f5;
+  --text-secondary: rgba(240, 240, 245, 0.6);
+  --text-muted: rgba(240, 240, 245, 0.35);
+  --accent-primary: #7c5cfc;
+  --accent-primary-glow: rgba(124, 92, 252, 0.3);
+  --accent-secondary: #5ce1e6;
+  --accent-warm: #ff6b6b;
+  --accent-warm-glow: rgba(255, 107, 107, 0.3);
+  --accent-success: #4ecdc4;
+  --accent-success-glow: rgba(78, 205, 196, 0.3);
+  --accent-amber: #ffa726;
+  --accent-amber-glow: rgba(255, 167, 38, 0.3);
+  --accent-pink: #f06292;
+  --accent-pink-glow: rgba(240, 98, 146, 0.3);
+  --gradient-primary: linear-gradient(135deg, #7c5cfc 0%, #5ce1e6 100%);
+  --gradient-warm: linear-gradient(135deg, #ff6b6b 0%, #ffa726 100%);
+  --gradient-cool: linear-gradient(135deg, #4ecdc4 0%, #44bef7 100%);
+  --gradient-aurora: linear-gradient(135deg, #7c5cfc 0%, #f06292 50%, #ffa726 100%);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-md: 0 8px 32px rgba(0,0,0,0.4);
+  --shadow-lg: 0 16px 64px rgba(0,0,0,0.5);
+  --shadow-glow: 0 0 40px var(--accent-primary-glow);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+  --font-primary: 'Inter', 'Noto Sans KR', -apple-system, sans-serif;
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================
+   GLOBAL RESET & BASE
+   ============================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-primary);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(124, 92, 252, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(92, 225, 230, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(240, 98, 146, 0.05) 0%, transparent 50%);
+  animation: bgDrift 30s ease-in-out infinite alternate;
+  z-index: 0;
+  pointer-events: none;
+}
+
+@keyframes bgDrift {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(-2%, 1%) rotate(1deg); }
+  66% { transform: translate(1%, -1%) rotate(-0.5deg); }
+  100% { transform: translate(-1%, 2%) rotate(0.5deg); }
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+
+/* ============================================
+   LAYOUT
+   ============================================ */
+#app-container {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 320px 1fr 340px;
+  grid-template-rows: auto 1fr;
+  gap: 0;
+  min-height: 100vh;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  background: rgba(10, 10, 20, 0.6);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-glass);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: transform var(--transition-normal);
+}
+
+.header-brand:hover {
+  transform: translateY(-1px);
+}
+
+.header-brand .logo-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow: var(--shadow-glow);
+  transition: transform var(--transition-bounce), box-shadow var(--transition-bounce);
+}
+
+.header-brand:hover .logo-icon {
+  transform: scale(1.1) rotate(-8deg);
+  box-shadow: 0 0 25px var(--accent-primary-glow), 0 0 10px var(--accent-secondary);
+}
+
+.header-brand h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+}
+
+.header-date-display {
+  text-align: center;
+}
+
+.header-date-display .today-date {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.header-date-display .today-sub {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-streak {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  color: var(--accent-amber);
+  font-weight: 600;
+}
+
+.header-streak .streak-fire { font-size: 1rem; }
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: 0 4px 20px var(--accent-primary-glow);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 30px var(--accent-primary-glow);
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.btn-primary:hover::after {
+  transform: translateX(100%);
+}
+
+.btn-ghost {
+  background: var(--bg-glass);
+  color: var(--text-primary);
+  border: 1px solid var(--border-glass);
+}
+
+.btn-ghost:hover {
+  background: var(--bg-glass-hover);
+  border-color: var(--border-glass-hover);
+}
+
+.btn-danger {
+  background: rgba(255, 107, 107, 0.15);
+  color: var(--accent-warm);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+}
+
+.btn-danger:hover {
+  background: rgba(255, 107, 107, 0.25);
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  background: var(--bg-glass);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-glass);
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-primary);
+}
+
+.btn-icon:hover {
+  background: var(--bg-glass-hover);
+  color: var(--text-primary);
+  border-color: var(--border-glass-hover);
+}
+
+/* ============================================
+   SIDEBARS
+   ============================================ */
+.sidebar-left {
+  padding: 24px 20px;
+  border-right: 1px solid var(--border-glass);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+  max-height: calc(100vh - 65px);
+}
+
+.mini-calendar {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+}
+
+.mini-cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.mini-cal-header h3 { font-size: 0.9rem; font-weight: 600; }
+.mini-cal-nav { display: flex; gap: 4px; }
+.mini-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+.mini-cal-day-name { font-size: 0.65rem; font-weight: 600; color: var(--text-muted); padding: 4px 0; text-transform: uppercase; }
+
+.mini-cal-day {
+  font-size: 0.75rem;
+  padding: 6px 2px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: var(--text-secondary);
+  position: relative;
+}
+
+.mini-cal-day:hover { background: var(--bg-glass-hover); color: var(--text-primary); }
+.mini-cal-day.today { background: var(--gradient-primary); color: white; font-weight: 700; box-shadow: 0 2px 12px var(--accent-primary-glow); }
+.mini-cal-day.selected { background: var(--bg-glass-active); color: var(--text-primary); font-weight: 600; border: 1px solid var(--accent-primary); }
+.mini-cal-day.other-month { color: var(--text-muted); opacity: 0.4; }
+.mini-cal-day.has-event::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+}
+
+.upcoming-section h3 {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.upcoming-list { display: flex; flex-direction: column; gap: 8px; }
+.upcoming-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.upcoming-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+.upcoming-item[data-urgency="high"]::before { background: var(--accent-warm); }
+.upcoming-item[data-urgency="medium"]::before { background: var(--accent-amber); }
+.upcoming-item[data-urgency="low"]::before { background: var(--accent-success); }
+.upcoming-item:hover { background: var(--bg-glass-hover); transform: translateX(4px); }
+.upcoming-item[data-urgency="high"] { animation: urgencyPulse 2s ease-in-out infinite; }
+
+@keyframes urgencyPulse {
+  0%, 100% { border-color: var(--border-glass); }
+  50% { border-color: rgba(255, 107, 107, 0.3); box-shadow: 0 0 12px rgba(255, 107, 107, 0.1); }
+}
+
+.upcoming-item .event-time { font-size: 0.7rem; font-weight: 600; color: var(--accent-secondary); min-width: 46px; padding-top: 2px; }
+.upcoming-item .event-info h4 { font-size: 0.8rem; font-weight: 600; margin-bottom: 2px; }
+.upcoming-item .event-info p { font-size: 0.7rem; color: var(--text-secondary); }
+
+.category-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.category-tag {
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  border: 1px solid transparent;
+}
+.category-tag:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  filter: brightness(1.1);
+}
+.category-tag:active {
+  transform: translateY(0);
+}
+.category-tag.active { border-color: currentColor; }
+.cat-all { background: var(--bg-glass); color: var(--text-secondary); }
+
+/* ============================================
+   MAIN CALENDAR AREA & VIEWS
+   ============================================ */
+.main-content {
+  padding: 24px;
+  overflow-y: auto;
+  max-height: calc(100vh - 65px);
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.calendar-title { display: flex; align-items: center; gap: 16px; }
+.calendar-title h2 { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.03em; }
+.calendar-title .month-badge { padding: 4px 12px; background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: var(--radius-full); font-size: 0.75rem; color: var(--text-secondary); }
+.calendar-nav { display: flex; align-items: center; gap: 4px; }
+.calendar-view-toggle { display: flex; background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: var(--radius-md); overflow: hidden; margin-left: 12px; }
+
+.view-toggle-btn {
+  padding: 6px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.view-toggle-btn.active { background: var(--accent-primary); color: white; }
+.view-toggle-btn:hover:not(.active) { background: var(--bg-glass-hover); color: var(--text-primary); }
+
+/* Calendar Grid Component */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: var(--border-glass);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border-glass);
+}
+
+.calendar-day-header { padding: 12px 8px; text-align: center; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); background: var(--bg-secondary); }
+.calendar-day-header:first-child { color: #ff5555; }
+.calendar-day-header:last-child  { color: #5599ff; }
+.day-number.sunday   { color: #ff5555; }
+.day-number.saturday { color: #5599ff; }
+.day-number.holiday  { color: #ff5555; }
+.mini-cal-day-name:first-child { color: #ff5555; }
+.mini-cal-day-name:last-child  { color: #5599ff; }
+.mini-cal-day.sunday   { color: #ff5555; }
+.mini-cal-day.saturday { color: #5599ff; }
+.mini-cal-day.holiday  { color: #ff5555; }
+
+.holiday-name { font-size: 0.55rem; color: #ff5555; line-height: 1.2; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.day-number-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+
+.car-badge { display: inline-flex; align-items: center; justify-content: center; padding: 1px 4px; height: 14px; border-radius: 4px; font-size: 0.58rem; font-weight: 700; line-height: 1; flex-shrink: 0; }
+.car-badge.odd { color: #ff55AA; border: 1px solid #ff55AA; background: rgba(255, 85, 170, 0.1); }
+.car-badge.even { color: #4ecdc4; border: 1px solid #4ecdc4; background: rgba(78, 205, 196, 0.1); }
+
+.calendar-day-cell { min-height: 100px; padding: 8px; background: rgba(255, 255, 255, 0.04); position: relative; cursor: pointer; transition: all var(--transition-fast); display: flex; flex-direction: column; }
+.calendar-day-cell:hover { background: rgba(18, 18, 31, 0.9); z-index: 2; }
+.calendar-day-cell.other-month { opacity: 0.3; }
+.calendar-day-cell.today { background: rgba(124, 92, 252, 0.06); }
+.calendar-day-cell.today .day-number { background: var(--gradient-primary); color: white; box-shadow: 0 2px 12px var(--accent-primary-glow); }
+.calendar-day-cell.selected { background: rgba(124, 92, 252, 0.1); box-shadow: inset 0 0 0 2px var(--accent-primary); }
+
+.day-number { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 600; transition: all var(--transition-fast); overflow: visible; position: relative; }
+.day-events { flex: 1; display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+
+.day-event-chip { padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; transition: all var(--transition-fast); display: flex; align-items: center; gap: 4px; }
+.day-event-chip:hover { filter: brightness(1.2); transform: scale(1.02); }
+.day-more-events { font-size: 0.6rem; color: var(--text-muted); text-align: center; padding: 2px; }
+
+/* ============================================
+   📋 방식 B: 체크리스트 독립 뷰 전용 스타일
+   ============================================ */
+#checklistView {
+  display: none; /* 초기값 히든 */
+  flex-direction: column;
+  gap: 20px;
+}
+
+.checklist-top-ctrl {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  padding: 16px 24px;
+  border-radius: var(--radius-lg);
+}
+
+.checklist-top-ctrl > div {
+  min-width: 0;
+}
+
+#newChecklistCatInput {
+  width: min(100%, 240px) !important;
+}
+
+.checklist-grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.chk-category {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+.chk-category.dragging { opacity: 0.4; transform: scale(0.98); }
+.chk-category.drag-over { border: 2px dashed var(--accent-primary); background: var(--bg-glass-hover); }
+
+.chk-category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--accent-primary);
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+}
+
+.chk-header-left { display: flex; align-items: center; gap: 8px; }
+.chk-drag-handle {
+  cursor: grab;
+  color: var(--text-muted);
+  user-select: none;
+  font-size: 1.1rem;
+  transition: color var(--transition-fast), transform var(--transition-bounce);
+  display: inline-block;
+}
+.chk-drag-handle:hover {
+  color: var(--accent-secondary);
+  transform: scale(1.2);
+}
+.chk-drag-handle:active {
+  cursor: grabbing;
+  transform: scale(0.9);
+}
+.chk-category-title { font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+.chk-header-actions { display: flex; gap: 6px; }
+
+.chk-items-container { display: flex; flex-direction: column; gap: 6px; }
+.chk-todo-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid transparent;
+  gap: 8px;
+  transition: all var(--transition-fast);
+}
+.chk-todo-item:hover { background: var(--bg-glass-hover); }
+.chk-todo-item.pinned { background: rgba(255, 167, 38, 0.05); border-left: 3px solid var(--accent-amber); }
+.chk-todo-item.checked { opacity: 0.5; }
+.chk-todo-item.checked label { text-decoration: line-through; color: var(--text-muted); }
+
+.chk-todo-item input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent-primary); }
+.chk-todo-item label { cursor: pointer; font-size: 0.88rem; flex-grow: 1; word-break: break-all; color: var(--text-primary); user-select: none; }
+
+.chk-item-btn { background: none; border: none; cursor: pointer; font-size: 0.85rem; padding: 4px; border-radius: var(--radius-sm); color: var(--text-muted); opacity: 0; transition: opacity var(--transition-fast), color var(--transition-fast); }
+.chk-todo-item:hover .chk-item-btn, .chk-todo-item.pinned .chk-item-btn-pin { opacity: 0.7; }
+.chk-item-btn:hover { opacity: 1 !important; color: var(--text-primary); background: var(--bg-glass); }
+.chk-item-btn-pin { opacity: 0.3; }
+.chk-todo-item.pinned .chk-item-btn-pin { color: var(--accent-amber); opacity: 1; }
+
+/* ============================================
+   RIGHT SIDEBAR ELEMENTS & ENHANCED MEMO WIDGET
+   ============================================ */
+.sidebar-right {
+  padding: 24px 20px;
+  border-left: 1px solid var(--border-glass);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+  max-height: calc(100vh - 65px);
+}
+
+.motivation-card { background: var(--gradient-aurora); border-radius: var(--radius-lg); padding: 20px; position: relative; overflow: hidden; min-height: 120px; display: flex; align-items: center; }
+.motivation-card::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.35); z-index: 0; }
+.motivation-card .motivation-content { position: relative; z-index: 1; width: 100%; }
+.motivation-card .motivation-emoji { font-size: 1.5rem; margin-bottom: 8px; }
+.motivation-card .motivation-text { font-size: 0.88rem; font-weight: 500; line-height: 1.6; margin-bottom: 6px; white-space: normal; word-break: keep-all; }
+.motivation-card .motivation-author { font-size: 0.72rem; color: rgba(255,255,255,0.7); text-align: right; }
+
+.today-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.summary-stat { padding: 14px; background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: var(--radius-md); text-align: center; transition: all var(--transition-normal); }
+.summary-stat:hover { background: var(--bg-glass-hover); transform: translateY(-2px); }
+.summary-stat .stat-value { font-size: 1.4rem; font-weight: 800; }
+.summary-stat .stat-label { font-size: 0.65rem; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
+.stat-events .stat-value { color: var(--accent-primary); }
+.stat-memos .stat-value { color: var(--accent-secondary); }
+.stat-done .stat-value { color: var(--accent-success); }
+.stat-pending .stat-value { color: var(--accent-amber); }
+
+.memo-section h3 { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+.memo-search-box { margin-bottom: 12px; position: relative; }
+.memo-search-input { width: 100%; padding: 8px 12px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-glass); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 0.78rem; outline: none; transition: all var(--transition-fast); }
+.memo-search-input:focus { border-color: var(--accent-secondary); background: rgba(255, 255, 255, 0.08); }
+
+.memo-list { display: flex; flex-direction: column; gap: 10px; }
+.memo-card { padding: 14px; background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: var(--radius-md); cursor: pointer; transition: all var(--transition-normal); position: relative; overflow: hidden; }
+.memo-card:hover { background: var(--bg-glass-hover); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.memo-card .memo-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: var(--text-primary); }
+.memo-card .memo-preview { font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; word-break: break-all; }
+.memo-card .memo-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; font-size: 0.65rem; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.03); padding-top: 6px; }
+.memo-card .memo-pin { position: absolute; top: 8px; right: 8px; font-size: 0.85rem; z-index: 2; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+
+/* 고급형 고정 메모 프리미엄 스타일 */
+.memo-card.pinned { 
+  background: linear-gradient(135deg, rgba(255, 167, 38, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+  border-color: rgba(255, 167, 38, 0.25) !important;
+  box-shadow: 0 4px 14px rgba(255, 167, 38, 0.05);
+}
+
+/* 컬러 칩 셀렉터 스타일 */
+.color-chips-container { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+.color-chip { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; transition: all var(--transition-bounce); border: 2px solid transparent; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.6); }
+.color-chip:hover { transform: scale(1.15); }
+.color-chip.selected { border-color: #fff; transform: scale(1.1); box-shadow: 0 0 12px currentColor; }
+.chip-default { background: var(--bg-glass); border: 1px solid var(--border-glass); }
+.chip-purple { background: #7c5cfc; }
+.chip-teal { background: #5ce1e6; }
+.chip-pink { background: #f06292; }
+.chip-amber { background: #ffa726; }
+
+.car-container { background: var(--bg-glass); padding: 15px; border-radius: 12px; border: 1px solid var(--border-glass); }
+.car-status-box { text-align: center; margin-bottom: 15px; }
+.car-subtitle { color: var(--text-secondary); font-size: 11px; margin-bottom: 5px; }
+.car-counter { font-size: 24px; font-weight: bold; color: var(--accent-secondary); }
+.car-counter.warning { color: var(--accent-warm); }
+.car-msg { font-size: 12px; font-weight: bold; color: var(--accent-success); }
+.car-msg.warning { color: var(--accent-warm); }
+.car-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 12px; }
+.day-btn { background: var(--bg-glass-active); border: 1px solid var(--border-glass); color: var(--text-primary); padding: 8px 0; border-radius: 6px; cursor: pointer; font-size: 10px; transition: all 0.2s; }
+.day-btn.active { background: var(--accent-primary); color: white; border: none; }
+.day-btn.active.violation { background: var(--accent-warm); }
+.reset-btn { background: transparent; border: 1px solid var(--accent-warm); color: var(--accent-warm); padding: 6px; width: 100%; border-radius: 6px; font-size: 11px; cursor: pointer; }
+.reset-btn:hover { background: rgba(255, 107, 107, 0.1); }
+
+/* ============================================
+   ⏱️ TIMER WIDGET
+   ============================================ */
+.timer-container { background: var(--bg-card); padding: 18px 14px; border-radius: var(--radius-md); border: 1px solid var(--border-glass); display: flex; flex-direction: column; align-items: center; gap: 14px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); backdrop-filter: blur(10px); }
+.timer-container .clock-face { position: relative; width: 130px; height: 130px; }
+.timer-container .clock-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.timer-container .clock-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
+.timer-container .time-display { font-family: 'Inter', monospace; font-size: 24px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; }
+.timer-container .status-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; color: var(--text-muted); }
+.timer-container .add-btns { display: flex; gap: 4px; width: 100%; }
+.timer-container .add-btn { flex: 1; font-family: var(--font-primary); font-size: 11px; font-weight: 600; padding: 5px 0; border-radius: var(--radius-sm); border: 1px solid var(--border-glass); background: var(--bg-glass); color: var(--text-secondary); cursor: pointer; transition: all var(--transition-fast); }
+.timer-container .add-btn:hover { background: var(--bg-glass-hover); color: var(--text-primary); border-color: var(--border-glass-hover); }
+.timer-container .ctrl-btns { display: flex; gap: 12px; align-items: center; }
+.timer-container .btn-main-timer { width: 38px; height: 38px; border-radius: 50%; border: none; background: var(--gradient-primary); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; box-shadow: 0 4px 10px var(--accent-primary-glow); transition: all var(--transition-fast); }
+.timer-container .btn-main-timer:hover { transform: scale(1.05); box-shadow: 0 4px 14px var(--accent-primary-glow); }
+.timer-container .btn-sec-timer { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border-glass); background: var(--bg-glass); color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; transition: all var(--transition-fast); }
+.timer-container .btn-sec-timer:hover { background: var(--bg-glass-hover); color: var(--text-primary); }
+.timer-container .done-banner { display: none; width: 100%; text-align: center; font-size: 11px; font-weight: 600; color: var(--accent-success); background: rgba(78, 205, 196, 0.08); border: 1px solid rgba(78, 205, 196, 0.15); border-radius: var(--radius-sm); padding: 5px 0; }
+.chip-repeat-icon { font-size: 0.6rem; opacity: 0.7; flex-shrink: 0; margin-right: 1px; }
+
+/* ============================================
+   MODALS & FLOATING MECHANICS
+   ============================================ */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all var(--transition-normal); }
+.modal-overlay.active { opacity: 1; visibility: visible; }
+.modal { background: var(--bg-secondary); border: 1px solid var(--border-glass); border-radius: var(--radius-xl); padding: 32px; width: 90%; max-width: 520px; max-height: 85vh; overflow-y: auto; transform: scale(0.9) translateY(20px); transition: all var(--transition-bounce); box-shadow: var(--shadow-lg); }
+.modal-overlay.active .modal { transform: scale(1) translateY(0); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.modal-header h2 { font-size: 1.2rem; font-weight: 700; }
+.modal-close { width: 32px; height: 32px; border-radius: var(--radius-sm); border: none; background: var(--bg-glass); color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition-fast); }
+.modal-close:hover { background: rgba(255, 107, 107, 0.2); color: var(--accent-warm); }
+
+.form-group { margin-bottom: 18px; }
+.form-group label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+.form-input, .form-textarea, .form-select { width: 100%; padding: 10px 14px; background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: var(--radius-md); color: var(--text-primary); font-family: var(--font-primary); font-size: 0.85rem; transition: all var(--transition-fast); outline: none; }
+.form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 3px var(--accent-primary-glow); }
+.form-textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+.form-select { appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(240,240,245,0.5)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+.form-select option { background: var(--bg-secondary); color: var(--text-primary); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-actions { display: flex; gap: 10px; margin-top: 24px; }
+.form-actions .btn { flex: 1; }
+
+.category-selector { display: flex; gap: 8px; flex-wrap: wrap; }
+.category-option { padding: 6px 14px; border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all var(--transition-fast); border: 2px solid transparent; opacity: 0.6; }
+.category-option:hover, .category-option.selected { opacity: 1; }
+.category-option.selected { border-color: currentColor; transform: scale(1.05); }
+
+.priority-selector { display: flex; gap: 8px; }
+.priority-option { flex: 1; padding: 8px; text-align: center; border-radius: var(--radius-md); font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 2px solid transparent; transition: all var(--transition-fast); }
+.priority-option:hover, .priority-option.selected { border-color: currentColor; }
+.priority-low { background: rgba(78, 205, 196, 0.1); color: var(--accent-success); }
+.priority-medium { background: rgba(255, 167, 38, 0.1); color: var(--accent-amber); }
+.priority-high { background: rgba(255, 107, 107, 0.1); color: var(--accent-warm); }
+
+.forget-me-not { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); padding: 14px 24px; background: rgba(18, 18, 31, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--border-glass); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg), 0 0 30px var(--accent-primary-glow); z-index: 999; display: flex; align-items: center; gap: 12px; opacity: 0; transition: all var(--transition-smooth); max-width: 450px; }
+.forget-me-not.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
+.forget-me-not .fmn-icon { font-size: 1.5rem; animation: bellRing 1s ease-in-out; }
+
+@keyframes bellRing {
+  0%, 100% { transform: rotate(0); }
+  10% { transform: rotate(15deg); }
+  20% { transform: rotate(-15deg); }
+  30% { transform: rotate(10deg); }
+  40% { transform: rotate(-10deg); }
+  50% { transform: rotate(5deg); }
+}
+.forget-me-not .fmn-text { font-size: 0.82rem; font-weight: 500; flex: 1; }
+.forget-me-not .fmn-text strong { color: var(--accent-secondary); }
+.forget-me-not .fmn-close { background: none; border: none; color: var(--text-muted); font-size: 1.1rem; cursor: pointer; padding: 4px; transition: color var(--transition-fast); }
+.forget-me-not .fmn-close:hover { color: var(--text-primary); }
+
+.fab-container { position: fixed; bottom: 32px; right: 32px; z-index: 500; display: flex; flex-direction: column-reverse; align-items: center; gap: 8px; }
+.fab-btn { width: 56px; height: 56px; border-radius: 50%; background: var(--gradient-primary); color: white; border: none; font-size: 1.5rem; cursor: pointer; box-shadow: 0 6px 30px var(--accent-primary-glow); transition: all var(--transition-normal); display: flex; align-items: center; justify-content: center; }
+.fab-btn:hover { transform: scale(1.1) rotate(90deg); box-shadow: 0 8px 40px var(--accent-primary-glow); }
+.fab-sub-btns { display: flex; flex-direction: column; gap: 8px; opacity: 0; visibility: hidden; transform: translateY(10px); transition: all var(--transition-normal); }
+.fab-container.open .fab-sub-btns { opacity: 1; visibility: visible; transform: translateY(0); }
+.fab-sub-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border-glass); background: var(--bg-secondary); color: var(--text-primary); font-size: 1.1rem; cursor: pointer; transition: all var(--transition-normal); display: flex; align-items: center; justify-content: center; position: relative; }
+.fab-sub-btn:hover { background: var(--bg-glass-hover); transform: scale(1.1); }
+.fab-sub-btn .fab-tooltip { position: absolute; right: 56px; white-space: nowrap; padding: 4px 10px; background: var(--bg-secondary); border: 1px solid var(--border-glass); border-radius: var(--radius-sm); font-size: 0.72rem; font-weight: 600; opacity: 0; transition: opacity var(--transition-fast); pointer-events: none; }
+.fab-sub-btn:hover .fab-tooltip { opacity: 1; }
+
+.custom-checkbox { width: 18px; height: 18px; border: 2px solid var(--border-glass-hover); border-radius: 5px; cursor: pointer; transition: all var(--transition-fast); display: flex; align-items: center; justify-content: center; font-size: 0.65rem; flex-shrink: 0; }
+.custom-checkbox:hover { border-color: var(--accent-primary); }
+.custom-checkbox.checked { background: var(--gradient-primary); border-color: var(--accent-primary); animation: checkBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+@keyframes checkBounce { 0% { transform: scale(0.8); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+.completed-event { opacity: 0.45; }
+.completed-event .chip-text { text-decoration: line-through; }
+.chip-check { flex-shrink: 0; width: 11px; height: 11px; border-radius: 3px; border: 1.5px solid currentColor; display: flex; align-items: center; justify-content: center; font-size: 8px; transition: all var(--transition-fast); cursor: pointer; opacity: 0.7; }
+.chip-check:hover { opacity: 1; transform: scale(1.15); }
+.chip-check.checked { background: currentColor; opacity: 1; }
+.chip-check.checked::after { content: '✓'; color: var(--bg-primary); font-weight: 700; line-height: 1; }
+.chip-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.empty-state { text-align: center; padding: 32px 16px; color: var(--text-muted); }
+.empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.5; }
+.empty-state p { font-size: 0.8rem; line-height: 1.5; }
+
+.toast-container { position: fixed; top: 80px; right: 24px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
+.toast { padding: 12px 20px; background: var(--bg-secondary); border: 1px solid var(--border-glass); border-radius: var(--radius-md); font-size: 0.82rem; display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow-md); transform: translateX(120%); transition: transform var(--transition-bounce); min-width: 250px; }
+.toast.show { transform: translateX(0); }
+.toast.success { border-left: 3px solid var(--accent-success); }
+.toast.info { border-left: 3px solid var(--accent-primary); }
+.toast.warning { border-left: 3px solid var(--accent-amber); }
+
+@media (max-width: 1200px) { #app-container { grid-template-columns: 280px 1fr; } .sidebar-right { display: none; } }
+@media (max-width: 768px) { #app-container { grid-template-columns: 1fr; } .sidebar-left { display: none; } header { padding: 12px 16px; } .main-content { padding: 16px; } .calendar-day-cell { min-height: 60px; padding: 4px; } .day-event-chip { font-size: 0.6rem; padding: 1px 4px; } }
+
+/* 🖨️ 인쇄 모드 최적화 */
+@media print {
+  body { background: #fff !important; color: #000 !important; }
+  header, aside, .fab-container, .calendar-header, .checklist-top-ctrl, .chk-header-actions, .chk-drag-handle { display: none !important; }
+  #app-container { display: block !important; }
+  .main-content { padding: 0 !important; max-height: none !important; overflow: visible !important; }
+  #checklistView { display: flex !important; }
+  .chk-category { border: 1px solid #666 !important; background: #fff !important; box-shadow: none !important; page-break-inside: avoid; color: #000 !important; padding: 12px !important; }
+  .chk-category-title { color: #000 !important; }
+  .chk-todo-item { background: transparent !important; color: #000 !important; border: none !important; }
+  .chk-todo-item label { color: #000 !important; }
+  .chk-todo-item.checked label { color: #888 !important; }
+}
+
+/* 인쇄 전용 타이틀 숨김 처리 */
+.print-only-title {
+  display: none;
+}
+
+/* 체크리스트 상단 진행률 바 스타일 */
+.chk-progress-wrapper {
+  flex: 1;
+  max-width: 300px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-glass);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.chk-progress-bar-bg {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.chk-progress-bar-fill {
+  height: 100%;
+  background: var(--gradient-primary);
+  width: 0%;
+  transition: width var(--transition-normal);
+}
+.chk-progress-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-secondary);
+  min-width: 65px;
+  text-align: right;
+}
+
+.btn-icon:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  header {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .header-date-display {
+    order: 3;
+    width: 100%;
+  }
+
+  .calendar-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .calendar-title {
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .calendar-nav,
+  .calendar-view-toggle {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .view-toggle-btn {
+    flex: 1;
+    padding: 8px 10px;
+  }
+
+  .checklist-top-ctrl {
+    align-items: stretch;
+    padding: 14px;
+  }
+
+  .checklist-top-ctrl > div {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .checklist-top-ctrl .btn {
+    flex: 1;
+    min-width: 130px;
+  }
+
+  .chk-progress-wrapper {
+    max-width: none;
+  }
+
+  .checklist-grid-container {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .chk-category {
+    padding: 16px;
+  }
+
+  .chk-category-header {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .chk-header-actions {
+    flex-shrink: 0;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .modal {
+    padding: 22px;
+  }
+
+  .toast-container {
+    left: 16px;
+    right: 16px;
+  }
+
+  .toast {
+    min-width: 0;
+  }
+}
+
+@media print {
+  /* 인쇄 시 체크리스트 제목 강제 노출 */
+  .print-only-title {
+    display: block !important;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #000 !important;
+    margin-bottom: 24px;
+    border-bottom: 3px solid #000;
+    padding-bottom: 10px;
+  }
+}
+</style>
+</head>
+<body>
+<div id="app-container">
+  <header>
+    <div class="header-brand">
+      <div class="logo-icon">📅</div>
+      <h1>My Calendar</h1>
+    </div>
+    <div class="header-date-display">
+      <div class="today-date" id="headerTodayDate"></div>
+      <div class="today-sub" id="headerTodaySub"></div>
+    </div>
+    <div class="header-actions">
+      <div class="header-streak" id="streakBadge">
+        <span class="streak-fire">🔥</span>
+        <span id="streakCount">0</span>일 연속
+      </div>
+      <button class="btn-icon" id="todayBtn" title="오늘로 이동">📍</button>
+    </div>
+  </header>
+
+  <aside class="sidebar-left">
+    <div class="mini-calendar">
+      <div class="mini-cal-header">
+        <h3 id="miniCalTitle"></h3>
+        <div class="mini-cal-nav">
+          <button class="btn-icon" id="miniCalPrev" style="width:28px;height:28px;font-size:0.8rem;">◀</button>
+          <button class="btn-icon" id="miniCalNext" style="width:28px;height:28px;font-size:0.8rem;">▶</button>
+        </div>
+      </div>
+      <div class="mini-cal-grid" id="miniCalGrid"></div>
+    </div>
+
+    <div>
+      <div style="margin-bottom:12px; display:flex; align-items:center; justify-content:space-between;">
+        <h3 style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin:0;">카테고리</h3>
+        <button class="btn-icon" id="settingsMgrBtn" title="설정 및 카테고리 관리" style="width:24px;height:24px;font-size:0.7rem;">⚙️</button>
+      </div>
+      <div class="category-tags" id="categoryFilters"></div>
+    </div>
+
+    <div class="upcoming-section">
+      <h3>다가오는 일정</h3>
+      <div class="upcoming-list" id="upcomingList"></div>
+    </div>
+  
+    <div class="timer-section" style="margin-bottom: 20px;">
+      <div class="timer-container">
+        <div class="clock-face">
+          <svg class="clock-svg" width="100%" height="100%" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="120" cy="120" r="108" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="10"/>
+            <circle id="progress-ring" cx="120" cy="120" r="108" fill="none" stroke="var(--accent-primary)" stroke-width="10" stroke-linecap="round" stroke-dasharray="678.6" stroke-dashoffset="0" transform="rotate(-90 120 120)" style="transition: stroke-dashoffset 0.2s linear, stroke 0.4s ease;"/>
+          </svg>
+          <div class="clock-center">
+            <div class="time-display" id="time-display">30:00</div>
+            <div class="status-label" id="status-label">READY</div>
+          </div>
+        </div>
+        <div class="add-btns">
+          <button class="add-btn" id="add-1m">+1분</button>
+          <button class="add-btn" id="add-5m">+5분</button>
+          <button class="add-btn" id="add-10m">+10분</button>
+        </div>
+        <div class="ctrl-btns">
+          <button class="btn-sec-timer" id="btn-cancel-timer" title="취소">✕</button>
+          <button class="btn-main-timer" id="btn-play-timer">▶</button>
+          <button class="btn-sec-timer" id="btn-reset-timer" title="초기화">↻</button>
+        </div>
+        <div class="done-banner" id="done-banner">✓ 타이머가 완료되었습니다!</div>
+       </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    
+    <div class="calendar-header">
+      <div class="calendar-title">
+        <div style="display:flex;gap:8px;" id="calendarNavActionGroup">
+          <button class="btn-icon" id="calPrev">◀</button>
+          <button class="btn-icon" id="calNext">▶</button>
+        </div>
+        <h2 id="calendarTitle"></h2>
+        <span class="month-badge" id="eventCountBadge"></span>
+      </div>
+      <div class="calendar-nav">
+        <div class="calendar-view-toggle">
+          <button class="view-toggle-btn active" data-view="month">월</button>
+          <button class="view-toggle-btn" data-view="week">주</button>
+          <button class="view-toggle-btn" data-view="checklist">📋 체크리스트</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="calendar-grid" id="calendarGrid"></div>
+
+    <div id="checklistView">
+      <h1 class="print-only-title">💼 출장 및 현장조사 체크리스트</h1>
+
+      <div class="checklist-top-ctrl">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="text" id="newChecklistCatInput" class="form-input" placeholder="새 카테고리 이름 입력" style="width:240px;">
+          <button class="btn btn-primary" id="btnAddChecklistCat" style="padding: 0 16px; height: 38px;">+ 카테고리 추가</button>
+        </div>
+        
+        <div class="chk-progress-wrapper" id="checklistProgressWrapper">
+          <div class="chk-progress-bar-bg">
+            <div class="chk-progress-bar-fill" id="checklistProgressFill"></div>
+          </div>
+          <div class="chk-progress-text" id="checklistProgressText">0 / 0 (0%)</div>
+        </div>
+
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-ghost" id="btnPrintChecklist">🖨️ 인쇄 / PDF 저장</button>
+          <button class="btn btn-danger" id="btnResetChecklist" style="background:rgba(255,107,107,0.15)">🔄 전체 초기화</button>
+        </div>
+      </div>
+      <div class="checklist-grid-container" id="checklistGridContainer"></div>
+    </div>
+
+  </main>
+
+  <aside class="sidebar-right">
+    <div class="motivation-card">
+      <div class="motivation-content">
+        <div class="motivation-emoji" id="motivationEmoji">✨</div>
+        <div class="motivation-text" id="motivationText"></div>
+        <div class="motivation-author" id="motivationAuthor"></div>
+      </div>
+    </div>
+
+    <div class="today-summary">
+      <div class="summary-stat stat-events">
+        <div class="stat-value" id="statEvents">0</div>
+        <div class="stat-label">오늘 일정</div>
+      </div>
+      <div class="summary-stat stat-memos">
+        <div class="stat-value" id="statMemos">0</div>
+        <div class="stat-label">메모</div>
+      </div>
+      <div class="summary-stat stat-done">
+        <div class="stat-value" id="statDone">0</div>
+        <div class="stat-label">완료</div>
+      </div>
+      <div class="summary-stat stat-pending">
+        <div class="stat-value" id="statPending">0</div>
+        <div class="stat-label">대기중</div>
+      </div>
+    </div>
+
+    <div class="memo-section">
+      <h3>
+        <span>📝 메모</span>
+        <button class="btn-icon" id="addMemoBtn" title="메모 추가" style="width:28px;height:28px;font-size:0.85rem;">+</button>
+      </h3>
+      <div class="memo-search-box">
+        <input type="text" id="memoSearchInput" class="memo-search-input" placeholder="🔍 메모 검색 (제목 또는 내용)...">
+      </div>
+      <div class="memo-list" id="memoList"></div>
+    </div>
+
+    <div class="car-tracker-section" style="margin-top: 8px;">
+        <h3 style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 12px;">🚗 2부제 운행 기록기</h3>
+        <div id="carTrackerWidget" class="car-container"></div>
+        <div class="info-text" style="font-size: 11px; color: var(--text-muted); margin-top: 10px; line-height: 1.5;">
+            • 평일 중 50% 이하까지 운행 가능합니다.<br>
+            • 버튼에 불이 들어오면 '운행한 날'입니다.
+        </div>
+    </div>
+  </aside>
+</div>
+
+<div class="fab-container" id="fabContainer">
+  <button class="fab-btn" id="fabToggle">+</button>
+  <div class="fab-sub-btns">
+    <button class="fab-sub-btn" id="fabAddEvent">📅<span class="fab-tooltip">새 일정</span></button>
+    <button class="fab-sub-btn" id="fabAddMemo">📝<span class="fab-tooltip">새 메모</span></button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="eventModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="eventModalTitle">새 일정</h2>
+      <button class="modal-close" data-close="eventModal">✕</button>
+    </div>
+    <form id="eventForm">
+      <div class="form-group">
+        <label>일정 제목</label>
+        <input type="text" class="form-input" id="eventTitle" placeholder="무엇을 해야 하나요?" required autocomplete="off">
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <div class="custom-checkbox" id="eventAllDayToggle"></div>
+        <label id="eventAllDayLabel" style="margin:0;text-transform:none;letter-spacing:0;font-size:0.82rem;cursor:pointer;">하루 종일 (시간 지정 없음)</label>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>시작 날짜</label>
+          <input type="date" class="form-input" id="eventStartDate" required>
+        </div>
+        <div class="form-group" id="eventStartTimeGroup">
+          <label>시작 시간</label>
+          <input type="time" class="form-input" id="eventStartTime" step="900">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>종료 날짜</label>
+          <input type="date" class="form-input" id="eventEndDate">
+        </div>
+        <div class="form-group" id="eventEndTimeGroup">
+          <label>종료 시간</label>
+          <input type="time" class="form-input" id="eventEndTime" step="900">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>카테고리</label>
+        <div class="category-selector" id="eventCategorySelector"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>반복 설정</label>
+          <select class="form-select" id="eventRepeatType">
+            <option value="none">반복 없음</option>
+            <option value="daily">매일 반복</option>
+            <option value="weekly">매주 반복</option>
+            <option value="monthly">매월 반복</option>
+            <option value="monthlySpecific">매월 첫 번째 금요일</option>
+          </select>
+        </div>
+        <div class="form-group" id="eventRepeatUntilGroup" style="display: none;">
+          <label>반복 종료일</label>
+          <input type="date" class="form-input" id="eventRepeatUntil">
+        </div>
+      </div> 
+      <div class="form-group" id="eventExcludeHolidaysGroup" style="display: none; margin-top: -5px; margin-bottom: 15px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="custom-checkbox" id="eventExcludeHolidaysToggle"></div>
+          <label id="eventExcludeHolidaysLabel" style="margin:0;text-transform:none;letter-spacing:0;font-size:0.82rem;cursor:pointer;">🏖️ 주말 및 공휴일 제외</label>
+        </div>
+      </div>     
+      <div class="form-group">
+        <label>우선순위</label>
+        <div class="priority-selector" id="eventPrioritySelector">
+          <span class="priority-option priority-low selected" data-priority="low">낮음</span>
+          <span class="priority-option priority-medium" data-priority="medium">보통</span>
+          <span class="priority-option priority-high" data-priority="high">높음</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>설명 (선택)</label>
+        <textarea class="form-textarea" id="eventDescription" placeholder="일정에 대한 메모를 남겨보세요..." rows="3"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" data-close="eventModal">취소</button>
+        <button type="button" class="btn btn-danger" id="deleteEventBtn" style="display:none;">삭제</button>
+        <button type="submit" class="btn btn-primary">저장</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="memoModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="memoModalTitle">새 메모</h2>
+      <button class="modal-close" data-close="memoModal">✕</button>
+    </div>
+    <form id="memoForm">
+      <div class="form-group">
+        <label>메모 제목</label>
+        <input type="text" class="form-input" id="memoTitle" placeholder="메모 제목" required autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>내용</label>
+        <textarea class="form-textarea" id="memoContent" placeholder="생각을 자유롭게 적어보세요..." rows="6"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>연결 날짜 (선택)</label>
+          <input type="date" class="form-input" id="memoDate">
+        </div>
+        <div class="form-group">
+          <label>색상 테마</label>
+          <input type="hidden" id="memoColor" value="default">
+          <div class="color-chips-container" id="memoColorChips">
+            <div class="color-chip chip-default selected" data-color="default" title="기본">기본</div>
+            <div class="color-chip chip-purple" data-color="purple" title="보라"></div>
+            <div class="color-chip chip-teal" data-color="teal" title="민트"></div>
+            <div class="color-chip chip-pink" data-color="pink" title="핑크"></div>
+            <div class="color-chip chip-amber" data-color="amber" title="앰버"></div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:10px; margin-top: 8px;">
+        <div class="custom-checkbox" id="memoPinToggle"></div>
+        <label id="memoPinLabel" style="margin:0;text-transform:none;letter-spacing:0;font-size:0.82rem;cursor:pointer;">📌 중요 메모로 고정</label>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" data-close="memoModal">취소</button>
+        <button type="button" class="btn btn-danger" id="deleteMemoBtn" style="display:none;">삭제</button>
+        <button type="submit" class="btn btn-primary">저장</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal" style="max-width: 460px;">
+    <div class="modal-header">
+      <h2>환경설정 및 관리</h2>
+      <button class="modal-close" data-close="settingsModal">✕</button>
+    </div>
+    <div style="margin-bottom: 20px;">
+      <h4 style="font-size:0.85rem; margin-bottom:10px; color:var(--accent-primary);">💼 카테고리 편집</h4>
+      <div class="category-manager-list" id="categoryManagerList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;max-height:160px;overflow-y:auto;"></div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" class="form-input" id="newCategoryName" placeholder="예: 🛒 쇼핑" style="flex:1;" autocomplete="off">
+        <input type="color" id="newCategoryColor" value="#7c5cfc" style="width:36px;height:36px;padding:0;border:none;border-radius:8px;cursor:pointer;background:transparent;">
+        <button class="btn btn-primary" id="addCategorySubmitBtn" style="padding:0 14px;">추가</button>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--border-glass); padding-top:16px;">
+      <h4 style="font-size:0.85rem; margin-bottom:10px; color:var(--accent-amber);">💾 데이터 백업 및 복원</h4>
+      <div style="display:flex; gap:10px;">
+        <button type="button" class="btn btn-ghost" id="btnExportData" style="flex:1; font-size:0.75rem;">내보내기 (.JSON)</button>
+        <button type="button" class="btn btn-ghost" id="btnImportTrigger" style="flex:1; font-size:0.75rem;">가져오기</button>
+        <input type="file" id="fileImportInput" accept=".json" style="display:none;">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="forget-me-not" id="forgetMeNot">
+  <span class="fmn-icon">🔔</span>
+  <span class="fmn-text" id="fmnText"></span>
+  <button class="fmn-close" id="fmnCloseBtn">✕</button>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ============================================
+   APPLICATION STATE & DATA
+   ============================================ */
+const APP_KEY = 'my-calendar-app-v2';
+const CHK_DATA_KEY = 'field_checklist_data_v4';
+const CHK_ORDER_KEY = 'field_checklist_order_v4';
+const CHK_TITLES_KEY = 'field_checklist_titles_v4';
+
+const STATE = {
+  currentDate: new Date(),
+  selectedDate: null,
+  viewYear: new Date().getFullYear(),
+  viewMonth: new Date().getMonth(),
+  miniViewYear: new Date().getFullYear(),
+  miniViewMonth: new Date().getMonth(),
+  currentFilter: 'all',
+  editingEventId: null,
+  editingMemoId: null,
+  fabOpen: false,
+  viewMode: 'month', // 'month', 'week', 'checklist' (방식 B)
+  timerRunning: false,
+  timerInitial: 1800,
+  carNumber: 'none',
+  memoSearchQuery: '', // 메모 실시간 검색용 상태 추가
+};
+
+let timerLeft = STATE.timerInitial;
+let timerTotal = STATE.timerInitial;
+let timerIntervalId = null;
+let timerTargetTime = 0;
+const TIMER_CIRC = 2 * Math.PI * 108;
+let events = [];
+let memos = [];
+let carDriveDays = [];
+const DEFAULT_CATEGORIES = [
+  { id: 'work', name: '💼 업무', color: '#7c5cfc' },
+  { id: 'personal', name: '🏠 개인', color: '#4ecdc4' },
+  { id: 'health', name: '💪 건강', color: '#f06292' },
+  { id: 'study', name: '📚 학습', color: '#ffa726' }
+];
+let customCategories = DEFAULT_CATEGORIES.map(c => ({ ...c }));
+let streak = 0;
+let lastVisit = null;
+
+/* ============================================
+   📋 방식 B: 체크리스트 기본 데이터 가공 엔진
+   ============================================ */
+const CHECKLIST_RAW_DEFAULT = {
+  documents: [
+    { text: "신분증 (필요시)", checked: false, pinned: true },
+    { text: "현장기록지", checked: false, pinned: true },
+    { text: "COC", checked: false, pinned: true },
+    { text: "작업일지", checked: false, pinned: false },
+    { text: "안전교육일지", checked: false, pinned: false },
+    { text: "기타서류 (도면, 보드판, 라벨 등)", checked: false, pinned: false }
+  ],
+  electronics: [
+    { text: "노트북 & 충전 어댑터", checked: false, pinned: true },
+    { text: "캠핑 배터리", checked: false, pinned: false },
+    { text: "디지털카메라", checked: false, pinned: false },
+    { text: "무전기", checked: false, pinned: false },
+    { text: "GPS측량기", checked: false, pinned: false },
+    { text: "매설물탐지기", checked: false, pinned: false },
+    { text: "PID측정기", checked: false, pinned: false }
+  ],
+  sampling: [
+    { text: "캐노피", checked: false, pinned: false },
+    { text: "바닥용 천막지", checked: false, pinned: false },
+    { text: "테이블 / 의자", checked: false, pinned: false },
+    { text: "쓰레기통", checked: false, pinned: false },
+    { text: "철자, 보드판", checked: false, pinned: false },
+    { text: "필기구", checked: false, pinned: true },
+    { text: "장갑", checked: false, pinned: true },
+    { text: "테이프", checked: false, pinned: false },
+    { text: "파라필름", checked: false, pinned: false },
+    { text: "와이프올(휴지)", checked: false, pinned: false },
+    { text: "칼 / 가위 / 망치", checked: false, pinned: false },
+    { text: "주사기", checked: false, pinned: false },
+    { text: "쓰레기봉투", checked: false, pinned: false },
+    { text: "증류수", checked: false, pinned: false },
+    { text: "아이스팩 / 박스", checked: false, pinned: false },
+    { text: "안전용품(안전모/조끼/신발)", checked: false, pinned: true }
+  ],
+  bottles: [
+    { text: "갈색광구병", checked: false, pinned: false },
+    { text: "바이알 / 렉", checked: false, pinned: false },
+    { text: "지퍼백", checked: false, pinned: false }
+  ],
+  others: [
+    { text: "우비 / 장화", checked: false, pinned: false },
+    { text: "우산 / 휴지", checked: false, pinned: false },
+    { text: "개인 상비약", checked: false, pinned: false }
+  ]
+};
+
+const CHECKLIST_DEFAULT_TITLES = {
+  documents: "🗂️ 필수 서류 & 야장",
+  electronics: "💻 업무용 전자기기",
+  sampling: "🧪 시료채취 용품",
+  bottles: "🥃 시료병",
+  others: "📦 기타 용품"
+};
+
+let checklistOrder = ['documents', 'electronics', 'sampling', 'bottles', 'others'];
+let checklistTitles = { ...CHECKLIST_DEFAULT_TITLES };
+let checklistData = {};
+
+function generateDefaultChecklistData() {
+  const data = JSON.parse(JSON.stringify(CHECKLIST_RAW_DEFAULT));
+  Object.keys(data).forEach(cat => {
+    data[cat] = data[cat].map(item => ({ ...item, id: makeId('chk') }));
+  });
+  return data;
+}
+
+/* ============================================
+   대한민국 공휴일 계산 및 규칙 엔진
+   ============================================ */
+const SOLAR_HOLIDAYS = [
+  { month: 1, day: 1, name: '신정' },
+  { month: 3, day: 1, name: '삼일절' },
+  { month: 5, day: 5, name: '어린이날' },
+  { month: 6, day: 6, name: '현충일' },
+  { month: 7, day: 17, name: '제헌절' },
+  { month: 8, day: 15, name: '광복절' },
+  { month: 10, day: 3, name: '개천절' },
+  { month: 10, day: 9, name: '한글날' },
+  { month: 12, day: 25, name: '크리스마스' }
+];
+
+const LUNAR_HOLIDAYS = new Map([
+  ['2025-01-28', '설날 연휴'], ['2025-01-29', '설날'], ['2025-01-30', '설날 연휴'],
+  ['2025-05-06', '어린이날 대체'], ['2025-10-05', '추석 연휴'], ['2025-10-06', '추석'], 
+  ['2025-10-07', '추석 연휴'], ['2025-10-08', '추석 대체'],
+  ['2026-02-17', '설날 연휴'], ['2026-02-18', '설날'], ['2026-02-19', '설날 연휴'],
+  ['2026-05-25', '부처님오신날'], ['2026-06-03', '지방선거일'], ['2026-08-17', '광복절 대체'],
+  ['2026-09-24', '추석 연휴'], ['2026-09-25', '추석'], ['2026-09-26', '추석 연휴'], 
+  ['2026-10-05', '개천절 대체'],
+  ['2027-02-08', '설날 연휴'], ['2027-02-09', '설날'], ['2027-02-10', '설날 연휴'],
+  ['2027-05-13', '부처님오신날'], ['2027-08-16', '광복절 대체'], ['2027-10-04', '추석 연휴'], 
+  ['2027-10-05', '추석'], ['2027-10-06', '추석 연휴'], ['2027-10-11', '개천절 대체'],
+]);
+
+function getHolidayName(dateStr) {
+  if (LUNAR_HOLIDAYS.has(dateStr)) return LUNAR_HOLIDAYS.get(dateStr);
+  const parts = dateStr.split('-');
+  const y = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10);
+  const d = parseInt(parts[2], 10);
+
+  const matchedSolar = SOLAR_HOLIDAYS.find(h => h.month === m && h.day === d);
+  if (matchedSolar) return matchedSolar.name;
+
+  const replaceTargets = [
+    { m: 3, d: 1, name: '삼일절 대체' },
+    { m: 5, d: 5, name: '어린이날 대체' },
+    { m: 8, d: 15, name: '광복절 대체' },
+    { m: 10, d: 3, name: '개천절 대체' },
+    { m: 10, d: 9, name: '한글날 대체' },
+    { m: 12, d: 25, name: '크리스마스 대체' }
+  ];
+
+  for (const target of replaceTargets) {
+    const origDate = new Date(y, target.m - 1, target.d);
+    const origDayOfWeek = origDate.getDay();
+    if (origDayOfWeek === 0) {
+      if (m === target.m && d === target.d + 1) return target.name;
+    } else if (origDayOfWeek === 6) {
+      if (m === target.m && d === target.d + 2) return target.name;
+    }
+  }
+  return '';
+}
+
+function isHoliday(dateStr) { return getHolidayName(dateStr) !== ''; }
+
+function getDayType(dateStr) {
+  const parsedDate = new Date(dateStr.split('-')[0], parseInt(dateStr.split('-')[1])-1, dateStr.split('-')[2]);
+  const dow = parsedDate.getDay();
+  if (isHoliday(dateStr)) return 'holiday';
+  if (dow === 0) return 'sunday';
+  if (dow === 6) return 'saturday';
+  return '';
+}
+
+function isEventMatchDate(ev, dateStr) {
+  if (dateStr < ev.startDate) return false;
+  if (ev.repeatUntil && dateStr > ev.repeatUntil) return false;
+  if (ev.excludeHolidays) {
+    const dayType = getDayType(dateStr);
+    if (dayType === 'sunday' || dayType === 'saturday' || dayType === 'holiday') return false;
+  }
+  if (!ev.repeatType || ev.repeatType === 'none') {
+    return dateStr >= ev.startDate && dateStr <= (ev.endDate || ev.startDate);
+  }
+  const targetDate = parseLocalDate(dateStr);
+  const startDate = parseLocalDate(ev.startDate);
+  switch (ev.repeatType) {
+    case 'daily': return true;
+    case 'weekly': return targetDate.getDay() === startDate.getDay();
+    case 'monthly': return targetDate.getDate() === startDate.getDate();
+    case 'monthlySpecific': return targetDate.getDay() === 5 && targetDate.getDate() <= 7;
+    default: return false;
+  }
+}
+
+function getCarBadgeHtml(dateStr) {
+  if (STATE.carNumber === 'none' || !STATE.carNumber) return '';
+  const dayNum = parseInt(dateStr.split('-')[2], 10);
+  const isDayOdd = dayNum % 2 !== 0;
+  
+  if (STATE.carNumber === 'odd') {
+    return isDayOdd ? '<span class="car-badge even">운행</span>' : '<span class="car-badge odd">2부제</span>';
+  } else if (STATE.carNumber === 'even') {
+    return !isDayOdd ? '<span class="car-badge even">운행</span>' : '<span class="car-badge odd">2부제</span>';
+  }
+  return '';
+}
+
+const QUOTES = [
+  { text: "오늘 하루도 당신의 작은 노력이 큰 변화를 만듭니다.", emoji: "✨", author: "" },
+  { text: "계획을 세우는 것은 미래를 위한 가장 좋은 투자입니다.", emoji: "🚀", author: "" },
+  { text: "하루를 정리하면, 내일이 더 선명해집니다.", emoji: "🌅", author: "" },
+  { text: "작은 습관의 반복이 위대한 결과를 만듭니다.", emoji: "🌱", author: "— 제임스 클리어" },
+  { text: "시간을 관리하는 사람이 인생을 관리합니다.", emoji: "⏰", author: "" },
+];
+
+/* ============================================
+   PERSISTENCE & BACKUP SYSTEM
+   ============================================ */
+function saveData() {
+  const data = { events, memos, carDriveDays, customCategories, streak, lastVisit, carNumber: STATE.carNumber };
+  localStorage.setItem(APP_KEY, JSON.stringify(data));
+  
+  localStorage.setItem(CHK_DATA_KEY, JSON.stringify(checklistData));
+  localStorage.setItem(CHK_ORDER_KEY, JSON.stringify(checklistOrder));
+  localStorage.setItem(CHK_TITLES_KEY, JSON.stringify(checklistTitles));
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(APP_KEY);
+    if (raw) {
+      applyAppPayload(JSON.parse(raw));
+    }
+    
+    const savedChkData = localStorage.getItem(CHK_DATA_KEY);
+    const savedChkOrder = localStorage.getItem(CHK_ORDER_KEY);
+    const savedChkTitles = localStorage.getItem(CHK_TITLES_KEY);
+    
+    applyChecklistPayload(
+      savedChkData ? JSON.parse(savedChkData) : null,
+      savedChkOrder ? JSON.parse(savedChkOrder) : null,
+      savedChkTitles ? JSON.parse(savedChkTitles) : null
+    );
+  } catch (e) {
+    console.error('Data load error:', e);
+    customCategories = DEFAULT_CATEGORIES.map(c => ({ ...c }));
+    events = [];
+    memos = [];
+    carDriveDays = [];
+    applyChecklistPayload(null, null, null);
+  }
+}
+
+function exportDataAsJson() {
+  const exportPayload = { events, memos, carDriveDays, customCategories, streak, lastVisit, carNumber: STATE.carNumber, checklistData, checklistOrder, checklistTitles };
+  const dataStr = JSON.stringify(exportPayload, null, 2);
+  const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+  const linkElement = document.createElement('a');
+  linkElement.setAttribute('href', dataUri);
+  linkElement.setAttribute('download', `my-calendar-integrated-backup-${dateKey(new Date())}.json`);
+  linkElement.click();
+  showToast('데이터 통합 백업 파일이 추출되었습니다.', 'success');
+}
+
+function importDataFromJson(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    try {
+      const parsed = JSON.parse(event.target.result);
+      applyAppPayload(parsed);
+      applyChecklistPayload(parsed.checklistData, parsed.checklistOrder, parsed.checklistTitles);
+
+      saveData();
+      renderCategoryStyles();
+      renderCategoryFilters();
+      renderCategorySelector();
+      renderAll();
+      showToast('통합 데이터 패키지 복원이 완수되었습니다! 🎉', 'success');
+    } catch(err) {
+      showToast('파일 분석 중 에러가 검출되었습니다.', 'warning');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function updateStreak() {
+  const today = dateKey(new Date());
+  if (lastVisit === today) return;
+  if (lastVisit) {
+    const last = new Date(lastVisit);
+    const diff = Math.floor((new Date(today) - last) / 86400000);
+    if (diff === 1) streak++;
+    else if (diff > 1) streak = 1;
+  } else {
+    streak = 1;
+  }
+  lastVisit = today;
+  saveData();
+}
+
+function dateKey(d) {
+  const dd = d instanceof Date ? d : new Date(d);
+  return dd.getFullYear() + '-' + String(dd.getMonth() + 1).padStart(2, '0') + '-' + String(dd.getDate()).padStart(2, '0');
+}
+function genId() { return Date.now().toString(36) + Math.random().toString(36).substring(2, 8); }
+function makeId(prefix = 'id') {
+  if (globalThis.crypto?.randomUUID) return crypto.randomUUID();
+  return `${prefix}_${genId()}`;
+}
+function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str || ''; return div.innerHTML; }
+function getDaysInMonth(year, month) { return new Date(year, month + 1, 0).getDate(); }
+function getFirstDayOfMonth(year, month) { return new Date(year, month, 1).getDay(); }
+function parseLocalDate(value) {
+  if (value instanceof Date) return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+  const parts = String(value || '').split('-').map(Number);
+  if (parts.length === 3 && parts.every(Number.isFinite)) return new Date(parts[0], parts[1] - 1, parts[2]);
+  return new Date(value);
+}
+function isDateKey(value) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(value || '')) && dateKey(parseLocalDate(value)) === value;
+}
+function addDays(date, days) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+function eventDateTime(dateStr, time, fallbackTime = '23:59') {
+  const d = parseLocalDate(dateStr);
+  const [h, m] = String(time || fallbackTime).split(':').map(Number);
+  d.setHours(Number.isFinite(h) ? h : 23, Number.isFinite(m) ? m : 59, 0, 0);
+  return d;
+}
+function formatDateKR(d) {
+  let dd = (typeof d === 'string') ? parseLocalDate(d) : d;
+  const days = ['일', '월', '화', '수', '목', '금', '토'];
+  return `${dd.getFullYear()}년 ${dd.getMonth() + 1}월 ${dd.getDate()}일 (${days[dd.getDay()]})`;
+}
+function formatMonthKR(year, month) { return `${year}년 ${month + 1}월`; }
+
+function eventOccursInRange(ev, startKey, endKey) {
+  if (!ev?.startDate || dateKey(parseLocalDate(endKey)) < ev.startDate) return false;
+  if (!ev.repeatType || ev.repeatType === 'none') {
+    return ev.startDate <= endKey && (ev.endDate || ev.startDate) >= startKey;
+  }
+
+  const firstDate = parseLocalDate(ev.startDate);
+  const rangeStart = parseLocalDate(startKey);
+  const repeatStart = firstDate > rangeStart ? firstDate : rangeStart;
+  const repeatEndKey = ev.repeatUntil && ev.repeatUntil < endKey ? ev.repeatUntil : endKey;
+  const repeatEnd = parseLocalDate(repeatEndKey);
+  if (repeatStart > repeatEnd) return false;
+
+  for (let cursor = new Date(repeatStart); cursor <= repeatEnd; cursor = addDays(cursor, 1)) {
+    if (isEventMatchDate(ev, dateKey(cursor))) return true;
+  }
+  return false;
+}
+
+function countEventsInRange(startKey, endKey) {
+  return events.filter(e => {
+    if (STATE.currentFilter !== 'all' && e.category !== STATE.currentFilter) return false;
+    return eventOccursInRange(e, startKey, endKey);
+  }).length;
+}
+
+function getNextEventOccurrence(ev, from = new Date(), horizonDays = 370) {
+  const todayKey = dateKey(from);
+  if (!ev.repeatType || ev.repeatType === 'none') {
+    const endAt = eventDateTime(ev.endDate || ev.startDate, ev.endTime || ev.startTime, '23:59');
+    const todayStart = parseLocalDate(todayKey);
+    if (endAt < todayStart) return null;
+    return {
+      event: ev,
+      dateKey: ev.startDate < todayKey ? todayKey : ev.startDate,
+      sortAt: eventDateTime(ev.startDate < todayKey ? todayKey : ev.startDate, ev.startTime, ev.startTime ? ev.startTime : '23:59')
+    };
+  }
+
+  const firstDate = parseLocalDate(ev.startDate);
+  const fromDate = parseLocalDate(todayKey);
+  const startDate = firstDate > fromDate ? firstDate : fromDate;
+  const endDate = ev.repeatUntil ? parseLocalDate(ev.repeatUntil) : addDays(fromDate, horizonDays);
+  if (startDate > endDate) return null;
+
+  for (let cursor = new Date(startDate); cursor <= endDate; cursor = addDays(cursor, 1)) {
+    const key = dateKey(cursor);
+    if (isEventMatchDate(ev, key)) {
+      return { event: ev, dateKey: key, sortAt: eventDateTime(key, ev.startTime, ev.startTime ? ev.startTime : '23:59') };
+    }
+  }
+  return null;
+}
+
+function safeToken(value, fallback) {
+  const token = String(value || '').trim().replace(/[^\w-]/g, '_').slice(0, 64);
+  return token || fallback;
+}
+
+function safeColor(value, fallback = '#7c5cfc') {
+  return /^#[0-9a-fA-F]{6}$/.test(String(value || '')) ? String(value) : fallback;
+}
+
+function safeText(value, fallback = '', maxLength = 300) {
+  const text = String(value ?? '').trim();
+  return (text || fallback).slice(0, maxLength);
+}
+
+function normalizeCategories(input) {
+  const source = Array.isArray(input) && input.length > 0 ? input : DEFAULT_CATEGORIES;
+  const seen = new Set();
+  const categories = [];
+
+  source.forEach((cat, index) => {
+    const fallback = DEFAULT_CATEGORIES[index % DEFAULT_CATEGORIES.length] || DEFAULT_CATEGORIES[0];
+    let id = safeToken(cat?.id, fallback.id || `cat_${genId()}`);
+    if (seen.has(id)) id = `${id}_${genId()}`;
+    seen.add(id);
+    categories.push({
+      id,
+      name: safeText(cat?.name, fallback.name || '카테고리', 40),
+      color: safeColor(cat?.color, fallback.color)
+    });
+  });
+
+  return categories.length > 0 ? categories : DEFAULT_CATEGORIES.map(c => ({ ...c }));
+}
+
+function normalizeEvents(input, categories) {
+  const categoryIds = new Set(categories.map(c => c.id));
+  const fallbackCategory = categories[0]?.id || DEFAULT_CATEGORIES[0].id;
+  const repeatTypes = new Set(['none', 'daily', 'weekly', 'monthly', 'monthlySpecific']);
+  const priorities = new Set(['low', 'medium', 'high']);
+  const isTime = value => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value || ''));
+
+  return Array.isArray(input) ? input
+    .filter(ev => ev && isDateKey(ev.startDate) && safeText(ev.title))
+    .map(ev => {
+      const startDate = ev.startDate;
+      const endDate = isDateKey(ev.endDate) && ev.endDate >= startDate ? ev.endDate : startDate;
+      const repeatType = repeatTypes.has(ev.repeatType) ? ev.repeatType : 'none';
+      return {
+        id: safeToken(ev.id, `evt_${genId()}`),
+        title: safeText(ev.title, '제목 없음', 120),
+        startDate,
+        startTime: isTime(ev.startTime) ? ev.startTime : '',
+        endDate,
+        endTime: isTime(ev.endTime) ? ev.endTime : '',
+        description: safeText(ev.description, '', 1000),
+        category: categoryIds.has(ev.category) ? ev.category : fallbackCategory,
+        priority: priorities.has(ev.priority) ? ev.priority : 'low',
+        allDay: !!ev.allDay,
+        completed: !!ev.completed,
+        repeatType,
+        repeatUntil: isDateKey(ev.repeatUntil) && ev.repeatUntil >= startDate ? ev.repeatUntil : '',
+        excludeHolidays: !!ev.excludeHolidays
+      };
+    }) : [];
+}
+
+function normalizeMemos(input) {
+  const colors = new Set(['default', 'purple', 'teal', 'pink', 'amber']);
+  const now = new Date().toISOString();
+  return Array.isArray(input) ? input
+    .filter(memo => memo && safeText(memo.title))
+    .map(memo => ({
+      id: safeToken(memo.id, `memo_${genId()}`),
+      title: safeText(memo.title, '메모', 120),
+      content: safeText(memo.content, '', 3000),
+      linkedDate: isDateKey(memo.linkedDate) ? memo.linkedDate : '',
+      color: colors.has(memo.color) ? memo.color : 'default',
+      pinned: !!memo.pinned,
+      createdAt: Number.isNaN(Date.parse(memo.createdAt)) ? now : memo.createdAt,
+      updatedAt: Number.isNaN(Date.parse(memo.updatedAt)) ? now : memo.updatedAt
+    })) : [];
+}
+
+function normalizeChecklistState(data, order, titles) {
+  const sourceData = data && typeof data === 'object' && !Array.isArray(data) ? data : generateDefaultChecklistData();
+  const sourceTitles = titles && typeof titles === 'object' && !Array.isArray(titles) ? titles : CHECKLIST_DEFAULT_TITLES;
+  const keys = [...(Array.isArray(order) ? order : []), ...Object.keys(sourceData)];
+  const normalized = { data: {}, order: [], titles: {} };
+  const seen = new Set();
+
+  keys.forEach(rawKey => {
+    if (!rawKey || seen.has(rawKey)) return;
+    seen.add(rawKey);
+    const key = safeToken(rawKey, `custom_${genId()}`);
+    if (normalized.order.includes(key)) return;
+    const rawItems = Array.isArray(sourceData[rawKey]) ? sourceData[rawKey] : [];
+    normalized.order.push(key);
+    normalized.titles[key] = safeText(sourceTitles[rawKey], CHECKLIST_DEFAULT_TITLES[rawKey] || key, 80);
+    normalized.data[key] = rawItems.map(item => ({
+      id: safeToken(item?.id, `chk_${genId()}`),
+      text: safeText(item?.text, '새 항목', 160),
+      checked: !!item?.checked,
+      pinned: !!item?.pinned
+    }));
+  });
+
+  if (normalized.order.length === 0) {
+    return normalizeChecklistState(generateDefaultChecklistData(), Object.keys(CHECKLIST_DEFAULT_TITLES), CHECKLIST_DEFAULT_TITLES);
+  }
+  return normalized;
+}
+
+function applyAppPayload(payload = {}) {
+  customCategories = normalizeCategories(payload.customCategories);
+  events = normalizeEvents(payload.events, customCategories);
+  memos = normalizeMemos(payload.memos);
+  
+  carDriveDays = Array.isArray(payload.carDriveDays)
+    ? payload.carDriveDays.filter(d => {
+        if (typeof d === 'string') return /^\d{4}-\d{1,2}-\d+$/.test(d);
+        if (typeof d === 'object' && d !== null && d.id) return /^\d{4}-\d{1,2}-\d+$/.test(d.id);
+        return false;
+      })
+    : [];
+    
+  streak = Number.isFinite(Number(payload.streak)) ? Math.max(0, Math.floor(Number(payload.streak))) : 0;
+  lastVisit = isDateKey(payload.lastVisit) ? payload.lastVisit : null;
+  STATE.carNumber = ['none', 'odd', 'even'].includes(payload.carNumber) ? payload.carNumber : 'none';
+}
+
+function applyChecklistPayload(data, order, titles) {
+  const normalized = normalizeChecklistState(data, order, titles);
+  checklistData = normalized.data;
+  checklistOrder = normalized.order;
+  checklistTitles = normalized.titles;
+}
+
+function toggleComplete(eventId, e) {
+  e.stopPropagation();
+  const ev = events.find(x => x.id === eventId);
+  if (!ev) return;
+  ev.completed = !ev.completed;
+  saveData();
+  renderAll();
+  if (ev.completed) showToast('완료! 🎉', 'success');
+}
+
+function getEventsForDate(dateStr) {
+  return events.filter(e => {
+    if (STATE.currentFilter !== 'all' && e.category !== STATE.currentFilter) return false;
+    return isEventMatchDate(e, dateStr);
+  });
+}
+
+function getUrgency(event, occurrenceDate = event.startDate) {
+  const now = new Date();
+  const start = eventDateTime(occurrenceDate, event.startTime, event.startTime ? event.startTime : '23:59');
+  const hours = (start - now) / 3600000;
+  if (hours < 0) return 'past';
+  if (hours <= 3) return 'high';
+  if (hours <= 24) return 'medium';
+  return 'low';
+}
+
+/* ============================================
+   RENDERING PIPELINES (CORE VIEWS)
+   ============================================ */
+function renderHeader() {
+  const now = new Date();
+  const days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+  document.getElementById('headerTodayDate').textContent = formatDateKR(now);
+  document.getElementById('headerTodaySub').textContent = `${days[now.getDay()]} — 좋은 하루 되세요`;
+  document.getElementById('streakCount').textContent = streak;
+}
+
+function renderMiniCalendar() {
+  const { miniViewYear: year, miniViewMonth: month } = STATE;
+  document.getElementById('miniCalTitle').textContent = formatMonthKR(year, month);
+  const grid = document.getElementById('miniCalGrid');
+  grid.innerHTML = '';
+
+  ['일', '월', '화', '수', '목', '금', '토'].forEach(n => {
+    const el = document.createElement('div'); el.className = 'mini-cal-day-name'; el.textContent = n; grid.appendChild(el);
+  });
+
+  const firstDay = getFirstDayOfMonth(year, month);
+  const daysInMonth = getDaysInMonth(year, month);
+  const prevDays = getDaysInMonth(year, month - 1);
+  const todayKey = dateKey(new Date());
+
+  for (let i = 0; i < firstDay; i++) {
+    const el = document.createElement('div'); el.className = 'mini-cal-day other-month'; el.textContent = prevDays - firstDay + 1 + i; grid.appendChild(el);
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const el = document.createElement('div'); el.className = 'mini-cal-day'; el.textContent = d;
+    const key = dateKey(new Date(year, month, d));
+    if (key === todayKey) el.classList.add('today');
+    if (key === STATE.selectedDate) el.classList.add('selected');
+    const dayType = getDayType(key); if (dayType) el.classList.add(dayType);
+    if (getEventsForDate(key).length > 0) el.classList.add('has-event');
+    el.addEventListener('click', () => { STATE.selectedDate = key; STATE.viewYear = year; STATE.viewMonth = month; renderAll(); });
+    grid.appendChild(el);
+  }
+  const remaining = (7 - ((firstDay + daysInMonth) % 7)) % 7;
+  for (let i = 1; i <= remaining; i++) {
+    const el = document.createElement('div'); el.className = 'mini-cal-day other-month'; el.textContent = i; grid.appendChild(el);
+  }
+}
+
+function renderCalendar() {
+  const { viewYear: year, viewMonth: month } = STATE;
+  const grid = document.getElementById('calendarGrid');
+  const chkView = document.getElementById('checklistView');
+  const navActionGrp = document.getElementById('calendarNavActionGroup');
+  
+  if (STATE.viewMode === 'checklist') {
+    grid.style.display = 'none';
+    chkView.style.display = 'flex';
+    navActionGrp.style.visibility = 'hidden';
+    document.getElementById('calendarTitle').textContent = "💼 출장 및 현장조사 체크리스트";
+    document.getElementById('eventCountBadge').textContent = `총 ${checklistOrder.length}개 분야`;
+    renderChecklistView();
+    return;
+  }
+  
+  grid.style.display = 'grid';
+  chkView.style.display = 'none';
+  navActionGrp.style.visibility = 'visible';
+  grid.innerHTML = '';
+  grid.style.gridTemplateRows = (STATE.viewMode === 'week') ? 'auto 1fr' : '';
+
+  ['일', '월', '화', '수', '목', '금', '토'].forEach(h => {
+    const el = document.createElement('div'); el.className = 'calendar-day-header'; el.textContent = h; grid.appendChild(el);
+  });
+
+  const todayKey = dateKey(new Date());
+  const selectedKey = STATE.selectedDate || todayKey;
+
+  if (STATE.viewMode === 'week') {
+    const selDateObj = parseLocalDate(selectedKey);
+    const startDate = new Date(selDateObj);
+    startDate.setDate(selDateObj.getDate() - selDateObj.getDay());
+    const endDate = new Date(startDate); endDate.setDate(startDate.getDate() + 6);
+    const startKey = dateKey(startDate);
+    const endKey = dateKey(endDate);
+    
+    document.getElementById('calendarTitle').textContent = `${startDate.getMonth()+1}월 ${startDate.getDate()}일 - ${endDate.getMonth()+1}월 ${endDate.getDate()}일`;
+    document.getElementById('eventCountBadge').textContent = `${countEventsInRange(startKey, endKey)}개 일정`;
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(startDate); d.setDate(startDate.getDate() + i);
+      const cell = createDayCell(d.getDate(), d.getFullYear(), d.getMonth(), d.getMonth() !== month, todayKey, selectedKey);
+      cell.style.minHeight = '60vh'; grid.appendChild(cell);
+    }
+  } else {
+    document.getElementById('calendarTitle').textContent = formatMonthKR(year, month);
+    const firstOfMonth = dateKey(new Date(year, month, 1));
+    const lastOfMonth = dateKey(new Date(year, month + 1, 0));
+    document.getElementById('eventCountBadge').textContent = `${countEventsInRange(firstOfMonth, lastOfMonth)}개 일정`;
+
+    const firstDay = getFirstDayOfMonth(year, month);
+    const daysInMonth = getDaysInMonth(year, month);
+    const prevDays = getDaysInMonth(year, month - 1);
+
+    for (let i = 0; i < firstDay; i++) grid.appendChild(createDayCell(prevDays - firstDay + 1 + i, year, month - 1, true, todayKey, selectedKey));
+    for (let d = 1; d <= daysInMonth; d++) grid.appendChild(createDayCell(d, year, month, false, todayKey, selectedKey));
+    const remaining = (7 - ((firstDay + daysInMonth) % 7)) % 7;
+    for (let i = 1; i <= remaining; i++) grid.appendChild(createDayCell(i, year, month + 1, true, todayKey, selectedKey));
+  }
+}
+
+function createDayCell(day, year, month, isOtherMonth, todayKey, selectedKey) {
+  const cell = document.createElement('div'); cell.className = 'calendar-day-cell';
+  const realDate = new Date(year, month, day); const key = dateKey(realDate);
+  if (isOtherMonth) cell.classList.add('other-month');
+  if (key === todayKey) cell.classList.add('today');
+  if (key === selectedKey) cell.classList.add('selected');
+
+  const numRow = document.createElement('div'); numRow.className = 'day-number-row';
+  const numEl = document.createElement('div'); numEl.className = 'day-number'; numEl.textContent = day;
+  const dayType = getDayType(key); if (dayType) numEl.classList.add(dayType);
+  numRow.appendChild(numEl);
+
+  const carBadgeHtml = getCarBadgeHtml(key); if (carBadgeHtml) numRow.insertAdjacentHTML('beforeend', carBadgeHtml);
+  cell.appendChild(numRow);
+
+  const holidayName = getHolidayName(key);
+  if (holidayName) {
+    const nameEl = document.createElement('div'); nameEl.className = 'holiday-name'; nameEl.textContent = holidayName; cell.appendChild(nameEl);
+  }
+
+  const dayEvents = getEventsForDate(key);
+  if (dayEvents.length > 0) {
+    const evContainer = document.createElement('div'); evContainer.className = 'day-events';
+    const maxShow = 3;
+    dayEvents.slice(0, maxShow).forEach(ev => {
+      const chip = document.createElement('div'); chip.className = `day-event-chip cat-${ev.category}`;
+      if (ev.completed) chip.classList.add('completed-event');
+      const check = document.createElement('span'); check.className = 'chip-check' + (ev.completed ? ' checked' : '');
+      check.addEventListener('click', (e) => toggleComplete(ev.id, e));
+
+      const label = document.createElement('span'); label.className = 'chip-text';
+      const isRepeating = ev.repeatType && ev.repeatType !== 'none';
+      const repeatIconHtml = isRepeating ? '<span class="chip-repeat-icon">🔁</span>' : '';
+      label.innerHTML = repeatIconHtml + (ev.startTime ? ev.startTime.substring(0, 5) + ' ' : '') + escapeHtml(ev.title);
+
+      chip.appendChild(check); chip.appendChild(label);
+      chip.addEventListener('click', (e) => { e.stopPropagation(); openEditEvent(ev.id); });
+      evContainer.appendChild(chip);
+    });
+    if (dayEvents.length > maxShow) {
+      const more = document.createElement('div'); more.className = 'day-more-events'; more.textContent = `+${dayEvents.length - maxShow}`; evContainer.appendChild(more);
+    }
+    cell.appendChild(evContainer);
+  }
+  cell.addEventListener('click', () => { STATE.selectedDate = key; renderAll(); });
+  cell.addEventListener('dblclick', () => { STATE.selectedDate = key; openAddEvent(key); });
+  return cell;
+}
+
+/* ============================================
+   📋 방식 B: 체크리스트 전용 독자 컴포넌트 렌더러
+   ============================================ */
+function renderChecklistView() {
+  const container = document.getElementById('checklistGridContainer');
+  if (!container) return;
+  container.innerHTML = '';
+
+  checklistOrder.forEach(catKey => {
+    const title = checklistTitles[catKey] || catKey;
+    const catDiv = document.createElement('div');
+    catDiv.className = 'chk-category';
+    catDiv.id = `chkcat-${catKey}`;
+    catDiv.setAttribute('data-chk-category', catKey);
+
+    catDiv.innerHTML = `
+      <div class="chk-category-header">
+        <div class="chk-header-left">
+          <span class="chk-drag-handle">☰</span>
+          <span class="chk-category-title">${escapeHtml(title)}</span>
+        </div>
+        <div class="chk-header-actions">
+          <button class="btn btn-primary btn-add-item" data-cat="${catKey}" style="padding:2px 8px; font-size:0.75rem; height:24px; border-radius:4px;">+ 추가</button>
+          <button class="btn btn-danger btn-delete-cat" data-cat="${catKey}" style="padding:2px 6px; font-size:0.75rem; height:24px; border-radius:4px;">🗑️</button>
+        </div>
+      </div>
+      <div class="chk-items-container"></div>
+    `;
+
+    const itemsContainer = catDiv.querySelector('.chk-items-container');
+    const sortedItems = [...(checklistData[catKey] || [])].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+
+    if (sortedItems.length === 0) {
+      itemsContainer.innerHTML = '<div style="font-size:0.75rem; color:var(--text-muted); text-align:center; padding:10px 0;">물품이 없습니다.</div>';
+    }
+
+    sortedItems.forEach(item => {
+      const itemDiv = document.createElement('div');
+      itemDiv.className = `chk-todo-item ${item.checked ? 'checked' : ''} ${item.pinned ? 'pinned' : ''}`;
+      
+      const domId = `chkitem-${item.id}`;
+      const lockText = item.pinned ? '🔒' : '🔓';
+      
+      let deleteBtnHtml = '';
+      if (!item.pinned) {
+        deleteBtnHtml = `<button class="chk-item-btn btn-delete-item" data-cat="${catKey}" data-id="${item.id}" title="삭제">❌</button>`;
+      } else {
+        deleteBtnHtml = `<button class="chk-item-btn" style="opacity:0; pointer-events:none;">&nbsp;</button>`;
+      }
+
+      itemDiv.innerHTML = `
+        <input type="checkbox" id="${domId}" ${item.checked ? 'checked' : ''}>
+        <label for="${domId}">${escapeHtml(item.text)}</label>
+        <button class="chk-item-btn chk-item-btn-pin btn-pin-item" data-cat="${catKey}" data-id="${item.id}" title="고정">${lockText}</button>
+        <button class="chk-item-btn btn-edit-item" data-cat="${catKey}" data-id="${item.id}" title="수정">✏️</button>
+        ${deleteBtnHtml}
+      `;
+
+      itemDiv.querySelector('input').addEventListener('change', function() {
+        item.checked = this.checked;
+        itemDiv.classList.toggle('checked', this.checked);
+        saveData();
+        renderStats();
+      });
+
+      itemsContainer.appendChild(itemDiv);
+    });
+
+    container.appendChild(catDiv);
+  });
+
+  let totalItems = 0;
+  let checkedItems = 0;
+  checklistOrder.forEach(catKey => {
+    (checklistData[catKey] || []).forEach(item => {
+      totalItems++;
+      if (item.checked) checkedItems++;
+    });
+  });
+  const percent = totalItems > 0 ? Math.round((checkedItems / totalItems) * 100) : 0;
+  const fillEl = document.getElementById('checklistProgressFill');
+  const textEl = document.getElementById('checklistProgressText');
+  if (fillEl && textEl) {
+    fillEl.style.width = `${percent}%`;
+    textEl.textContent = `${checkedItems} / ${totalItems} (${percent}%)`;
+  }
+
+  initChecklistDragAndDrop();
+  bindChecklistEvents(container);
+}
+
+function bindChecklistEvents(container) {
+  container.querySelectorAll('.btn-add-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cat = btn.getAttribute('data-cat');
+      window.addChecklistItem(cat);
+    });
+  });
+  container.querySelectorAll('.btn-delete-cat').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cat = btn.getAttribute('data-cat');
+      window.deleteChecklistCategory(cat);
+    });
+  });
+  container.querySelectorAll('.btn-pin-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cat = btn.getAttribute('data-cat');
+      const id = btn.getAttribute('data-id');
+      window.toggleChecklistPin(cat, id);
+    });
+  });
+  container.querySelectorAll('.btn-edit-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cat = btn.getAttribute('data-cat');
+      const id = btn.getAttribute('data-id');
+      window.editChecklistItem(cat, id);
+    });
+  });
+  container.querySelectorAll('.btn-delete-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cat = btn.getAttribute('data-cat');
+      const id = btn.getAttribute('data-id');
+      window.deleteChecklistItem(cat, id);
+    });
+  });
+}
+
+/* ============================================
+   📋 체크리스트 비즈니스 엔진 함수군
+   ============================================ */
+window.addChecklistItem = function(category) {
+  const text = prompt("새로 추가할 물품 이름을 입력하세요:");
+  if (text && text.trim()) {
+    if (!checklistData[category]) checklistData[category] = [];
+    checklistData[category].push({ id: makeId('chk'), text: text.trim(), checked: false, pinned: false });
+    saveData(); 
+    renderChecklistView();
+  }
+};
+
+window.editChecklistItem = function(category, id) {
+  const item = checklistData[category].find(i => i.id === id);
+  if (!item) return;
+  if (item.pinned) { alert("고정된 항목은 수정할 수 없습니다. 먼저 잠금을 해제하세요."); return; }
+  const newText = prompt("물품 이름을 수정하세요:", item.text);
+  if (newText && newText.trim()) { item.text = newText.trim(); saveData(); renderChecklistView(); }
+};
+
+window.deleteChecklistItem = function(category, id) {
+  const idx = checklistData[category].findIndex(i => i.id === id);
+  if (idx === -1 || checklistData[category][idx].pinned) return;
+  if (confirm(`'${checklistData[category][idx].text}' 항목을 삭제하시겠습니까?`)) {
+    checklistData[category].splice(idx, 1); saveData(); renderChecklistView();
+  }
+};
+
+window.toggleChecklistPin = function(category, id) {
+  const item = checklistData[category].find(i => i.id === id);
+  if (item) { item.pinned = !item.pinned; saveData(); renderChecklistView(); }
+};
+
+window.deleteChecklistCategory = function(catKey) {
+  const title = checklistTitles[catKey] || catKey;
+  if (confirm(`'${title}' 카테고리와 내부 모든 물품 목록을 영구 삭제할까요?`)) {
+    checklistOrder = checklistOrder.filter(k => k !== catKey);
+    delete checklistTitles[catKey]; delete checklistData[catKey];
+    saveData(); renderChecklistView();
+  }
+};
+
+function initChecklistDragAndDrop() {
+  const container = document.getElementById('checklistGridContainer');
+  const cards = document.querySelectorAll('.chk-category');
+
+  cards.forEach(card => {
+    const handle = card.querySelector('.chk-drag-handle');
+    handle.setAttribute('draggable', 'true');
+
+    handle.addEventListener('dragstart', (e) => { card.classList.add('dragging'); e.dataTransfer.setData('text/plain', card.id); });
+    handle.addEventListener('dragend', () => {
+      card.classList.remove('dragging');
+      cards.forEach(c => c.classList.remove('drag-over'));
+      checklistOrder = Array.from(container.children).map(el => el.getAttribute('data-chk-category'));
+      saveData();
+    });
+    card.addEventListener('dragover', (e) => {
+      e.preventDefault(); const dragging = document.querySelector('.chk-category.dragging');
+      if (!dragging || dragging === card) return;
+      card.classList.add('drag-over');
+      const box = card.getBoundingClientRect(); const offset = e.clientX - box.left - (box.width / 2);
+      if (offset < 0) container.insertBefore(dragging, card); else container.insertBefore(dragging, card.nextSibling);
+    });
+    card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+  });
+}
+
+/* ============================================
+   SIDEBAR COMPONENTS & WIDGETS RENDERING
+   ============================================ */
+function renderUpcoming() {
+  const list = document.getElementById('upcomingList'); list.innerHTML = ''; const now = new Date();
+  const upcoming = events
+    .filter(e => {
+      if (e.completed || (STATE.currentFilter !== 'all' && e.category !== STATE.currentFilter)) return false;
+      return !!getNextEventOccurrence(e, now);
+    })
+    .map(e => getNextEventOccurrence(e, now))
+    .filter(Boolean)
+    .sort((a, b) => a.sortAt - b.sortAt)
+    .slice(0, 6);
+
+  if (upcoming.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">🎉</div><p>예정된 일정이 없습니다.<br>새 일정을 추가해보세요!</p></div>'; return;
+  }
+  upcoming.forEach(({ event: ev, dateKey: occurrenceDate }) => {
+    const item = document.createElement('div'); item.className = 'upcoming-item';
+    const urgency = getUrgency(ev, occurrenceDate); item.setAttribute('data-urgency', urgency === 'past' ? 'low' : urgency);
+    const d = parseLocalDate(occurrenceDate);
+    item.innerHTML = `
+      <span class="event-time">${d.getMonth() + 1}/${d.getDate()}<br>${ev.startTime ? ev.startTime.substring(0, 5) : '종일'}</span>
+      <div class="event-info"><h4>${escapeHtml(ev.title)}</h4><p>${escapeHtml(ev.description || getCategoryLabel(ev.category))}</p></div>
+    `;
+    item.addEventListener('click', () => openEditEvent(ev.id)); list.appendChild(item);
+  });
+}
+
+function getCategoryLabel(cat) { const found = customCategories.find(c => c.id === cat); return found ? found.name : ''; }
+
+/* 📝 파워풀 업그레이드형 메모 렌더링 엔진 */
+function renderMemos() {
+  const list = document.getElementById('memoList'); 
+  if (!list) return;
+  list.innerHTML = '';
+  
+  // 검색어 필터링 처리
+  let filteredMemos = [...memos];
+  if (STATE.memoSearchQuery.trim()) {
+    const q = STATE.memoSearchQuery.toLowerCase().trim();
+    filteredMemos = filteredMemos.filter(m => 
+      m.title.toLowerCase().includes(q) || 
+      m.content.toLowerCase().includes(q)
+    );
+  }
+
+  // 고정 상태 우선 정렬 후 수정시간 내림차순 정렬
+  const sorted = filteredMemos.sort((a, b) => (b.pinned - a.pinned) || new Date(b.updatedAt) - new Date(a.updatedAt));
+  
+  if (sorted.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📝</div>
+        <p>${STATE.memoSearchQuery ? '검색 결과와 일치하는<br>메모가 없습니다.' : '기록된 메모가 없습니다.<br>아이디어를 채워보세요!'}</p>
+      </div>`; 
+    return;
+  }
+  
+  sorted.forEach(m => {
+    const card = document.createElement('div'); 
+    card.className = 'memo-card' + (m.pinned ? ' pinned' : '');
+    
+    // 테마 색상 맵에 따른 매끄러운 좌측 광채 테두리 스타일 매핑
+    const colorMap = { 
+      purple: '#7c5cfc', 
+      teal: '#5ce1e6', 
+      pink: '#f06292', 
+      amber: '#ffa726',
+      default: 'rgba(240, 240, 245, 0.2)'
+    };
+    const activeColor = colorMap[m.color] || colorMap.default;
+    card.style.borderLeft = `4px solid ${activeColor}`;
+    
+    // 개별 메모 내부의 미묘한 배경 반투명 색상 지원
+    if (m.color !== 'default') {
+      card.style.background = `linear-gradient(135deg, ${activeColor}12 0%, rgba(255,255,255,0.02) 100%)`;
+    }
+
+    const date = new Date(m.updatedAt);
+    const timeStr = `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    
+    card.innerHTML = `
+      ${m.pinned ? '<span class="memo-pin">📌</span>' : ''}
+      <div class="memo-title" style="${m.pinned ? 'padding-right: 20px;' : ''}">${escapeHtml(m.title)}</div>
+      <div class="memo-preview">${escapeHtml(m.content || '내용 없음').replace(/\n/g, '<br>')}</div>
+      <div class="memo-meta">
+        <span>🕒 ${timeStr}</span>
+        ${m.linkedDate ? `<span style="color:var(--accent-secondary); font-weight:600;">📅 ${escapeHtml(m.linkedDate)}</span>` : ''}
+      </div>
+    `;
+    card.addEventListener('click', () => openEditMemo(m.id)); 
+    list.appendChild(card);
+  });
+}
+
+function renderStats() {
+  const todayEvents = getEventsForDate(dateKey(new Date()));
+  document.getElementById('statEvents').textContent = todayEvents.length;
+  document.getElementById('statMemos').textContent = memos.length;
+  document.getElementById('statDone').textContent = todayEvents.filter(e => e.completed).length;
+  document.getElementById('statPending').textContent = todayEvents.filter(e => !e.completed).length;
+}
+function renderMotivation() {
+  const q = QUOTES[new Date().getDate() % QUOTES.length];
+  document.getElementById('motivationEmoji').textContent = q.emoji;
+  document.getElementById('motivationText').textContent = q.text;
+  document.getElementById('motivationAuthor').textContent = q.author;
+}
+
+/* ============================================
+   ⏱️ TIMER ENGINE
+   ============================================ */
+function updateTimerDisplay() {
+  const display = document.getElementById('time-display'); const ring = document.getElementById('progress-ring'); if (!display || !ring) return;
+  const m = Math.floor(timerLeft / 60); const s = timerLeft % 60; display.textContent = m + ':' + (s < 10 ? '0' + s : s);
+  const ratio = timerTotal > 0 ? timerLeft / timerTotal : 0; ring.style.strokeDashoffset = (TIMER_CIRC * (1 - ratio)).toFixed(2);
+  if (timerLeft <= 0) { ring.style.stroke = 'var(--accent-warm)'; display.style.color = 'var(--accent-warm)'; }
+  else if (timerLeft <= 60) { ring.style.stroke = 'var(--accent-amber)'; display.style.color = 'var(--accent-amber)'; }
+  else { ring.style.stroke = 'var(--accent-primary)'; display.style.color = 'var(--text-primary)'; }
+}
+function toggleTimerEngine() {
+  const playBtn = document.getElementById('btn-play-timer'); const statusLbl = document.getElementById('status-label'); const banner = document.getElementById('done-banner');
+  if (!playBtn || !statusLbl || !banner) return;
+  if (STATE.timerRunning) {
+    clearInterval(timerIntervalId); timerIntervalId = null; STATE.timerRunning = false; playBtn.textContent = '▶'; statusLbl.textContent = '일시중지';
+  } else {
+    if (timerLeft <= 0) return; banner.style.display = 'none'; STATE.timerRunning = true; playBtn.textContent = '❚❚'; statusLbl.textContent = '진행중';
+    timerTargetTime = Date.now() + (timerLeft * 1000);
+    timerIntervalId = setInterval(() => {
+      timerLeft = Math.round((timerTargetTime - Date.now()) / 1000);
+      if (timerLeft <= 0) {
+        timerLeft = 0; clearInterval(timerIntervalId); timerIntervalId = null; STATE.timerRunning = false; playBtn.textContent = '▶'; statusLbl.textContent = '종료'; banner.style.display = 'block'; showToast('⏱️ 타이머 완료!', 'success');
+      }
+      updateTimerDisplay();
+    }, 200);
+  }
+}
+function cancelTimerEngine() {
+  clearInterval(timerIntervalId); timerIntervalId = null; STATE.timerRunning = false;
+  document.getElementById('btn-play-timer').textContent = '▶'; document.getElementById('status-label').textContent = '취소됨'; document.getElementById('done-banner').style.display = 'none';
+}
+function resetTimerEngine() {
+  clearInterval(timerIntervalId); timerIntervalId = null; STATE.timerRunning = false; timerLeft = 0; timerTotal = 0;
+  document.getElementById('btn-play-timer').textContent = '▶'; document.getElementById('status-label').textContent = '초기화'; document.getElementById('done-banner').style.display = 'none';
+  const ring = document.getElementById('progress-ring'); if (ring) { ring.style.stroke = 'var(--accent-primary)'; ring.style.strokeDashoffset = TIMER_CIRC.toFixed(2); }
+  const display = document.getElementById('time-display'); if (display) { display.style.color = 'var(--text-primary)'; display.textContent = '0:00'; }
+}
+function addTimerTime(seconds) {
+  timerLeft += seconds; if (timerLeft > timerTotal) timerTotal = timerLeft;
+  document.getElementById('done-banner').style.display = 'none'; if (!STATE.timerRunning) document.getElementById('status-label').textContent = '대기중';
+  updateTimerDisplay();
+}
+
+/* ============================================
+   🚗 차량 2부제 위젯
+   ============================================ */
+function getActualWorkdays(year, month) {
+  const daysInMonth = new Date(year, month + 1, 0).getDate(); let actualWorkdays = 0;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateObj = new Date(year, month, d); const dayOfWeek = dateObj.getDay();
+    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    if (dayOfWeek !== 0 && dayOfWeek !== 6 && !isHoliday(dateString)) actualWorkdays++;
+  }
+  return actualWorkdays;
+}
+function renderCarTracker() {
+  const container = document.getElementById('carTrackerWidget'); if (!container) return;
+  const totalWorkdays = getActualWorkdays(STATE.viewYear, STATE.viewMonth); 
+  const limitDays = Math.ceil(totalWorkdays / 2);
+  const prefix = `${STATE.viewYear}-${STATE.viewMonth + 1}-`; 
+  
+  const monthDrives = carDriveDays.filter(d => {
+    const idStr = typeof d === 'string' ? d : d.id;
+    return idStr.startsWith(prefix);
+  }); 
+  const currentCount = monthDrives.length;
+  
+  const targetDate = STATE.selectedDate || dateKey(new Date());
+
+  let html = `
+    <div class="car-status-box">
+      <div class="car-subtitle">${STATE.viewYear}년 ${STATE.viewMonth + 1}월 평일 기준 (${totalWorkdays}일)</div>
+      <div class="car-counter ${currentCount > limitDays ? 'warning' : ''}">${currentCount} / ${totalWorkdays}</div>
+      <div class="car-msg ${currentCount > limitDays ? 'warning' : ''}">
+        ${currentCount > limitDays ? `⚠️ 위반 (위반 ${currentCount - limitDays}회째)` : `✅ 안전 (앞으로 ${limitDays - currentCount}일 가능)`}
+      </div>
+      <div class="car-subtitle" style="color:var(--accent-primary); margin-top:8px; font-weight:600; padding:4px; background:var(--bg-glass); border-radius:4px;">
+        📌 기록 지정일: ${targetDate}
+      </div>
+    </div><div class="car-grid">
+  `;
+
+  for (let i = 1; i <= totalWorkdays; i++) {
+    const id = `${prefix}${i}`; 
+    const record = monthDrives.find(d => (typeof d === 'string' ? d : d.id) === id);
+    const isActive = !!record;
+    
+    const isClickable = (isActive && i === currentCount) || (!isActive && i === currentCount + 1);
+    
+    let isViolation = false; 
+    if (isActive) { 
+      const activeIndex = monthDrives.findIndex(d => (typeof d === 'string' ? d : d.id) === id); 
+      if (activeIndex >= limitDays) isViolation = true; 
+    }
+    
+    html += `<button class="day-btn ${isActive ? 'active' : ''} ${isViolation ? 'violation' : ''}" data-drive-id="${id}" style="${!isClickable ? 'opacity: 0.3; cursor: not-allowed;' : ''}">${i}일차</button>`;
+  }
+  html += `</div><button class="reset-btn" id="btnResetCarTracker">기록 및 캘린더 초기화</button>`; 
+  container.innerHTML = html;
+
+  container.querySelectorAll('.day-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const driveId = btn.getAttribute('data-drive-id');
+      const i = parseInt(driveId.split('-')[2]);
+      const record = monthDrives.find(d => (typeof d === 'string' ? d : d.id) === driveId);
+      const isActive = !!record;
+      const isClickable = (isActive && i === currentCount) || (!isActive && i === currentCount + 1);
+
+      if (!isClickable) {
+        if (isActive) showToast('가장 최근 기록부터 순서대로 취소해야 합니다.', 'warning');
+        else showToast(`${currentCount + 1}일차부터 순서대로 기록해야 합니다.`, 'warning');
+        return;
+      }
+
+      if (isActive) {
+         if (typeof record === 'object' && record.eventId) {
+             events = events.filter(e => e.id !== record.eventId);
+         }
+         carDriveDays = carDriveDays.filter(d => (typeof d === 'string' ? d !== driveId : d.id !== driveId));
+         saveData(); renderAll();
+         showToast(`${i}일차 운행 기록이 취소되었습니다.`, 'info');
+      } else {
+         const dayType = getDayType(targetDate);
+         const isHoli = isHoliday(targetDate);
+         
+         if (dayType === 'sunday' || dayType === 'saturday' || isHoli) {
+             showToast('주말 및 공휴일은 2부제 기록을 할 수 없습니다.', 'warning');
+             return;
+         }
+         
+         const alreadyRecorded = carDriveDays.some(d => typeof d === 'object' && d.date === targetDate);
+         if (alreadyRecorded) {
+             showToast('해당 날짜에 이미 운행 기록이 존재합니다.', 'warning');
+             return;
+         }
+
+         const newEventId = `evt_car_${genId()}`;
+         events.push({
+             id: newEventId,
+             title: `🚗 2부제 운행 (${i}일차)`,
+             startDate: targetDate,
+             startTime: '',
+             endDate: targetDate,
+             endTime: '',
+             description: `2부제 운행기록 자동 생성 (${i}일차)`,
+             category: customCategories[0]?.id || 'work', 
+             priority: 'low',
+             allDay: true,
+             completed: true,
+             repeatType: 'none',
+             repeatUntil: '',
+             excludeHolidays: false
+         });
+
+         carDriveDays.push({
+             id: driveId,
+             date: targetDate,
+             eventId: newEventId
+         });
+
+         saveData(); renderAll();
+         showToast(`${i}일차 운행 기록이 캘린더에 추가되었습니다.`, 'success');
+      }
+    });
+  });
+  
+  document.getElementById('btnResetCarTracker')?.addEventListener('click', () => {
+    if (confirm('이번 달 운행 기록을 초기화하시겠습니까? 연동된 캘린더 일정도 모두 삭제됩니다.')) { 
+      monthDrives.forEach(d => {
+        if (typeof d === 'object' && d.eventId) events = events.filter(e => e.id !== d.eventId);
+      });
+      carDriveDays = carDriveDays.filter(d => {
+        const idStr = typeof d === 'string' ? d : d.id;
+        return !idStr.startsWith(prefix);
+      }); 
+      saveData(); renderAll(); 
+      showToast('초기화가 완료되었습니다.', 'info');
+    }
+  });
+}
+
+/* ============================================
+   CATEGORY MANAGEMENT
+   ============================================ */
+function renderCategoryStyles() {
+  let styleEl = document.getElementById('dynamic-category-styles') || document.createElement('style');
+  styleEl.id = 'dynamic-category-styles'; document.head.appendChild(styleEl); let css = '';
+  customCategories.forEach(c => {
+    css += `.cat-${c.id} { background: ${c.color}26; color: ${c.color}; }\n`;
+    css += `.day-event-chip.cat-${c.id} { background: ${c.color}40; color: ${c.color}; border: 1px solid ${c.color}20; }\n`;
+  });
+  styleEl.textContent = css;
+}
+function renderCategoryFilters() {
+  const container = document.getElementById('categoryFilters'); if (!container) return;
+  let html = `<span class="category-tag cat-all ${STATE.currentFilter === 'all' ? 'active' : ''}" data-cat="all">전체</span>`;
+  customCategories.forEach(c => { html += `<span class="category-tag cat-${c.id} ${STATE.currentFilter === c.id ? 'active' : ''}" data-cat="${c.id}">${escapeHtml(c.name)}</span>`; });
+  container.innerHTML = html;
+  container.querySelectorAll('.category-tag').forEach(tag => { tag.addEventListener('click', () => { STATE.currentFilter = tag.getAttribute('data-cat'); renderAll(); }); });
+}
+function renderCategorySelector() {
+  const container = document.getElementById('eventCategorySelector'); if (!container) return; container.innerHTML = '';
+  customCategories.forEach(c => {
+    const span = document.createElement('span'); span.className = `category-option cat-${c.id}`; span.setAttribute('data-cat', c.id); span.textContent = c.name;
+    span.addEventListener('click', () => { container.querySelectorAll('.category-option').forEach(o => o.classList.remove('selected')); span.classList.add('selected'); });
+    container.appendChild(span);
+  });
+}
+function renderCategoryManagerList() {
+  const list = document.getElementById('categoryManagerList'); if (!list) return; list.innerHTML = '';
+  customCategories.forEach((c, index) => {
+    const item = document.createElement('div'); item.style.cssText = 'display:flex; flex-direction:column; gap:8px; padding:12px; background:var(--bg-glass); border-radius:var(--radius-md); margin-bottom:8px; border:1px solid var(--border-glass);';
+    const isFirst = index === 0; const isLast = index === customCategories.length - 1;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; align-items:center; justify-content:space-between;';
+
+    const inputGroup = document.createElement('div');
+    inputGroup.style.cssText = 'display:flex; align-items:center; gap:10px; flex:1;';
+
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    colorInput.className = 'edit-cat-color';
+    colorInput.dataset.id = c.id;
+    colorInput.value = safeColor(c.color);
+    colorInput.style.cssText = 'width:24px; height:24px; border:none; border-radius:4px; background:none; cursor:pointer;';
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.className = 'edit-cat-name';
+    nameInput.dataset.id = c.id;
+    nameInput.value = c.name;
+    nameInput.style.cssText = 'background:transparent; border:none; color:var(--text-primary); font-size:0.85rem; font-weight:600; width:100%;';
+
+    inputGroup.append(colorInput, nameInput);
+
+    const actions = document.createElement('div');
+    actions.style.cssText = 'display:flex; align-items:center; gap:4px;';
+
+    const makeActionButton = (className, text, extraStyle = '') => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `btn-icon ${className}`;
+      button.dataset.id = c.id;
+      button.textContent = text;
+      button.style.cssText = `width:24px;height:24px;font-size:0.7rem;${extraStyle}`;
+      return button;
+    };
+
+    const upBtn = makeActionButton('move-cat-btn', '▲', 'font-size:0.6rem;');
+    upBtn.dataset.dir = 'up';
+    upBtn.disabled = isFirst;
+    if (isFirst) upBtn.style.opacity = '0.3';
+
+    const downBtn = makeActionButton('move-cat-btn', '▼', 'font-size:0.6rem;');
+    downBtn.dataset.dir = 'down';
+    downBtn.disabled = isLast;
+    if (isLast) downBtn.style.opacity = '0.3';
+
+    const saveBtn = makeActionButton('save-cat-btn', '💾', 'color:var(--accent-success);');
+    const deleteBtn = makeActionButton('delete-cat-btn', '🗑', 'color:var(--accent-warm);');
+
+    actions.append(upBtn, downBtn, saveBtn, deleteBtn);
+    row.append(inputGroup, actions);
+    item.appendChild(row);
+    list.appendChild(item);
+  });
+}
+function updateCategory(id, newName, newColor) {
+  const cat = customCategories.find(c => c.id === id); if (!cat || !newName.trim()) return; cat.name = safeText(newName, cat.name, 40); cat.color = safeColor(newColor, cat.color); saveData(); renderCategoryStyles(); renderCategoryFilters(); renderCategorySelector(); renderAll(); showToast('카테고리가 수정되었습니다.', 'success');
+}
+function moveCategoryOrder(id, direction) {
+  const index = customCategories.findIndex(c => c.id === id); if (index === -1) return; const targetIndex = direction === 'up' ? index - 1 : index + 1; if (targetIndex < 0 || targetIndex >= customCategories.length) return;
+  const temp = customCategories[index]; customCategories[index] = customCategories[targetIndex]; customCategories[targetIndex] = temp; saveData(); renderCategoryStyles(); renderCategoryFilters(); renderCategorySelector(); renderCategoryManagerList(); renderAll();
+}
+function addCustomCategory() {
+  const name = safeText(document.getElementById('newCategoryName').value, '', 40); if (!name) return; customCategories.push({ id: 'cat_' + genId(), name, color: safeColor(document.getElementById('newCategoryColor').value) }); document.getElementById('newCategoryName').value = ''; saveData(); renderCategoryStyles(); renderCategoryFilters(); renderCategorySelector(); renderCategoryManagerList(); renderAll();
+}
+function deleteCustomCategory(id) {
+  if (customCategories.length <= 1) { showToast('최소 1개의 카테고리는 필요합니다.', 'warning'); return; } customCategories = customCategories.filter(c => c.id !== id); events.forEach(e => { if (e.category === id) e.category = customCategories[0].id; }); if (STATE.currentFilter === id) STATE.currentFilter = 'all'; saveData(); renderCategoryStyles(); renderCategoryFilters(); renderCategorySelector(); renderCategoryManagerList(); renderAll();
+}
+
+/* ============================================
+   MODALS FORM HANDLERS
+   ============================================ */
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); if (id === 'eventModal') STATE.editingEventId = null; if (id === 'memoModal') STATE.editingMemoId = null; }
+function openSettingsManager() { renderCategoryManagerList(); openModal('settingsModal'); }
+
+function openAddEvent(dateStr) {
+  STATE.editingEventId = null; document.getElementById('eventModalTitle').textContent = '새 일정'; document.getElementById('deleteEventBtn').style.display = 'none'; document.getElementById('eventForm').reset(); document.getElementById('eventStartDate').value = dateStr || dateKey(new Date()); document.getElementById('eventEndDate').value = dateStr || dateKey(new Date());
+  document.getElementById('eventCategorySelector').querySelectorAll('.category-option').forEach((el, idx) => el.classList.toggle('selected', idx === 0));
+  document.querySelectorAll('#eventPrioritySelector .priority-option').forEach(el => el.classList.toggle('selected', el.getAttribute('data-priority') === 'low'));
+  const allDayToggle = document.getElementById('eventAllDayToggle'); allDayToggle.classList.remove('checked'); allDayToggle.textContent = '';
+  const excludeToggle = document.getElementById('eventExcludeHolidaysToggle'); excludeToggle.classList.remove('checked'); excludeToggle.textContent = '';
+  document.getElementById('eventStartTimeGroup').style.display = 'block'; document.getElementById('eventEndTimeGroup').style.display = 'block'; document.getElementById('eventRepeatType').value = 'none'; document.getElementById('eventRepeatUntilGroup').style.display = 'none'; document.getElementById('eventExcludeHolidaysGroup').style.display = 'none'; openModal('eventModal');
+}
+function openEditEvent(id) {
+  const ev = events.find(e => e.id === id); if (!ev) return; STATE.editingEventId = id; document.getElementById('eventModalTitle').textContent = '일정 수정'; document.getElementById('deleteEventBtn').style.display = 'block'; document.getElementById('eventTitle').value = ev.title; document.getElementById('eventStartDate').value = ev.startDate; document.getElementById('eventStartTime').value = ev.startTime || ''; document.getElementById('eventEndDate').value = ev.endDate || ev.startDate; document.getElementById('eventEndTime').value = ev.endTime || ''; document.getElementById('eventDescription').value = ev.description || '';
+  document.getElementById('eventCategorySelector').querySelectorAll('.category-option').forEach(el => el.classList.toggle('selected', el.getAttribute('data-cat') === ev.category));
+  document.querySelectorAll('#eventPrioritySelector .priority-option').forEach(el => el.classList.toggle('selected', el.getAttribute('data-priority') === ev.priority));
+  const isAllDay = ev.allDay || (!ev.startTime && !ev.endTime); const allDayToggle = document.getElementById('eventAllDayToggle'); allDayToggle.classList.toggle('checked', isAllDay); allDayToggle.textContent = isAllDay ? '✓' : ''; document.getElementById('eventStartTimeGroup').style.display = isAllDay ? 'none' : 'block'; document.getElementById('eventEndTimeGroup').style.display = isAllDay ? 'none' : 'block';
+  const repeatType = ev.repeatType || 'none'; document.getElementById('eventRepeatType').value = repeatType; document.getElementById('eventRepeatUntil').value = ev.repeatUntil || ''; document.getElementById('eventRepeatUntilGroup').style.display = repeatType === 'none' ? 'none' : 'block';
+  const excludeToggle = document.getElementById('eventExcludeHolidaysToggle'); excludeToggle.classList.toggle('checked', !!ev.excludeHolidays); excludeToggle.textContent = ev.excludeHolidays ? '✓' : ''; document.getElementById('eventExcludeHolidaysGroup').style.display = repeatType === 'none' ? 'none' : 'block'; openModal('eventModal');
+}
+
+/* 📝 메모 전용 컬러 칩 컴포넌트 갱신 액추에이터 */
+function selectMemoColorChip(colorValue) {
+  document.getElementById('memoColor').value = colorValue;
+  document.querySelectorAll('#memoColorChips .color-chip').forEach(chip => {
+    chip.classList.toggle('selected', chip.getAttribute('data-color') === colorValue);
+  });
+}
+
+function openAddMemo() { 
+  STATE.editingMemoId = null; 
+  document.getElementById('memoModalTitle').textContent = '새 메모'; 
+  document.getElementById('deleteMemoBtn').style.display = 'none'; 
+  document.getElementById('memoForm').reset(); 
+  
+  selectMemoColorChip('default');
+  const pinToggle = document.getElementById('memoPinToggle'); 
+  pinToggle.classList.remove('checked'); 
+  pinToggle.textContent = ''; 
+  openModal('memoModal'); 
+}
+
+function openEditMemo(id) {
+  const m = memos.find(x => x.id === id); 
+  if (!m) return; 
+  STATE.editingMemoId = id; 
+  document.getElementById('memoModalTitle').textContent = '메모 수정'; 
+  document.getElementById('deleteMemoBtn').style.display = 'block'; 
+  document.getElementById('memoTitle').value = m.title; 
+  document.getElementById('memoContent').value = m.content; 
+  document.getElementById('memoDate').value = m.linkedDate || ''; 
+  
+  selectMemoColorChip(m.color || 'default');
+  const pinToggle = document.getElementById('memoPinToggle'); 
+  pinToggle.classList.toggle('checked', m.pinned); 
+  pinToggle.textContent = m.pinned ? '✓' : ''; 
+  openModal('memoModal');
+}
+
+/* ============================================
+   FORMS SUBMIT PIPELINE
+   ============================================ */
+document.getElementById('eventForm').addEventListener('submit', (e) => {
+  e.preventDefault(); const title = document.getElementById('eventTitle').value.trim(); if (!title) return;
+  const category = document.querySelector('#eventCategorySelector .category-option.selected')?.getAttribute('data-cat') || customCategories[0].id;
+  const priority = document.querySelector('#eventPrioritySelector .priority-option.selected')?.getAttribute('data-priority') || 'low';
+  const isAllDay = document.getElementById('eventAllDayToggle').classList.contains('checked');
+  const repeatType = document.getElementById('eventRepeatType').value; const repeatUntil = document.getElementById('eventRepeatUntil').value;
+  const excludeHolidays = document.getElementById('eventExcludeHolidaysToggle').classList.contains('checked');
+  const eventData = { title, startDate: document.getElementById('eventStartDate').value, startTime: isAllDay ? '' : document.getElementById('eventStartTime').value || '', endDate: document.getElementById('eventEndDate').value || document.getElementById('eventStartDate').value, endTime: isAllDay ? '' : document.getElementById('eventEndTime').value || '', description: document.getElementById('eventDescription').value.trim(), category, priority, allDay: isAllDay, completed: false, repeatType, repeatUntil, excludeHolidays };
+
+  if (eventData.endDate && eventData.endDate < eventData.startDate) { showToast('종료 날짜 오류: 종료일은 시작일보다 이전일 수 없습니다.', 'warning'); return; }
+  if (repeatType !== 'none' && repeatUntil && repeatUntil < eventData.startDate) { showToast('반복 종료일 오류: 시작일 이후여야 합니다.', 'warning'); return; }
+  if (STATE.editingEventId) { const idx = events.findIndex(e => e.id === STATE.editingEventId); if (idx !== -1) { eventData.id = STATE.editingEventId; eventData.completed = events[idx].completed; events[idx] = eventData; } }
+  else { eventData.id = genId(); events.push(eventData); }
+  saveData(); closeModal('eventModal'); renderAll();
+});
+
+document.getElementById('memoForm').addEventListener('submit', (e) => {
+  e.preventDefault(); const title = document.getElementById('memoTitle').value.trim(); if (!title) return;
+  const pinned = document.getElementById('memoPinToggle').classList.contains('checked');
+  const memoData = { title, content: document.getElementById('memoContent').value.trim(), linkedDate: document.getElementById('memoDate').value || '', color: document.getElementById('memoColor').value || 'default', pinned, updatedAt: new Date().toISOString() };
+  if (STATE.editingMemoId) { const idx = memos.findIndex(m => m.id === STATE.editingMemoId); if (idx !== -1) { memoData.id = STATE.editingMemoId; memoData.createdAt = memos[idx].createdAt; memos[idx] = memoData; } }
+  else { memoData.id = genId(); memoData.createdAt = new Date().toISOString(); memos.push(memoData); }
+  saveData(); closeModal('memoModal'); renderAll();
+});
+
+/* ============================================
+   GLOBAL INITIALIZERS & BINDINGS
+   ============================================ */
+function checkForgetMeNot() {
+  const now = new Date(); const urgent = events.filter(e => !e.completed && e.startTime && (e.startDate === dateKey(now))).filter(e => { const diff = new Date(e.startDate + 'T' + e.startTime) - now; return diff > 0 && diff <= 3 * 3600000; });
+  if (urgent.length > 0) {
+    const mins = Math.round((new Date(urgent[0].startDate + 'T' + urgent[0].startTime) - now) / 60000);
+    document.getElementById('fmnText').innerHTML = `잊지 마세요! <strong>${escapeHtml(urgent[0].title)}</strong>이(가) ${mins < 60 ? mins+'분 후' : Math.floor(mins/60)+'시간 후'}에 시작됩니다.`;
+    document.getElementById('forgetMeNot').classList.add('visible');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.body.addEventListener('click', (e) => {
+    if (e.target.id === 'settingsMgrBtn' || e.target.closest('#settingsMgrBtn')) openSettingsManager();
+    const closeTarget = e.target.closest('[data-close]'); if (closeTarget) closeModal(closeTarget.getAttribute('data-close'));
+    if (e.target.classList.contains('modal-overlay')) closeModal(e.target.id);
+    const deleteBtn = e.target.closest('.delete-cat-btn'); if (deleteBtn) deleteCustomCategory(deleteBtn.getAttribute('data-id'));
+    const saveBtn = e.target.closest('.save-cat-btn'); if (saveBtn) { const id = saveBtn.getAttribute('data-id'); const parent = saveBtn.closest('div').parentElement.parentElement; updateCategory(id, parent.querySelector('.edit-cat-name').value, parent.querySelector('.edit-cat-color').value); }
+    const moveBtn = e.target.closest('.move-cat-btn'); if (moveBtn) moveCategoryOrder(moveBtn.getAttribute('data-id'), moveBtn.getAttribute('data-dir'));
+  });
+
+  document.getElementById('addCategorySubmitBtn').addEventListener('click', addCustomCategory);
+  document.getElementById('btnExportData').addEventListener('click', exportDataAsJson);
+  document.getElementById('btnImportTrigger').addEventListener('click', () => document.getElementById('fileImportInput').click());
+  document.getElementById('fileImportInput').addEventListener('change', importDataFromJson);
+  document.getElementById('deleteEventBtn').addEventListener('click', () => { events = events.filter(e => e.id !== STATE.editingEventId); saveData(); closeModal('eventModal'); renderAll(); });
+  
+  /* ⚠️ 메모 삭제버튼 클릭 시 상단 고정(잠금) 상태 체크 리스너 */
+  document.getElementById('deleteMemoBtn').addEventListener('click', () => { 
+    // 1. 현재 편집 중인 메모 데이터를 찾습니다.
+    const currentMemo = memos.find(m => m.id === STATE.editingMemoId);
+    
+    // 2. 메모가 존재하고, 상단 고정(pinned) 상태라면 삭제를 강력히 차단합니다.
+    if (currentMemo && currentMemo.pinned) {
+      alert('🔒 이 메모는 상단 고정(잠금) 상태이므로 삭제할 수 없습니다.\n삭제하려면 먼저 [📌 중요 메모로 고정]을 해제해 주세요.');
+      return; // 삭제 로직을 실행하지 않고 여기서 종료합니다.
+    }
+
+    // 3. 고정되지 않은 일반 메모일 때만 기존처럼 삭제 확인창을 띄웁니다.
+    if (confirm('정말 이 메모를 삭제하시겠습니까? 한 번 삭제된 메모는 복구할 수 없습니다.')) {
+      memos = memos.filter(m => m.id !== STATE.editingMemoId); 
+      saveData(); 
+      closeModal('memoModal'); 
+      renderAll(); 
+      showToast('메모가 삭제되었습니다.', 'info');
+    }
+  });
+  
+  document.getElementById('fmnCloseBtn').addEventListener('click', () => document.getElementById('forgetMeNot').classList.remove('visible'));
+
+  /* 타이머 조작부 */
+  document.getElementById('btn-play-timer').addEventListener('click', toggleTimerEngine);
+  document.getElementById('btn-cancel-timer').addEventListener('click', cancelTimerEngine);
+  document.getElementById('btn-reset-timer').addEventListener('click', resetTimerEngine);
+  document.getElementById('add-1m').addEventListener('click', () => addTimerTime(60));
+  document.getElementById('add-5m').addEventListener('click', () => addTimerTime(300));
+  document.getElementById('add-10m').addEventListener('click', () => addTimerTime(600));
+
+  /* 달력 네비게이션 제어부 */
+  document.getElementById('calPrev').addEventListener('click', () => {
+    if (STATE.viewMode === 'week') { const d = new Date(STATE.selectedDate || new Date()); d.setDate(d.getDate() - 7); STATE.selectedDate = dateKey(d); STATE.viewYear = d.getFullYear(); STATE.viewMonth = d.getMonth(); }
+    else { STATE.viewMonth--; if (STATE.viewMonth < 0) { STATE.viewMonth = 11; STATE.viewYear--; } }
+    STATE.miniViewYear = STATE.viewYear; STATE.miniViewMonth = STATE.viewMonth; renderAll();
+  });
+  document.getElementById('calNext').addEventListener('click', () => {
+    if (STATE.viewMode === 'week') { const d = new Date(STATE.selectedDate || new Date()); d.setDate(d.getDate() + 7); STATE.selectedDate = dateKey(d); STATE.viewYear = d.getFullYear(); STATE.viewMonth = d.getMonth(); }
+    else { STATE.viewMonth++; if (STATE.viewMonth > 11) { STATE.viewMonth = 0; STATE.viewYear++; } }
+    STATE.miniViewYear = STATE.viewYear; STATE.miniViewMonth = STATE.viewMonth; renderAll();
+  });
+  document.getElementById('miniCalPrev').addEventListener('click', () => { STATE.miniViewMonth--; if (STATE.miniViewMonth < 0) { STATE.miniViewMonth = 11; STATE.miniViewYear--; } renderMiniCalendar(); });
+  document.getElementById('miniCalNext').addEventListener('click', () => { STATE.miniViewMonth++; if (STATE.miniViewMonth > 11) { STATE.miniViewMonth = 0; STATE.miniViewYear++; } renderMiniCalendar(); });
+  document.getElementById('todayBtn').addEventListener('click', () => { const now = new Date(); STATE.viewYear = now.getFullYear(); STATE.viewMonth = now.getMonth(); STATE.miniViewYear = now.getFullYear(); STATE.miniViewMonth = now.getMonth(); STATE.selectedDate = dateKey(now); renderAll(); });
+
+  /* 뷰 토글 탭 제어 엔진 */
+  document.querySelectorAll('.view-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.view-toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active'); 
+      STATE.viewMode = btn.getAttribute('data-view'); 
+      
+      const eventTooltip = document.querySelector('#fabAddEvent .fab-tooltip');
+      const memoTooltip = document.querySelector('#fabAddMemo .fab-tooltip');
+      if (eventTooltip && memoTooltip) {
+        if (STATE.viewMode === 'checklist') {
+          eventTooltip.textContent = '📦 분야 추가';
+          memoTooltip.textContent = '➕ 물품 추가';
+        } else {
+          eventTooltip.textContent = '새 일정';
+          memoTooltip.textContent = '새 메모';
+        }
+      }
+      renderAll();
+    });
+  });
+
+  /* 체크리스트 독립 뷰 상단 컨트롤러 */
+  document.getElementById('btnAddChecklistCat').addEventListener('click', () => {
+    const input = document.getElementById('newChecklistCatInput'); const title = input.value.trim();
+    if (!title) { alert("카테고리 이름을 입력해 주세요."); return; }
+    const catKey = `custom_${Date.now()}`; checklistOrder.push(catKey); checklistTitles[catKey] = title; checklistData[catKey] = [];
+    saveData(); renderChecklistView(); input.value = ''; showToast('새 체크리스트 분야가 추가되었습니다.', 'success');
+  });
+  document.getElementById('btnPrintChecklist').addEventListener('click', () => window.print());
+  document.getElementById('btnResetChecklist').addEventListener('click', () => {
+    if (confirm("모든 체크리스트 목록을 초기 기본 상태로 되돌리시겠습니까?")) {
+      checklistOrder = ['documents', 'electronics', 'sampling', 'bottles', 'others']; checklistTitles = { ...CHECKLIST_DEFAULT_TITLES }; checklistData = generateDefaultChecklistData();
+      saveData(); renderChecklistView(); showToast('체크리스트가 초기화되었습니다.', 'info');
+    }
+  });
+
+  /* 양식 세부 트랜지션 처리 */
+   document.querySelectorAll('#eventPrioritySelector .priority-option').forEach(option => {
+    option.addEventListener('click', () => {
+      document.querySelectorAll('#eventPrioritySelector .priority-option').forEach(o => o.classList.remove('selected'));
+      option.classList.add('selected');
+    });
+  });
+  document.getElementById('eventAllDayToggle').addEventListener('click', function() { this.classList.toggle('checked'); this.textContent = this.classList.contains('checked')?'✓':''; const hide = this.classList.contains('checked'); document.getElementById('eventStartTimeGroup').style.display = hide?'none':'block'; document.getElementById('eventEndTimeGroup').style.display = hide?'none':'block'; });
+  document.getElementById('eventAllDayLabel').addEventListener('click', () => document.getElementById('eventAllDayToggle').click());
+  document.getElementById('eventRepeatType').addEventListener('change', function() { const hide = this.value === 'none'; document.getElementById('eventRepeatUntilGroup').style.display = hide?'none':'block'; document.getElementById('eventExcludeHolidaysGroup').style.display = hide?'none':'block'; });
+  document.getElementById('eventExcludeHolidaysToggle').addEventListener('click', function() { this.classList.toggle('checked'); this.textContent = this.classList.contains('checked')?'✓':''; });
+  document.getElementById('eventExcludeHolidaysLabel').addEventListener('click', () => document.getElementById('eventExcludeHolidaysToggle').click());
+  document.getElementById('memoPinToggle').addEventListener('click', function() { this.classList.toggle('checked'); this.textContent = this.classList.contains('checked')?'✓':''; });
+  document.getElementById('memoPinLabel').addEventListener('click', () => document.getElementById('memoPinToggle').click());
+
+  /* 📝 메모 색상 선택 전용 컬러칩 클릭 이벤트 위임 바인딩 */
+  document.getElementById('memoColorChips').addEventListener('click', (e) => {
+    const chip = e.target.closest('.color-chip');
+    if (chip) {
+      const colorVal = chip.getAttribute('data-color');
+      selectMemoColorChip(colorVal);
+    }
+  });
+
+  /* 📝 메모 검색창 입력 실시간 연동 리스너 */
+  document.getElementById('memoSearchInput').addEventListener('input', (e) => {
+    STATE.memoSearchQuery = e.target.value;
+    renderMemos();
+  });
+
+  /* FAB 액션 스레드 */
+  document.getElementById('fabToggle').addEventListener('click', () => { 
+    STATE.fabOpen = !STATE.fabOpen; 
+    document.getElementById('fabContainer').classList.toggle('open', STATE.fabOpen); 
+    document.getElementById('fabToggle').style.transform = STATE.fabOpen?'rotate(45deg)':''; 
+  });
+  
+  document.getElementById('fabAddEvent').addEventListener('click', () => { 
+    STATE.fabOpen = false; 
+    document.getElementById('fabContainer').classList.remove('open'); 
+    document.getElementById('fabToggle').style.transform = ''; 
+    if (STATE.viewMode === 'checklist') {
+      const catInput = document.getElementById('newChecklistCatInput');
+      if(catInput) { catInput.focus(); showToast('새 체크리스트 분야를 입력하세요.', 'info'); }
+    } else {
+      openAddEvent(STATE.selectedDate || dateKey(new Date())); 
+    }
+  });
+  
+  document.getElementById('fabAddMemo').addEventListener('click', () => { 
+    STATE.fabOpen = false; 
+    document.getElementById('fabContainer').classList.remove('open'); 
+    document.getElementById('fabToggle').style.transform = ''; 
+    if (STATE.viewMode === 'checklist') {
+      if (checklistOrder.length > 0) window.addChecklistItem(checklistOrder[0]);
+    } else {
+      openAddMemo(); 
+    }
+  });
+  document.getElementById('addMemoBtn').addEventListener('click', openAddMemo);
+
+  init(); 
+});
+
+function renderAll() {
+  renderHeader();
+  renderMiniCalendar();
+  renderCalendar();
+  renderUpcoming();
+  renderMemos();
+  renderStats();
+  renderMotivation();
+  renderCarTracker();
+  updateTimerDisplay();
+}
+
+function init() {
+  loadData();
+  updateStreak();
+  renderCategoryStyles();
+  renderCategoryFilters();
+  renderCategorySelector();
+  renderMotivation();
+  renderAll();
+  setInterval(checkForgetMeNot, 5 * 60 * 1000);
+}
+
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer'); if (!container) return;
+  const toast = document.createElement('div'); toast.className = `toast show ${type}`; toast.textContent = message; container.appendChild(toast);
+  setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 2500);
+}
+</script>
+</body>
+</html>

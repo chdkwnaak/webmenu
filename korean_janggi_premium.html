@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>정통 프로 장기 — Korean Janggi Premium</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;900&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      background: #0d0a07;
+      color: #e0d5c0;
+      font-family: 'Noto Sans KR', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: radial-gradient(circle at center, #231b14 0%, #080605 100%);
+    }
+
+    #app {
+      display: flex;
+      gap: 30px;
+      align-items: flex-start;
+      position: relative;
+      z-index: 1;
+      padding: 20px;
+      max-width: 1200px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    /* 측면 판넬 업그레이드 */
+    .side-panel {
+      width: 260px;
+      background: rgba(22, 17, 13, 0.93);
+      border: 2px solid #5d4630;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.85), inset 0 0 24px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      backdrop-filter: blur(10px);
+    }
+    
+    .side-panel h2 {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 18px;
+      color: #dfb36c;
+      text-align: center;
+      letter-spacing: 1.5px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      border-bottom: 2px solid #4a3724;
+      padding-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .captured-area {
+      min-height: 110px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      align-content: flex-start;
+      padding: 12px;
+      background: rgba(8, 6, 5, 0.6);
+      border: 1px solid #3c2d1e;
+      border-radius: 8px;
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.9);
+    }
+
+    .cap-piece {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 13px;
+      width: 32px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      clip-path: polygon(30% 0%, 70% 0%, 100% 20%, 100% 80%, 70% 100%, 30% 100%, 0% 80%, 0% 20%);
+      font-weight: 900;
+      box-shadow: inset 0 0 6px rgba(0,0,0,0.8), 0 3px 6px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .cap-cho { 
+      background: linear-gradient(135deg, #165235 0%, #0d3823 100%); 
+      color: #6ee7b7; 
+      text-shadow: 0 1px 2px #000;
+    }
+    
+    .cap-han { 
+      background: linear-gradient(135deg, #8c2020 0%, #5c1111 100%); 
+      color: #fca5a5; 
+      text-shadow: 0 1px 2px #000;
+    }
+
+    .turn-indicator {
+      padding: 14px;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: 900;
+      font-size: 16px;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .turn-han { 
+      background: linear-gradient(180deg, #c53030, #741b1b); 
+      border: 2px solid #ef4444; 
+      color: #fff; 
+      box-shadow: 0 0 20px rgba(239,68,68,0.35); 
+    }
+    
+    .turn-cho { 
+      background: linear-gradient(180deg, #15803d, #14532d); 
+      border: 2px solid #22c55e; 
+      color: #fff; 
+      box-shadow: 0 0 20px rgba(34,197,94,0.35); 
+    }
+
+    /* 대국 설정 버튼 군 */
+    .diff-btn, .action-btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin: 4px 0;
+      border: 1px solid #5d4630;
+      background: linear-gradient(180deg, #302316, #16100a);
+      color: #dfb36c;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
+      transition: all 0.2s ease;
+      font-family: 'Noto Sans KR', sans-serif;
+      text-shadow: 0 1px 2px #000;
+    }
+    
+    .diff-btn:hover, .action-btn:hover { 
+      background: linear-gradient(180deg, #4d3925, #271d12); 
+      color: #fff;
+      border-color: #dfb36c;
+    }
+    
+    .diff-btn.active { 
+      background: linear-gradient(180deg, #8a6538, #5a4228); 
+      color: #fff; 
+      border-color: #dfb36c; 
+      box-shadow: 0 0 12px rgba(223,179,108,0.4); 
+    }
+
+    #board-wrap { 
+      position: relative; 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    /* 프로장기 나무판 질감 강화 */
+    #board-container {
+      box-sizing: content-box;
+      position: relative; 
+      width: 560px; 
+      height: 630px;
+      background-image:
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.35) 100%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 100 100'%3E%3Cfilter id='woodNoise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.03' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23woodNoise)'/%3E%3C/svg%3E"),
+        linear-gradient(135deg, #d89f5c 0%, #a46d32 100%);
+      border: 10px solid #4a2f18; 
+      border-radius: 12px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.9), inset 0 0 30px rgba(0,0,0,0.5);
+    }
+    
+    #board-canvas { 
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      z-index: 1; 
+      pointer-events: none; 
+    }
+    
+    #pieces-layer { 
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      z-index: 5; 
+      pointer-events: none; 
+    }
+
+    /* 전통 목조 기품을 담은 3D 입체 기물 스타일 */
+    .piece {
+      position: absolute; 
+      width: 54px; 
+      height: 60px;
+      clip-path: polygon(30% 0%, 70% 0%, 100% 20%, 100% 80%, 70% 100%, 30% 100%, 0% 80%, 0% 20%);
+      display: flex; 
+      align-items: center; 
+      justify-content: center;
+      font-weight: 900; 
+      font-family: 'Noto Serif KR', serif;
+      cursor: pointer; 
+      pointer-events: auto;
+      transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                  top 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                  transform 0.15s ease, 
+                  filter 0.15s ease;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.7);
+      transform: translate(-50%, -50%);
+      border: 1px solid rgba(0,0,0,0.3);
+    }
+    
+    .piece::after {
+      content: ''; 
+      position: absolute; 
+      inset: 3px; 
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      clip-path: polygon(30% 0%, 70% 0%, 100% 20%, 100% 80%, 70% 100%, 30% 100%, 0% 80%, 0% 20%);
+    }
+    
+    .piece-han { 
+      color: #b91c1c; 
+      text-shadow: 0px 1px 1px rgba(255,255,255,0.7), 0px -1px 1px rgba(0,0,0,0.6); 
+      background-image:
+        linear-gradient(135deg, rgba(255,255,255,0.22) 0%, transparent 50%, rgba(0,0,0,0.55) 100%),
+        linear-gradient(90deg, #eedbc5, #cfac88);
+    }
+    
+    .piece-cho { 
+      color: #065f46; 
+      text-shadow: 0px 1px 1px rgba(255,255,255,0.7), 0px -1px 1px rgba(0,0,0,0.6); 
+      font-family: 'Georgia', serif; 
+      font-style: italic; 
+      padding-right: 4px;
+      background-image:
+        linear-gradient(135deg, rgba(255,255,255,0.22) 0%, transparent 50%, rgba(0,0,0,0.55) 100%),
+        linear-gradient(90deg, #e0efdf, #aacda4);
+    }
+    
+    .piece:hover { 
+      transform: translate(-50%, -50%) scale(1.08) translateY(-4px); 
+      z-index: 20; 
+      filter: brightness(1.1); 
+      box-shadow: 0 12px 20px rgba(0,0,0,0.8);
+    }
+    
+    .piece.selected { 
+      animation: pulse-select 1.2s infinite ease-in-out; 
+      z-index: 20; 
+      filter: brightness(1.2) drop-shadow(0 0 10px #dfb36c); 
+    }
+
+    .piece-captured {
+      transition: transform 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045), opacity 0.4s ease-in !important;
+      transform: translate(-50%, -50%) scale(0) rotate(90deg) !important;
+      opacity: 0 !important; 
+      pointer-events: none !important; 
+      z-index: 1 !important;
+    }
+
+    .size-L { font-size: 32px; } 
+    .size-M { font-size: 24px; } 
+    .size-S { font-size: 19px; }
+
+    /* === 이동 표시기 강화 === */
+    .valid-move {
+      position: absolute; 
+      width: 56px; 
+      height: 60px; 
+      z-index: 30; 
+      pointer-events: auto; 
+      cursor: pointer; 
+      transform: translate(-50%, -50%);
+      display: flex; 
+      justify-content: center; 
+      align-items: center;
+      background: transparent;
+    }
+    
+    .valid-move::after {
+      content: ''; 
+      display: block;
+      width: 14px; 
+      height: 14px; 
+      border-radius: 50%;
+      background: rgba(223, 179, 108, 0.95); 
+      box-shadow: 0 0 12px #dfb36c, inset 0 0 3px #fff;
+      animation: pulse-move-new 0.8s infinite alternate ease-in-out;
+    }
+    
+    .valid-move.capture::after {
+      width: 50px; 
+      height: 56px; 
+      background: none; 
+      border-radius: 0;
+      border: 3px solid #ef4444; 
+      box-shadow: 0 0 15px #ef4444, inset 0 0 8px rgba(239,68,68,0.3);
+      clip-path: polygon(30% 0%, 70% 0%, 100% 20%, 100% 80%, 70% 100%, 30% 100%, 0% 80%, 0% 20%);
+      animation: pulse-cap-new 0.6s infinite alternate ease-in-out;
+    }
+
+    /* 마지막 착수 표시 하이라이트 스타일 */
+    .last-move-marker {
+      position: absolute;
+      width: 50px;
+      height: 56px;
+      transform: translate(-50%, -50%);
+      background: rgba(250, 204, 21, 0.25);
+      border: 2px dashed #facc15;
+      pointer-events: none;
+      z-index: 2;
+      clip-path: polygon(30% 0%, 70% 0%, 100% 20%, 100% 80%, 70% 100%, 30% 100%, 0% 80%, 0% 20%);
+      animation: pulse-marker 1.5s infinite alternate ease-in-out;
+    }
+
+    @keyframes pulse-marker {
+      from { background: rgba(250, 204, 21, 0.15); border-color: rgba(250, 204, 21, 0.6); }
+      to { background: rgba(250, 204, 21, 0.35); border-color: rgba(250, 204, 21, 1); }
+    }
+
+    @keyframes pulse-select { 
+      0%, 100% { transform: translate(-50%, -50%) scale(1.05); } 
+      50% { transform: translate(-50%, -50%) scale(1.15) translateY(-2px); } 
+    }
+    @keyframes pulse-move-new { 
+      from { transform: scale(0.9); opacity: 0.7; } 
+      to { transform: scale(1.35); opacity: 1; } 
+    }
+    @keyframes pulse-cap-new { 
+      from { transform: scale(1); opacity: 0.8; } 
+      to { transform: scale(1.08); opacity: 1; } 
+    }
+
+    /* 반투명 오버레이 모달 설계 */
+    .overlay {
+      display: none; 
+      position: fixed; 
+      inset: 0; 
+      background: rgba(8, 6, 5, 0.9);
+      z-index: 100; 
+      justify-content: center; 
+      align-items: center; 
+      flex-direction: column; 
+      backdrop-filter: blur(8px);
+    }
+    
+    .overlay.show { display: flex; }
+    
+    .overlay h1 { 
+      font-family: 'Noto Serif KR', serif;
+      font-size: 38px; 
+      color: #dfb36c; 
+      margin-bottom: 8px; 
+      text-shadow: 0 4px 12px rgba(0,0,0,0.9); 
+      letter-spacing: 2px;
+    }
+    
+    .overlay p { 
+      font-size: 15px; 
+      color: #a8a29e; 
+      margin-bottom: 25px; 
+    }
+
+    /* 프로장기 스타일 대형 장군(Check) 연출 레이어 */
+    #check-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.5);
+      font-family: 'Noto Serif KR', serif;
+      font-size: 64px;
+      font-weight: 900;
+      color: #ef4444;
+      text-shadow: 0 0 25px rgba(239, 68, 68, 0.7), 0 4px 15px #000;
+      letter-spacing: 4px;
+      z-index: 90;
+      pointer-events: none;
+      opacity: 0;
+      display: none;
+      text-align: center;
+      width: 100%;
+    }
+
+    .animate-check {
+      display: block !important;
+      animation: check-fade-in-out 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes check-fade-in-out {
+      0% { transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
+      20% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+      40% { transform: translate(-50%, -50%) scale(1.0); opacity: 1; }
+      80% { transform: translate(-50%, -50%) scale(1.0); opacity: 1; filter: brightness(1.3); }
+      100% { transform: translate(-50%, -50%) scale(1.2); opacity: 0; }
+    }
+
+    /* ==========================================
+       진형 선택 창 디자인
+       ========================================== */
+    .setup-sections-container {
+      display: flex;
+      flex-direction: column;   
+      gap: 20px;                
+      width: 100%;
+      max-width: 640px;         
+      margin-bottom: 30px;
+      padding: 0 15px;
+      box-sizing: border-box;
+    }
+
+    .setup-section { 
+      background: rgba(22, 17, 13, 0.85);
+      border: 2px solid #5a4228;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
+      width: 100%;
+    }
+
+    .setup-section h3 { 
+      color: #dfb36c; 
+      margin-bottom: 15px; 
+      font-size: 16px; 
+      font-family: 'Noto Serif KR', serif;
+      letter-spacing: 1px;
+    }
+
+    .setup-cards { 
+      display: flex !important; 
+      flex-direction: row !important; 
+      flex-wrap: nowrap !important;   
+      gap: 10px; 
+      justify-content: space-between; 
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .setup-card {
+      flex: 1 1 0% !important; 
+      padding: 14px 4px; 
+      border: 1px solid #5d4630; 
+      border-radius: 8px;
+      background: rgba(8, 6, 5, 0.6); 
+      cursor: pointer; 
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      min-width: 0; 
+    }
+
+    .setup-card:hover { 
+      background: rgba(77, 57, 37, 0.3); 
+      border-color: #dfb36c; 
+      transform: translateY(-3px); 
+    }
+
+    .setup-card.selected { 
+      border: 2px solid #dfb36c; 
+      background: linear-gradient(180deg, #4d3925, #271d12);
+      box-shadow: 0 0 15px rgba(223, 179, 108, 0.25); 
+    }
+
+    .card-diagram { 
+      font-size: 14px; 
+      font-weight: 900; 
+      letter-spacing: 1px; 
+      white-space: nowrap;
+    }
+
+    .setup-card .cho-text { color: #6ee7b7; text-shadow: 0 0 4px rgba(110,231,183,0.2); }
+    .setup-card .han-text { color: #fca5a5; text-shadow: 0 0 4px rgba(252,165,165,0.2); }
+
+    @media (max-width: 600px) {
+      .setup-cards {
+        grid-template-cols: repeat(2, 1fr); 
+        gap: 8px;
+      }
+      .setup-section {
+        padding: 15px 10px;
+      }
+      .card-diagram {
+        font-size: 12px; 
+      }
+    }
+
+    .big-btn {
+      padding: 16px 60px; 
+      font-size: 18px; 
+      font-weight: 900; 
+      background: linear-gradient(180deg, #dfb36c, #a47c3e);
+      color: #1c130c; 
+      border: none; 
+      border-radius: 10px; 
+      cursor: pointer; 
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      font-family: 'Noto Serif KR', serif; 
+      transition: 0.2s ease; 
+      opacity: 0.4; 
+      pointer-events: none;
+    }
+
+    .big-btn:disabled {
+      cursor: not-allowed;
+    }
+    
+    .big-btn.ready { 
+      opacity: 1; 
+      pointer-events: auto; 
+    }
+    
+    .big-btn.ready:hover { 
+      transform: scale(1.04); 
+      filter: brightness(1.15); 
+      box-shadow: 0 12px 30px rgba(223, 179, 108, 0.3);
+    }
+
+    #move-log {
+      height: 200px; 
+      overflow-y: auto; 
+      font-size: 11px; 
+      color: #c8c3bc; 
+      padding: 10px;
+      background: rgba(8, 6, 5, 0.6); 
+      border: 1px solid #3c2d1e;
+      border-radius: 8px; 
+      box-shadow: inset 0 0 8px rgba(0,0,0,0.9);
+    }
+    
+    #move-log::-webkit-scrollbar { width: 5px; }
+    #move-log::-webkit-scrollbar-thumb { background: #4a3724; border-radius: 3px; }
+    
+    .log-row { 
+      padding: 6px 0; 
+      border-bottom: 1px solid rgba(255,255,255,0.03); 
+    }
+
+    .blood-slash { 
+      position: absolute; 
+      width: 80px; 
+      height: 8px; 
+      background: #ef4444; 
+      border-radius: 4px; 
+      z-index: 50; 
+      pointer-events: none; 
+      opacity: 0; 
+      transform: translate(-50%, -50%) rotate(-45deg) scale(0); 
+      animation: slash 0.3s ease-out forwards; 
+    }
+    
+    @keyframes slash { 
+      50% { transform: translate(-50%, -50%) rotate(-45deg) scale(1.5); opacity: 1; } 
+      100% { transform: translate(-50%, -50%) rotate(-45deg) scale(2); opacity: 0; } 
+    }
+
+    #status-msg {
+      position: absolute; 
+      top: -50px; 
+      left: 50%; 
+      transform: translateX(-50%);
+      background: rgba(185, 28, 28, 0.95); 
+      color: #fff; 
+      padding: 12px 24px; 
+      border-radius: 30px;
+      font-weight: bold; 
+      font-size: 14px; 
+      opacity: 0; 
+      transition: 0.3s ease; 
+      pointer-events: none; 
+      z-index: 200; 
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.2);
+      letter-spacing: 1px;
+    }
+    
+    #status-msg.show { opacity: 1; transform: translate(-50%, 10px); }
+    #status-msg.draw-msg { background: rgba(180, 134, 45, 0.95); }
+    
+    #ai-think { 
+      position: absolute; 
+      bottom: -40px; 
+      left: 50%; 
+      transform: translateX(-50%); 
+      color: #dfb36c; 
+      font-weight: bold; 
+      display: none; 
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 4px #000;
+      animation: pulse-glow 1.5s infinite alternate;
+    }
+
+    @keyframes pulse-glow {
+      from { opacity: 0.6; }
+      to { opacity: 1; }
+    }
+
+    @media (max-width: 1120px) {
+      body {
+        align-items: flex-start;
+      }
+
+      #app {
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        padding: 12px;
+      }
+
+      #board-wrap {
+        order: 1;
+        margin-bottom: 44px;
+      }
+
+      .side-panel {
+        width: min(100%, 580px);
+      }
+
+      .side-panel:first-child {
+        order: 2;
+      }
+
+      .side-panel:last-child {
+        order: 3;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .overlay {
+        padding: 16px;
+        overflow-y: auto;
+        justify-content: flex-start;
+      }
+
+      .overlay h1 {
+        font-size: 30px;
+        margin-top: 18px;
+      }
+
+      .setup-sections-container {
+        gap: 14px;
+        padding: 0;
+      }
+
+      .setup-cards {
+        flex-wrap: wrap !important;
+      }
+
+      .setup-card {
+        flex: 1 1 calc(50% - 8px) !important;
+      }
+
+      .big-btn {
+        width: min(100%, 320px);
+        padding: 14px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <!-- 왼쪽 전황 패널 (초 나라 / AI) -->
+  <div class="side-panel">
+    <h2><i class="fa-solid fa-robot"></i> 전황 (초)</h2>
+    <div>
+      <div style="font-size:11px; color:#aaa; text-align:center; margin-bottom:5px;">AI(楚)가 잃은 기물</div>
+      <div id="cap-cho" class="captured-area"></div>
+    </div>
+    <div class="turn-indicator" id="turn-disp">漢 차례 (당신)</div>
+    <div style="margin-top: 10px;" id="diff-buttons-container">
+      <div style="font-size:11px; color:#aaa; text-align:center; margin-bottom:5px;">AI 난이도 설정</div>
+      <button class="diff-btn active" data-level="1">초급 (Lv.1)</button>
+      <button class="diff-btn" data-level="2">중급 (Lv.2)</button>
+      <button class="diff-btn" data-level="3">고급 (Lv.3)</button>
+    </div>
+  </div>
+
+  <!-- 중앙 장기판 메인 보드 -->
+  <div id="board-wrap">
+    <div id="status-msg"></div>
+    <div id="board-container">
+      <canvas id="board-canvas" width="560" height="630"></canvas>
+      <div id="pieces-layer"></div>
+      <!-- 대형 장군 연출 레이어 -->
+      <div id="check-overlay">將軍 (장군)</div>
+    </div>
+    <div id="ai-think"><i class="fa-solid fa-bolt-lightning"></i> 적장이 전술을 구상 중입니다...</div>
+  </div>
+
+  <!-- 오른쪽 전황 패널 (한 나라 / 유저) -->
+  <div class="side-panel">
+    <h2><i class="fa-solid fa-user"></i> 전황 (한)</h2>
+    <div>
+      <div style="font-size:11px; color:#aaa; text-align:center; margin-bottom:5px;">당신(漢)이 잃은 기물</div>
+      <div id="cap-han" class="captured-area"></div>
+    </div>
+    <div style="margin: 5px 0;" id="move-log-container">
+      <div style="font-size:11px; color:#aaa; text-align:center; margin-bottom:5px;">전투 기록장</div>
+      <div id="move-log"></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 5px; width: 100%;">
+      <button class="action-btn" id="btn-undo"><i class="fa-solid fa-reply"></i> 한 수 물리기</button>
+      <button class="action-btn" id="btn-restart" style="background:linear-gradient(180deg, #7f1d1d, #450a0a); color:#fff; border-color: #b91c1c;"><i class="fa-solid fa-flag"></i> 기권 / 재시작</button>
+    </div>
+  </div>
+</div>
+
+<!-- 차림 진형 선택 모달 -->
+<div id="setup-overlay" class="overlay show">
+  <h1>⚔️ 정통 장기 ⚔️</h1>
+  <p>전투에 임할 군사들의 진형을 선택하십시오.</p>
+  
+  <div class="setup-sections-container">
+    
+    <div class="setup-section">
+      <h3>🔴 당신 (漢) 의 진형</h3>
+      <div class="setup-cards" id="cards-han">
+        <div class="setup-card" data-side="han" data-code="smsm" id="han-smsm">
+          <div class="card-diagram han-text">象 馬 象 馬</div>
+          <div style="color:#aaa; font-size:11px;">상마상마 (왼마)</div>
+        </div>
+        <div class="setup-card" data-side="han" data-code="msms" id="han-msms">
+          <div class="card-diagram han-text">馬 象 馬 象</div>
+          <div style="color:#aaa; font-size:11px;">마상마상 (오른마)</div>
+        </div>
+        <div class="setup-card" data-side="han" data-code="smms" id="han-smms">
+          <div class="card-diagram han-text">象 馬 馬 象</div>
+          <div style="color:#aaa; font-size:11px;">상마마상 (원앙마)</div>
+        </div>
+        <div class="setup-card" data-side="han" data-code="mssm" id="han-mssm">
+          <div class="card-diagram han-text">馬 象 象 馬</div>
+          <div style="color:#aaa; font-size:11px;">마상상마 (양귀마)</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="setup-section">
+      <h3>🟢 AI (楚) 의 진형</h3>
+      <div class="setup-cards" id="cards-cho">
+        <div class="setup-card" data-side="cho" data-code="smsm" id="cho-smsm">
+          <div class="card-diagram cho-text">象 馬 象 馬</div>
+          <div style="color:#aaa; font-size:11px;">상마상마 (왼마)</div>
+        </div>
+        <div class="setup-card" data-side="cho" data-code="msms" id="cho-msms">
+          <div class="card-diagram cho-text">馬 象 馬 象</div>
+          <div style="color:#aaa; font-size:11px;">마상마상 (오른마)</div>
+        </div>
+        <div class="setup-card" data-side="cho" data-code="smms" id="cho-smms">
+          <div class="card-diagram cho-text">象 馬 馬 象</div>
+          <div style="color:#aaa; font-size:11px;">상마마상 (원앙마)</div>
+        </div>
+        <div class="setup-card" data-side="cho" data-code="mssm" id="cho-mssm">
+          <div class="card-diagram cho-text">馬 象 象 馬</div>
+          <div style="color:#aaa; font-size:11px;">마상상마 (양귀마)</div>
+        </div>
+      </div>
+    </div>
+
+  </div> <button class="big-btn" id="btn-start" disabled aria-disabled="true"><i class="fa-solid fa-play"></i> 대국 시작</button>
+</div>
+
+<!-- 게임 종료 모달 -->
+<div id="game-over-overlay" class="overlay">
+  <h1 id="end-title"></h1>
+  <p id="end-desc"></p>
+  <button class="big-btn ready" id="btn-gameover-retry"><i class="fa-solid fa-rotate-left"></i> 다시 도전하기</button>
+</div>
+
+<script>
+/**
+ * ======================================================
+ * KOREAN JANGGI — IMPROVED ENGINE (CSP COMPLIANT)
+ * ======================================================
+ */
+
+// === SOUND ENGINE ===
+var Sound = {
+  ctx: null,
+  init: function() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+  play: function(freq, type, dur, vol) {
+    if (!this.ctx) return;
+    try { 
+      var o = this.ctx.createOscillator(), g = this.ctx.createGain(); 
+      o.type = type; 
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(vol||0.1, this.ctx.currentTime); 
+      g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
+      o.connect(g); 
+      g.connect(this.ctx.destination); 
+      o.start(); 
+      o.stop(this.ctx.currentTime + dur); 
+    } catch(e) {}
+  },
+  move: function(){ this.play(150,'triangle',0.12,0.35); },
+  capture: function(){ this.play(280,'square',0.18,0.22); this.play(95,'sawtooth',0.28,0.32); },
+  check: function(){ this.play(580,'sine',0.45,0.3); this.play(340,'sawtooth',0.35,0.25); },
+  error: function(){ this.play(190,'sawtooth',0.2,0.12); }
+};
+document.body.addEventListener('click', function(){ Sound.init(); }, {once:true});
+
+// === CONSTANTS & PST ===
+var COLS=9, ROWS=10, CW=56, CH=60, OX=56, OY=45;
+var HAN='han', CHO='cho';
+var TYPE = {K:'K',R:'R',H:'H',E:'E',C:'C',A:'A',S:'S'};
+var TEXT = {
+  han:{K:'漢',R:'車',H:'馬',E:'象',C:'包',A:'士',S:'兵'}, 
+  cho:{K:'楚',R:'車',H:'馬',E:'象',C:'包',A:'士',S:'卒'}
+};
+var SIZE_MAP = {K:'L',R:'M',H:'M',E:'M',C:'M',A:'S',S:'S'};
+var VALS = {K:10000,R:130,C:70,H:50,E:30,A:30,S:20};
+
+var PST = {
+  S:[[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,2,0,4,0,2,0,0],[4,0,6,0,8,0,6,0,4],[6,8,10,10,12,10,10,8,6],[8,10,12,12,14,12,12,10,8],[10,12,14,14,16,14,14,12,10],[12,14,14,16,18,16,14,14,12],[14,16,16,18,20,18,16,16,14]],
+  H:[[-4,-2,0,2,2,2,0,-2,-4],[-2,0,4,4,6,4,4,0,-2],[0,4,6,8,8,8,6,4,0],[2,4,8,10,10,10,8,4,2],[2,6,8,10,12,10,8,6,2],[2,6,8,10,12,10,8,6,2],[2,4,8,10,10,10,8,4,2],[0,4,6,8,8,8,6,4,0],[-2,0,4,4,6,4,4,0,-2],[-4,-2,0,2,2,2,0,-2,-4]],
+  E:[[0,0,2,0,0,0,2,0,0],[0,2,4,2,0,2,4,2,0],[2,4,6,4,2,4,6,4,2],[0,4,4,6,4,6,4,4,0],[0,2,4,4,4,4,4,2,0],[0,2,4,4,4,4,4,2,0],[0,4,4,6,4,6,4,4,0],[2,4,6,4,2,4,6,4,2],[0,2,4,2,0,2,4,2,0],[0,0,2,0,0,0,2,0,0]],
+  R:[[0,0,2,4,4,4,2,0,0],[0,2,4,4,6,4,4,2,0],[2,4,4,4,6,4,4,4,2],[4,4,4,6,6,6,4,4,4],[4,4,6,6,8,6,6,4,4],[4,4,6,6,8,6,6,4,4],[4,4,4,6,6,6,4,4,4],[2,4,4,4,6,4,4,4,2],[0,2,4,4,6,4,4,2,0],[0,0,2,4,4,4,2,0,0]],
+  C:[[0,0,2,4,4,4,2,0,0],[0,2,4,4,6,4,4,2,0],[0,4,6,6,8,6,6,4,0],[2,4,6,6,8,6,6,4,2],[4,4,6,6,8,6,6,4,4],[4,4,6,6,8,6,6,4,4],[2,4,6,6,8,6,6,4,2],[0,4,6,6,8,6,6,4,0],[0,2,4,4,6,4,4,2,0],[0,0,2,4,4,4,2,0,0]],
+  K:[[0,0,0,0,2,0,0,0,0],[0,0,0,2,6,2,0,0,0],[0,0,0,0,2,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,2,0,0,0,0],[0,0,0,2,6,2,0,0,0],[0,0,0,0,2,0,0,0,0]],
+  A:[[0,0,0,2,0,2,0,0,0],[0,0,0,0,6,0,0,0,0],[0,0,0,2,0,2,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,2,0,2,0,0,0],[0,0,0,0,6,0,0,0,0],[0,0,0,2,0,2,0,0,0]]
+};
+
+var SETUPS = {
+  'smsm':[TYPE.E,TYPE.H,TYPE.E,TYPE.H],
+  'msms':[TYPE.H,TYPE.E,TYPE.H,TYPE.E],
+  'smms':[TYPE.E,TYPE.H,TYPE.H,TYPE.E],
+  'mssm':[TYPE.H,TYPE.E,TYPE.E,TYPE.H]
+};
+
+// === GAME STATE ===
+var setupConf = {han:null,cho:null};
+var board=[], turn=HAN, selected=null, validMoves=[];
+var moveHistory=[], capHan=[], capCho=[];
+var lastMove = null; 
+var gameOver=false, aiThinking=false, aiDepth=2;
+var pieceIdCounter=0;
+var pieceElements = new Map();
+var positionCounts = {};
+var movesWithoutCapture = 0;
+var aiJobId = 0;
+
+function makePiece(type,color){ return {t:type,c:color,id:pieceIdCounter++}; }
+
+function boardHash(b, sideToMove){
+  var h='';
+  for(var r=0;r<ROWS;r++) for(var c=0;c<COLS;c++) h += b[r][c] ? (b[r][c].c[0]+b[r][c].t) : '..';
+  return h+(sideToMove||turn)[0];
+}
+
+// === PURE ENGINE FUNCTIONS ===
+function inBounds(r,c){ return r>=0 && r<ROWS && c>=0 && c<COLS; }
+function isPalace(r,c){ return c>=3 && c<=5 && (r<=2 || r>=7); }
+
+function getPalaceLines(r,c){
+  var pts=[], centers=[[1,4],[8,4]];
+  for(var i=0;i<centers.length;i++){
+    var cr=centers[i][0],cc=centers[i][1];
+    if(r===cr&&c===cc){ pts.push([cr-1,cc-1],[cr-1,cc+1],[cr+1,cc-1],[cr+1,cc+1]); }
+    else if(Math.abs(r-cr)===1&&Math.abs(c-cc)===1){ pts.push([cr,cc]); }
+  }
+  return pts;
+}
+
+function getMoves(b,r,c){
+  var p=b[r][c]; if(!p) return [];
+  var moves=[],color=p.c,enemy=color===HAN?CHO:HAN;
+  var deltas,nd,paths,i,nr,nc,jumped,t;
+
+  function add(nr,nc){
+    if(inBounds(nr,nc)){ t=b[nr][nc]; if(!t||t.c===enemy) moves.push({r:nr,c:nc}); return !t; }
+    return false;
+  }
+
+  if(p.t===TYPE.K||p.t===TYPE.A){
+    deltas=[[0,1],[0,-1],[1,0],[-1,0]];
+    for(i=0;i<4;i++){ if(isPalace(r+deltas[i][0],c+deltas[i][1])) add(r+deltas[i][0],c+deltas[i][1]); }
+    var plines=getPalaceLines(r,c);
+    for(i=0;i<plines.length;i++) add(plines[i][0],plines[i][1]);
+  }
+
+  if(p.t===TYPE.R){
+    deltas=[[0,1],[0,-1],[1,0],[-1,0]];
+    for(i=0;i<4;i++){ nr=r+deltas[i][0]; nc=c+deltas[i][1]; while(add(nr,nc)){nr+=deltas[i][0];nc+=deltas[i][1];} }
+    var rlines=getPalaceLines(r,c);
+    for(i=0;i<rlines.length;i++){
+      if(add(rlines[i][0],rlines[i][1])&&Math.abs(r-rlines[i][0])===1){
+        var oppR=rlines[i][0]+(rlines[i][0]-r),oppC=rlines[i][1]+(rlines[i][1]-c);
+        if(isPalace(oppR,oppC)) add(oppR,oppC);
+      }
+    }
+  }
+
+  if(p.t===TYPE.C){
+    deltas=[[0,1],[0,-1],[1,0],[-1,0]];
+    for(i=0;i<4;i++){
+      nr=r+deltas[i][0]; nc=c+deltas[i][1]; jumped=false;
+      while(inBounds(nr,nc)){
+        t=b[nr][nc];
+        if(!jumped){ 
+          if(t){
+            if(t.t===TYPE.C) break; // 포는 포를 다리로 삼을 수 없음
+            jumped=true;
+          } 
+        }
+        else{ 
+          if(t){
+            if(t.t===TYPE.C) break; // 포는 포를 잡을 수 없음
+            if(t.c===enemy) moves.push({r:nr,c:nc}); 
+            break;
+          } 
+          else moves.push({r:nr,c:nc}); 
+        }
+        nr+=deltas[i][0]; nc+=deltas[i][1];
+      }
+    }
+    var palaceCenters=[[1,4],[8,4]];
+    for(i=0;i<palaceCenters.length;i++){
+      var pcr=palaceCenters[i][0],pcc=palaceCenters[i][1];
+      if(Math.abs(r-pcr)===1&&Math.abs(c-pcc)===1){
+        var tCenter=b[pcr][pcc];
+        if(tCenter && tCenter.t!==TYPE.C){ // 대각선 다리도 포는 불가능
+          var cOppR=pcr+(pcr-r),cOppC=pcc+(pcc-c);
+          if(inBounds(cOppR,cOppC)){
+            var tOpp=b[cOppR][cOppC];
+            if(!tOpp || (tOpp.c===enemy && tOpp.t!==TYPE.C)) moves.push({r:cOppR,c:cOppC});
+          }
+        }
+      }
+    }
+  }
+
+  if(p.t===TYPE.H){
+    nd=[[-1,0,-2,-1],[-1,0,-2,1],[1,0,2,-1],[1,0,2,1],[0,-1,-1,-2],[0,-1,1,-2],[0,1,-1,2],[0,1,1,2]];
+    for(i=0;i<8;i++){ if(inBounds(r+nd[i][0],c+nd[i][1])&&!b[r+nd[i][0]][c+nd[i][1]]) add(r+nd[i][2],c+nd[i][3]); }
+  }
+
+  if(p.t===TYPE.E){
+    paths=[[[-1,0],[-2,-1],[-3,-2]],[[-1,0],[-2,1],[-3,2]],[[1,0],[2,-1],[3,-2]],[[1,0],[2,1],[3,2]],
+           [[0,-1],[-1,-2],[-2,-3]],[[0,-1],[1,-2],[2,-3]],[[0,1],[-1,2],[-2,3]],[[0,1],[1,2],[2,3]]];
+    for(i=0;i<paths.length;i++){
+      if(inBounds(r+paths[i][0][0],c+paths[i][0][1])&&!b[r+paths[i][0][0]][c+paths[i][0][1]])
+        if(inBounds(r+paths[i][1][0],c+paths[i][1][1])&&!b[r+paths[i][1][0]][c+paths[i][1][1]])
+          add(r+paths[i][2][0],c+paths[i][2][1]);
+    }
+  }
+
+  if(p.t===TYPE.S){
+    var fwd=color===HAN?-1:1;
+    add(r+fwd,c); add(r,c-1); add(r,c+1);
+    var slines=getPalaceLines(r,c);
+    for(i=0;i<slines.length;i++){
+      if((color===HAN&&slines[i][0]<r)||(color===CHO&&slines[i][0]>r)) add(slines[i][0],slines[i][1]);
+    }
+  }
+  return moves;
+}
+
+// 어떤 기물들이 장군을 부르고 있는지 배열로 반환하는 핵심 체크 연산 함수
+function getCheckers(b, color) {
+  var kr=-1, kc=-1, r, c;
+  for(r=0; r<ROWS; r++){
+    for(c=0; c<COLS; c++){
+      if(b[r][c] && b[r][c].t===TYPE.K && b[r][c].c===color){ kr=r; kc=c; break; }
+    }
+    if(kr!==-1) break;
+  }
+  if(kr===-1) return [];
+
+  var enemy = color===HAN?CHO:HAN;
+  var checkers = [];
+
+  for(r=0; r<ROWS; r++){
+    for(c=0; c<COLS; c++){
+      var p = b[r][c]; if(!p || p.c!==enemy) continue;
+      
+      // 최적화: 유효 거리 및 궁성 외부 기물 검사 차단
+      var dr = Math.abs(r-kr), dc = Math.abs(c-kc);
+      if(p.t===TYPE.S && (dr>1 || dc>1)) continue;
+      if((p.t===TYPE.A || p.t===TYPE.K) && (dr>2 || dc>2)) continue;
+      if(p.t===TYPE.H && (dr>2 || dc>2)) continue;
+      if(p.t===TYPE.E && (dr>3 || dc>3)) continue;
+      if((p.t===TYPE.R || p.t===TYPE.C) && r!==kr && c!==kc){
+        if(!isPalace(r,c) || !isPalace(kr,kc) || dr>2 || dc>2) continue;
+      }
+
+      var mvs = getMoves(b, r, c);
+      for(var i=0; i<mvs.length; i++){
+        if(mvs[i].r===kr && mvs[i].c===kc) {
+          // 중요 버그 수정: 포가 장군을 칠 때, 궁 바로 앞에 또 다른 포가 수비벽 형태로 버티고 있다면 유효한 장군이 아님!
+          if (p.t === TYPE.C) {
+            // 공격하는 포(p)와 아군 왕(K) 사이의 한가운데 기물(다리) 검사
+            var bridgePiece = null;
+            if (r === kr) { // 가로 방향
+              var step = c < kc ? 1 : -1;
+              for (var tc = c + step; tc !== kc; tc += step) {
+                if (b[r][tc]) { bridgePiece = b[r][tc]; break; }
+              }
+            } else if (c === kc) { // 세로 방향
+              var step = r < kr ? 1 : -1;
+              for (var tr = r + step; tr !== kr; tr += step) {
+                if (b[tr][c]) { bridgePiece = b[tr][c]; break; }
+              }
+            } else { // 궁성 내 대각선 사선 방향
+              var pcr = 1, pcc = 4;
+              if (color === HAN) pcr = 8;
+              if (r === pcr && c === pcc) { /* 왕이 구석에 있고 포가 중심에 있는 경우 등 */ }
+              else if (b[pcr][pcc]) { bridgePiece = b[pcr][pcc]; }
+            }
+            // 만약 다리 역할을 하는 중간 기물이 '포(C)'라면 정통 규칙상 포장군 성립 불가 (무시)
+            if (bridgePiece && bridgePiece.t === TYPE.C) continue;
+          }
+          
+          checkers.push(p.t);
+        }
+      }
+    }
+  }
+  return checkers;
+}
+
+function isCheck(b, color){
+  return getCheckers(b, color).length > 0;
+}
+
+function getLegalMoves(b,r,c){
+  var p=b[r][c]; if(!p) return [];
+  var moves=getMoves(b,r,c),result=[];
+  for(var i=0;i<moves.length;i++){
+    var m=moves[i],sim=b.map(function(row){return row.slice();});
+    sim[m.r][m.c]=sim[r][c]; sim[r][c]=null;
+    if(!isCheck(sim,p.c)) result.push(m);
+  }
+  return result;
+}
+
+function hasLegalMove(b,color){
+  for(var r=0;r<ROWS;r++) for(var c=0;c<COLS;c++)
+    if(b[r][c]&&b[r][c].c===color&&getLegalMoves(b,r,c).length>0) return true;
+  return false;
+}
+
+function evalBoard(b){
+  var score=0;
+  for(var r=0;r<ROWS;r++) for(var c=0;c<COLS;c++){
+    var p=b[r][c]; if(!p)continue;
+    var v=VALS[p.t], pstRow=p.c===CHO?r:9-r;
+    v+=PST[p.t][pstRow][c];
+    score+=(p.c===CHO)?v:-v;
+  }
+  return score;
+}
+
+function minimax(b,depth,alpha,beta,isMax){
+  if(depth===0)return evalBoard(b);
+  var color=isMax?CHO:HAN,moves=[],r,c,i,m,sim,v;
+  for(r=0;r<ROWS;r++) for(c=0;c<COLS;c++){
+    if(b[r][c]&&b[r][c].c===color){
+      var pm=getLegalMoves(b,r,c);
+      for(i=0;i<pm.length;i++) moves.push({fr:r,fc:c,tr:pm[i].r,tc:pm[i].c,cap:b[pm[i].r][pm[i].c]});
+    }
+  }
+  if(moves.length===0) return isMax?-99999:99999;
+  moves.sort(function(a,b){return(b.cap?VALS[b.cap.t]:0)-(a.cap?VALS[a.cap.t]:0);});
+  if(isMax){
+    var max=-Infinity;
+    for(i=0;i<moves.length;i++){m=moves[i];sim=b.map(function(row){return row.slice();});sim[m.tr][m.tc]=sim[m.fr][m.fc];sim[m.fr][m.fc]=null;v=minimax(sim,depth-1,alpha,beta,false);if(v>max)max=v;if(v>alpha)alpha=v;if(beta<=alpha)break;}
+    return max;
+  }else{
+    var min=Infinity;
+    for(i=0;i<moves.length;i++){m=moves[i];sim=b.map(function(row){return row.slice();});sim[m.tr][m.tc]=sim[m.fr][m.fc];sim[m.fr][m.fc]=null;v=minimax(sim,depth-1,alpha,beta,true);if(v<min)min=v;if(v<beta)beta=v;if(beta<=alpha)break;}
+    return min;
+  }
+}
+
+function runAISearch(boardData,depth){
+  var bestVal=-Infinity,bestMoves=[];
+  for(var r=0;r<ROWS;r++) for(var c=0;c<COLS;c++){
+    if(boardData[r][c]&&boardData[r][c].c===CHO){
+      var moves=getLegalMoves(boardData,r,c);
+      for(var i=0;i<moves.length;i++){
+        var m=moves[i],sim=boardData.map(function(row){return row.slice();});
+        sim[m.r][m.c]=sim[r][c]; sim[r][c]=null;
+        var v=minimax(sim,depth-1,-Infinity,Infinity,false);
+        if(v>bestVal){bestVal=v;bestMoves=[{fr:r,fc:c,tr:m.r,tc:m.c}];}
+        else if(v===bestVal){bestMoves.push({fr:r,fc:c,tr:m.r,tc:m.c});}
+      }
+    }
+  }
+  return bestMoves;
+}
+
+// === WEB WORKER AI ===
+var aiWorker=null;
+function createAIWorker(){
+  if(!window.Worker || !window.Blob || !window.URL) return null;
+  try{
+    var source=[
+      'var COLS='+COLS+', ROWS='+ROWS+';',
+      'var HAN='+JSON.stringify(HAN)+', CHO='+JSON.stringify(CHO)+';',
+      'var TYPE='+JSON.stringify(TYPE)+';',
+      'var VALS='+JSON.stringify(VALS)+';',
+      'var PST='+JSON.stringify(PST)+';',
+      inBounds.toString(),
+      isPalace.toString(),
+      getPalaceLines.toString(),
+      getMoves.toString(),
+      getCheckers.toString(),
+      isCheck.toString(),
+      getLegalMoves.toString(),
+      evalBoard.toString(),
+      minimax.toString(),
+      runAISearch.toString(),
+      'self.onmessage=function(e){',
+      '  var data=e.data;',
+      '  self.postMessage({jobId:data.jobId,bestMoves:runAISearch(data.board,data.depth)});',
+      '};'
+    ].join('\n');
+    var blob=new Blob([source],{type:'application/javascript'});
+    var url=URL.createObjectURL(blob);
+    var worker=new Worker(url);
+    worker._objectUrl=url;
+    return worker;
+  }catch(e){
+    return null;
+  }
+}
+
+function runAI(){
+  aiThinking=true; document.getElementById('ai-think').style.display='block';
+  var jobId=++aiJobId;
+  var bd=board.map(function(row){return row.map(function(cell){return cell?{t:cell.t,c:cell.c}:null;});});
+  if(aiWorker){aiWorker.postMessage({board:bd,depth:aiDepth,jobId:jobId});}
+  else{setTimeout(function(){handleAIResult(runAISearch(bd,aiDepth),jobId);},50);}
+}
+
+function handleAIResult(bestMoves,jobId){
+  if(jobId && jobId!==aiJobId) return;
+  aiThinking=false; document.getElementById('ai-think').style.display='none';
+  if(gameOver || turn!==CHO) return;
+  if(bestMoves.length>0){var m=bestMoves[Math.floor(Math.random()*bestMoves.length)];executeMove(m.fr,m.fc,m.tr,m.tc);}
+}
+
+// === BOARD INIT ===
+function initBoard(){
+  aiJobId++;
+  pieceIdCounter=0;
+  pieceElements.forEach(function(el){el.remove();}); pieceElements.clear();
+  board=Array.from({length:ROWS},function(){return Array(COLS).fill(null);});
+  turn=HAN;selected=null;validMoves=[];moveHistory=[];capHan=[];capCho=[];gameOver=aiThinking=false;
+  lastMove=null; 
+  positionCounts={};movesWithoutCapture=0;
+
+  var hArr=SETUPS[setupConf.han],cArr=SETUPS[setupConf.cho];
+  board[0][0]=makePiece(TYPE.R,CHO);board[0][1]=makePiece(cArr[0],CHO);board[0][2]=makePiece(cArr[1],CHO);
+  board[0][3]=makePiece(TYPE.A,CHO);board[1][4]=makePiece(TYPE.K,CHO);board[0][5]=makePiece(TYPE.A,CHO);
+  board[0][6]=makePiece(cArr[2],CHO);board[0][7]=makePiece(cArr[3],CHO);board[0][8]=makePiece(TYPE.R,CHO);
+  board[2][1]=makePiece(TYPE.C,CHO);board[2][7]=makePiece(TYPE.C,CHO);
+  for(var i=0;i<9;i+=2) board[3][i]=makePiece(TYPE.S,CHO);
+
+  board[9][0]=makePiece(TYPE.R,HAN);board[9][1]=makePiece(hArr[0],HAN);board[9][2]=makePiece(hArr[1],HAN);
+  board[9][3]=makePiece(TYPE.A,HAN);board[8][4]=makePiece(TYPE.K,HAN);board[9][5]=makePiece(TYPE.A,HAN);
+  board[9][6]=makePiece(hArr[2],HAN);board[9][7]=makePiece(hArr[3],HAN);board[9][8]=makePiece(TYPE.R,HAN);
+  board[7][1]=makePiece(TYPE.C,HAN);board[7][7]=makePiece(TYPE.C,HAN);
+  for(var i=0;i<9;i+=2) board[6][i]=makePiece(TYPE.S,HAN);
+
+  positionCounts[boardHash(board, turn)]=1;
+  renderBg();updateUI();renderPieces();
+}
+
+// === RENDERING ===
+function renderBg(){
+  var canvas=document.getElementById('board-canvas'),ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  
+  ctx.strokeStyle='rgba(66, 44, 22, 0.75)';
+  ctx.lineWidth=2.5;
+  for(var r=0;r<ROWS;r++){ctx.beginPath();ctx.moveTo(OX,OY+r*CH);ctx.lineTo(OX+(COLS-1)*CW,OY+r*CH);ctx.stroke();}
+  for(var c=0;c<COLS;c++){ctx.beginPath();ctx.moveTo(OX+c*CW,OY);ctx.lineTo(OX+c*CW,OY+(ROWS-1)*CH);ctx.stroke();}
+  
+  ctx.beginPath();ctx.moveTo(OX+3*CW,OY);ctx.lineTo(OX+5*CW,OY+2*CH);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(OX+5*CW,OY);ctx.lineTo(OX+3*CW,OY+2*CH);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(OX+3*CW,OY+7*CH);ctx.lineTo(OX+5*CW,OY+9*CH);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(OX+5*CW,OY+7*CH);ctx.lineTo(OX+3*CW,OY+9*CH);ctx.stroke();
+  
+  ctx.fillStyle='rgba(66, 44, 22, 0.9)';
+  var dots=[[2,1],[2,7],[3,0],[3,2],[3,4],[3,6],[3,8],[7,1],[7,7],[6,0],[6,2],[6,4],[6,6],[6,8]];
+  for(var i=0;i<dots.length;i++){ctx.beginPath();ctx.arc(OX+dots[i][1]*CW,OY+dots[i][0]*CH,5,0,Math.PI*2);ctx.fill();}
+}
+
+function resizeBoardForViewport(){
+  var boardWrap=document.getElementById('board-wrap');
+  var boardContainer=document.getElementById('board-container');
+  if(!boardWrap || !boardContainer) return;
+
+  var availableWidth=Math.max(280, Math.min(580, window.innerWidth-24));
+  var scale=Math.min(1, availableWidth/580);
+
+  if(scale<1){
+    boardWrap.style.width='';
+    boardWrap.style.height='';
+    boardWrap.style.transformOrigin='top center';
+    boardWrap.style.transform='scale('+scale+')';
+    boardWrap.style.marginBottom=(44 - 650*(1-scale))+'px';
+    boardContainer.style.transformOrigin='';
+    boardContainer.style.transform='';
+  } else {
+    boardWrap.style.width='';
+    boardWrap.style.height='';
+    boardWrap.style.transformOrigin='';
+    boardWrap.style.transform='';
+    boardWrap.style.marginBottom='';
+    boardContainer.style.transform='';
+    boardContainer.style.transformOrigin='';
+  }
+}
+
+function renderPieces(){
+  var layer=document.getElementById('pieces-layer');
+  var activePieceIds=new Set();
+  var old=layer.querySelectorAll('.valid-move,.blood-slash,.last-move-marker');
+  for(var i=0;i<old.length;i++) old[i].remove();
+
+  if (lastMove) {
+    var fromMarker = document.createElement('div');
+    fromMarker.className = 'last-move-marker';
+    fromMarker.style.left = (OX + lastMove.fC * CW) + 'px';
+    fromMarker.style.top = (OY + lastMove.fR * CH) + 'px';
+    layer.appendChild(fromMarker);
+
+    var toMarker = document.createElement('div');
+    toMarker.className = 'last-move-marker';
+    toMarker.style.left = (OX + lastMove.tC * CW) + 'px';
+    toMarker.style.top = (OY + lastMove.tR * CH) + 'px';
+    layer.appendChild(toMarker);
+  }
+
+  for(var r=0;r<ROWS;r++){
+    for(var c=0;c<COLS;c++){
+      var p=board[r][c]; if(!p)continue;
+      activePieceIds.add(p.id);
+      var el=pieceElements.get(p.id);
+      if(!el){
+        el=document.createElement('div');
+        el.className='piece piece-'+p.c+' size-'+SIZE_MAP[p.t];
+        el.textContent=TEXT[p.c][p.t];
+        layer.appendChild(el);
+        pieceElements.set(p.id,el);
+      }
+      el.style.left=(OX+c*CW)+'px'; el.style.top=(OY+r*CH)+'px';
+      if(selected&&selected.r===r&&selected.c===c) el.classList.add('selected');
+      else el.classList.remove('selected');
+      
+      el.onclick=(function(row,col){return function(e){onPieceClick(e,row,col);};})(r,c);
+    }
+  }
+
+  pieceElements.forEach(function(el,id){
+    if(!activePieceIds.has(id)){
+      el.classList.add('piece-captured');
+      el.style.pointerEvents='none';
+      setTimeout(function(){el.remove();},350);
+      pieceElements.delete(id);
+    }
+  });
+  
+  validMoves.forEach(function(m){
+    var el=document.createElement('div');
+    var isCap=board[m.r][m.c];
+    el.className='valid-move '+(isCap?'capture':'');
+    el.style.left=(OX+m.c*CW)+'px'; 
+    el.style.top=(OY+m.r*CH)+'px';
+    
+    el.onclick = function(e){
+      e.stopPropagation();
+      executeMove(selected.r, selected.c, m.r, m.c);
+    };
+    layer.appendChild(el);
+  });
+}
+
+function updateUI(){
+  var ti=document.getElementById('turn-disp');
+  if(turn===HAN){
+    ti.textContent='漢 차례 (당신)';
+    ti.className='turn-indicator turn-han';
+  } else {
+    ti.textContent='楚 차례 (AI)';
+    ti.className='turn-indicator turn-cho';
+  }
+  document.getElementById('cap-han').innerHTML=capHan.map(function(p){
+    return '<div class="cap-piece cap-han">'+TEXT.han[p]+'</div>';
+  }).join('');
+  document.getElementById('cap-cho').innerHTML=capCho.map(function(p){
+    return '<div class="cap-piece cap-cho">'+TEXT.cho[p]+'</div>';
+  }).join('');
+}
+
+function logMove(p,fromR,fromC,toR,toC,cap){
+  var log=document.getElementById('move-log'), num=moveHistory.length;
+  var cName=p.c===HAN?'<span style="color:#f87171; font-weight:bold;">漢</span>':'<span style="color:#34d399; font-weight:bold;">楚</span>';
+  var action=cap?' <span style="color:#f87171;"><i class="fa-solid fa-burst"></i> '+TEXT[cap.c][cap.t]+' 참수</span>':'';
+  log.innerHTML+='<div class="log-row">'+num+'. '+cName+' '+TEXT[p.c][p.t]+' ('+fromC+','+fromR+') → ('+toC+','+toR+')'+action+'</div>';
+  log.scrollTop=log.scrollHeight;
+}
+
+// 어떤 장군인지 분석하여 대형 텍스트 컴포넌트에 한글/한자 조합으로 출력하는 연출 함수
+function triggerCheckAnimation(checkers) {
+  var overlay = document.getElementById('check-overlay');
+  
+  // 무엇에 의한 장군인지 네이밍 맵 정의
+  var typeNames = { R: '車將 (차장)', C: '包將 (포장)', H: '馬將 (마장)', E: '象將 (상장)', S: '卒將 (졸장)' };
+  var txt = '將軍 (장군)';
+  
+  if (checkers && checkers.length > 0) {
+    if (checkers.length >= 2) {
+      txt = '양수겸장 (兩手兼將)'; // 둘 이상의 기물이 동시 타격 시 프로장기 단골 대사 연출
+    } else {
+      txt = typeNames[checkers[0]] || '將軍 (장군)';
+    }
+  }
+
+  overlay.textContent = txt;
+  overlay.classList.remove('animate-check');
+  void overlay.offsetWidth; 
+  overlay.classList.add('animate-check');
+  
+  Sound.check();
+
+  setTimeout(function() {
+    overlay.classList.remove('animate-check');
+  }, 1200);
+}
+
+function showMsg(msg,isDraw){
+  var m=document.getElementById('status-msg'); m.textContent=msg;
+  m.className=isDraw?'show draw-msg':''; m.classList.add('show');
+  if(!isDraw) Sound.error();
+  setTimeout(function(){ m.classList.remove('show'); }, 2000);
+}
+
+// === GAME FLOW ===
+function onPieceClick(e,r,c){
+  e.stopPropagation();
+  if(gameOver||aiThinking)return;
+  var p=board[r][c];
+  if(p&&p.c===turn){
+    if(selected&&selected.r===r&&selected.c===c){ selected=null; validMoves=[]; renderPieces(); } 
+    else{ selected={r:r,c:c}; validMoves=getLegalMoves(board,r,c); renderPieces(); }
+  }
+  else if(selected){
+    for(var i=0;i<validMoves.length;i++){
+      if(validMoves[i].r===r&&validMoves[i].c===c){
+        executeMove(selected.r,selected.c,r,c);
+        return;
+      }
+    }
+  }
+}
+
+document.getElementById('board-container').onclick=function(e){
+  if(gameOver||aiThinking||!selected)return;
+  selected=null; validMoves=[]; renderPieces();
+};
+
+function executeMove(fR,fC,tR,tC){
+  var p=board[fR][fC], cap=board[tR][tC];
+  moveHistory.push({
+    board:board.map(function(r){return r.slice();}),
+    turn:turn,
+    capHan:capHan.slice(),
+    capCho:capCho.slice(),
+    logHTML:document.getElementById('move-log').innerHTML,
+    posCounts:JSON.parse(JSON.stringify(positionCounts)),
+    movesNoCap:movesWithoutCapture,
+    lastMove: lastMove ? Object.assign({}, lastMove) : null 
+  });
+
+  lastMove = {fR: fR, fC: fC, tR: tR, tC: tC};
+
+  if(cap){
+    if(cap.c===HAN) capHan.push(cap.t); else capCho.push(cap.t);
+    var layer=document.getElementById('pieces-layer');
+    var slash=document.createElement('div'); slash.className='blood-slash';
+    slash.style.left=(OX+tC*CW)+'px'; slash.style.top=(OY+tR*CH)+'px';
+    layer.appendChild(slash); setTimeout(function(){slash.remove();},400);
+    Sound.capture(); movesWithoutCapture=0;
+  } else {
+    Sound.move(); movesWithoutCapture++;
+  }
+
+  logMove(p,fR,fC,tR,tC,cap);
+  board[tR][tC]=p; board[fR][fC]=null;
+  selected=null; validMoves=[];
+  var enemy=turn===HAN?CHO:HAN;
+
+  if(cap && cap.t===TYPE.K){
+    renderPieces();
+    updateUI();
+    endGame(p.c,'kingCapture');
+    return;
+  }
+
+  var hash=boardHash(board, enemy);
+  positionCounts[hash]=(positionCounts[hash]||0)+1;
+
+  if(positionCounts[hash]>=3){ renderPieces(); updateUI(); endGame('draw','threefold'); return; }
+  if(movesWithoutCapture>=100){ renderPieces(); updateUI(); endGame('draw','100moves'); return; }
+
+  if(!hasLegalMove(board,enemy)){ renderPieces(); updateUI(); endGame(turn,null); }
+  else{
+    turn=enemy; updateUI(); renderPieces();
+    
+    // 장군 원인 제공 기물 배열 추출 및 애니메이션 분기 연출
+    var currentCheckers = getCheckers(board, turn);
+    if(currentCheckers.length > 0){ 
+      triggerCheckAnimation(currentCheckers); 
+    }
+    
+    if(turn===CHO&&!gameOver){ 
+      aiThinking=true; 
+      document.getElementById('ai-think').style.display='block'; 
+      setTimeout(runAI, 50); 
+    }
+  }
+}
+
+function undoMove(){
+  if(aiThinking||moveHistory.length<2) return;
+  var snap=moveHistory[moveHistory.length-2];
+  board=snap.board.map(function(r){return r.slice();}); turn=snap.turn;
+  capHan=snap.capHan.slice(); capCho=snap.capCho.slice();
+  document.getElementById('move-log').innerHTML=snap.logHTML;
+  positionCounts=JSON.parse(JSON.stringify(snap.posCounts)); movesWithoutCapture=snap.movesNoCap;
+  lastMove = snap.lastMove; 
+  moveHistory=moveHistory.slice(0,-2); selected=null; validMoves=[]; gameOver=false;
+  document.getElementById('game-over-overlay').classList.remove('show');
+  pieceElements.forEach(function(el){el.remove();}); pieceElements.clear();
+  updateUI(); renderPieces();
+}
+
+function endGame(winner,drawReason){
+  gameOver=true;
+  var t=document.getElementById('end-title'), d=document.getElementById('end-desc');
+  if(winner==='draw'){
+    t.innerHTML='🤝 무승부 (Draw)'; t.style.color='#dfb36c';
+    d.textContent=drawReason==='threefold'?'동일 국면이 3회 반복되어 무승부가 선언되었습니다.':'100수 동안 잡기 없이 진행되어 무승부가 선언되었습니다.';
+  } else {
+    t.innerHTML=winner===HAN?'🏆 勝利 (승리) 🏆':'💀 敗北 (패배)';
+    t.style.color=winner===HAN?'#ef4444':'#a8a29e';
+    d.textContent=winner===HAN?'적장의 목을 베고 승리를 거두었습니다!':'장군을 잃고 아군의 기지가 함락되었습니다.';
+  }
+  document.getElementById('game-over-overlay').classList.add('show');
+}
+
+// === UI CONTROLLERS (CSP COMPLIANT) ===
+function pickSetup(side,code){
+  setupConf[side]=code;
+  var cards = document.querySelectorAll('#cards-'+side+' .setup-card');
+  for(var i=0;i<cards.length;i++) cards[i].classList.remove('selected');
+  document.getElementById(side+'-'+code).classList.add('selected');
+  var startBtn=document.getElementById('btn-start');
+  var ready=!!(setupConf.han && setupConf.cho);
+  startBtn.classList.toggle('ready',ready);
+  startBtn.disabled=!ready;
+  startBtn.setAttribute('aria-disabled', String(!ready));
+}
+
+function openSetup(){
+  aiJobId++;
+  aiThinking=false;
+  document.getElementById('ai-think').style.display='none';
+  document.getElementById('game-over-overlay').classList.remove('show');
+  document.getElementById('setup-overlay').classList.add('show');
+  setupConf={han:null,cho:null};
+  var cards = document.querySelectorAll('.setup-card');
+  for(var i=0;i<cards.length;i++) cards[i].classList.remove('selected');
+  var startBtn=document.getElementById('btn-start');
+  startBtn.classList.remove('ready');
+  startBtn.disabled=true;
+  startBtn.setAttribute('aria-disabled','true');
+}
+
+function setDiff(lv){
+  aiDepth=lv===1?1:lv===2?2:3;
+  var btns=document.querySelectorAll('.diff-btn');
+  for(var i=0;i<btns.length;i++) btns[i].classList.toggle('active',i===lv-1);
+}
+
+function startGame(){
+  if(!setupConf.han || !setupConf.cho){
+    showMsg('양쪽 진형을 모두 선택해 주세요.');
+    return;
+  }
+  document.getElementById('setup-overlay').classList.remove('show');
+  document.getElementById('move-log').innerHTML='';
+  initBoard();
+}
+
+// === EVENT BINDING FOR CSP COMPLIANCE ===
+document.addEventListener('DOMContentLoaded', function() {
+  resizeBoardForViewport();
+  window.addEventListener('resize', resizeBoardForViewport);
+
+  document.getElementById('btn-undo').addEventListener('click', undoMove);
+  document.getElementById('btn-restart').addEventListener('click', openSetup);
+  document.getElementById('btn-gameover-retry').addEventListener('click', openSetup);
+  document.getElementById('btn-start').addEventListener('click', startGame);
+
+  var diffButtons = document.querySelectorAll('#diff-buttons-container .diff-btn');
+  diffButtons.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var lv = parseInt(this.getAttribute('data-level'));
+      setDiff(lv);
+    });
+  });
+
+  var setupCards = document.querySelectorAll('.setup-card');
+  setupCards.forEach(function(card) {
+    card.addEventListener('click', function() {
+      var side = this.getAttribute('data-side');
+      var code = this.getAttribute('data-code');
+      pickSetup(side, code);
+    });
+  });
+
+  aiWorker = createAIWorker();
+  if(aiWorker){
+    aiWorker.onmessage = function(e){ handleAIResult(e.data.bestMoves,e.data.jobId); };
+    aiWorker.onerror = function(){
+      if(aiWorker && aiWorker._objectUrl) URL.revokeObjectURL(aiWorker._objectUrl);
+      aiWorker=null;
+      if(aiThinking && turn===CHO && !gameOver){
+        aiThinking=false;
+        runAI();
+      }
+    };
+  }
+});
+</script>
+</body>
+</html>
