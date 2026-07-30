@@ -61,10 +61,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .document-page-viewport{min-width:0}
 .editor-head-chain-of-custody{display:grid;grid-template-columns:42px minmax(0,1fr);gap:7px;overflow-x:hidden;padding:8px 10px}
 .editor-head-chain-of-custody>div:first-child{min-width:0}
-.coc-controls{display:flex;align-items:center;flex-wrap:wrap;gap:5px;min-width:0}
-.coc-controls .cell-selection-hint{flex:1 1 245px;min-width:180px;font-size:9px;line-height:1.25;white-space:normal}
+.coc-controls{display:flex;align-items:stretch;flex-wrap:wrap;gap:5px;min-width:0}
+.coc-controls .cell-selection-hint{flex:1 0 100%;min-width:180px;font-size:9px;line-height:1.25;white-space:normal}
 .coc-controls select{max-width:140px;height:31px;padding:3px 5px;font-size:11px}
 .coc-controls button{padding:5px 7px;font-size:11px}
+.coc-control-group{display:flex;flex:1 1 auto;align-items:center;flex-wrap:wrap;gap:4px;min-width:0;padding:4px;border:1px solid #d2dde5;border-radius:6px;background:#f7fafc}
+.coc-control-group-analysis{flex-basis:300px}.coc-control-group-sample{flex-basis:360px}.coc-control-group-page{flex-basis:380px}
+.coc-control-group-label{flex:0 0 auto;padding:0 3px;color:#31536a;font-size:9px;font-weight:900;white-space:nowrap}
 .analysis-edit-mode-toggle.is-active{border-color:#16704a;background:#25855a;color:#fff}
 .analysis-edit-mode-toggle.is-active:hover{background:#1d704c}
 .page-jump-controls{display:flex;align-items:center;gap:4px;min-width:0}
@@ -241,6 +244,20 @@ input.field-error{background:#fff0ed!important;box-shadow:inset 0 0 0 .35mm #c73
 .coc-table td{height:4.8mm;padding:.15mm .3mm;text-align:center}
 .coc-table input{height:4mm;text-align:center;font-size:1.8mm}
 .coc-table .sample-id-input{text-align:left}
+.coc-depth-editor{display:grid;grid-template-columns:minmax(0,1fr) 2.2mm minmax(0,1fr);align-items:center;width:100%;min-width:0}
+.coc-depth-editor .coc-depth-part{min-width:0;padding:0 .2mm}
+.coc-depth-separator{visibility:hidden;user-select:none;font-weight:900;line-height:1}
+.coc-depth-editor.has-start .coc-depth-separator{visibility:visible}
+.coc-depth-editor:not(.has-start) .coc-depth-end{visibility:hidden;pointer-events:none}
+.coc-depth-editor.depth-invalid{background:#fff0ed;box-shadow:inset 0 0 0 .35mm #c73c32}
+.coc-depth-editor.depth-invalid .coc-depth-part{background:transparent!important;box-shadow:none!important}
+.coc-depth-editor.depth-sequence-reverse:not(.depth-invalid){background:#ffe3e0;box-shadow:inset 0 0 0 .35mm #c73c32}
+.coc-depth-editor.depth-sequence-overlap:not(.depth-invalid){background:#fff3cd;box-shadow:inset 0 0 0 .35mm #d89b18}
+.coc-depth-editor.depth-sequence-reverse .coc-depth-part,.coc-depth-editor.depth-sequence-overlap .coc-depth-part{background:transparent!important;box-shadow:none!important}
+.depth-suggestion-popover{position:fixed;z-index:1000;display:flex;flex-wrap:wrap;gap:5px;max-width:calc(100vw - 16px);padding:6px;border:1px solid #6e91aa;border-radius:8px;background:#fff;box-shadow:0 5px 18px rgba(15,43,67,.28)}
+.depth-suggestion-popover[hidden]{display:none}
+.depth-suggestion-popover button{min-width:48px;min-height:34px;padding:6px 10px;border:1px solid #8da8bb;border-radius:6px;background:#eef6fb;color:#123b5d;font-size:13px;font-weight:800}
+.depth-suggestion-popover button:hover,.depth-suggestion-popover button.is-active{border-color:#187db6;background:#187db6;color:#fff}
 .analysis-cell{padding:0!important}
 .analysis-toggle{width:100%;height:100%;min-height:4.4mm;border:0;border-radius:0;padding:0;background:transparent;font-size:2.2mm}
 .analysis-toggle.checked{font-weight:900}
@@ -341,6 +358,10 @@ input.field-error{background:#fff0ed!important;box-shadow:inset 0 0 0 .35mm #c73
 .workspace-reset-options>label{display:flex;align-items:flex-start;gap:7px;font-size:12px;line-height:1.45}
 .workspace-reset-options input[type="checkbox"]{width:17px;height:17px;margin-top:1px}
 .workspace-reset-options .simple-modal-field{display:grid}
+.workspace-reset-backup-confirm{padding:9px;border:1px solid #d7b46a;border-radius:7px;background:#fff8e8;color:#624a12;font-weight:700}
+.workspace-reset-backup-status{margin:0;padding:9px;border-radius:7px;background:#edf6fc;color:#214f72;font-size:12px;line-height:1.5}
+.simple-modal-hint{margin:9px 0 0;color:#526878;font-size:12px;line-height:1.5}
+.simple-modal-hint.warning{padding:8px;border-radius:6px;background:#fff7df;color:#755510;font-weight:700}
 .empty-state-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:18px}
 .backup-manager-modal{width:min(920px,100%)}
 .backup-manager-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -564,20 +585,24 @@ input.field-error{background:#fff0ed!important;box-shadow:inset 0 0 0 .35mm #c73
     font-size:10px;line-height:1.2
   }
   .editor-head-chain-of-custody .coc-controls{
-    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;width:100%
+    display:grid;grid-template-columns:minmax(0,1fr);gap:4px;width:100%
   }
   .editor-head-chain-of-custody .coc-controls .cell-selection-hint{
     grid-column:1/-1;min-width:0;padding:2px 3px;border-radius:4px;
     background:#eef6fb;overflow:visible;text-overflow:clip;white-space:normal;
     font-size:10px;line-height:1.35
   }
-  .editor-head-chain-of-custody .coc-controls button,
-  .editor-head-chain-of-custody .coc-controls select{
+  .editor-head-chain-of-custody .coc-control-group{
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px;width:100%;padding:4px
+  }
+  .editor-head-chain-of-custody .coc-control-group-label{grid-column:1/-1;padding:0 2px;font-size:9px}
+  .editor-head-chain-of-custody .coc-control-group button,
+  .editor-head-chain-of-custody .coc-control-group select{
     width:100%;min-width:0;max-width:none;min-height:31px;padding:3px 2px;
     white-space:normal;font-size:9px;line-height:1.1
   }
-  .editor-head-chain-of-custody .coc-controls>select{grid-column:span 2}
-  .editor-head-chain-of-custody .coc-controls>[data-action="remove-coc-page"]{grid-column:auto}
+  .editor-head-chain-of-custody .coc-control-group-analysis>select{grid-column:1/-1}
+  .editor-head-chain-of-custody .coc-control-group-page>[data-action="remove-coc-page"]{grid-column:1/-1}
   .document-search-box{top:max(6px,env(safe-area-inset-top));right:6px;width:calc(100vw - 12px);padding:6px}
   .document-search-head{margin-bottom:4px;font-size:11px}
   .document-search-row{grid-template-columns:minmax(0,1fr) 31px 31px 43px;gap:3px}
@@ -624,13 +649,6 @@ input.field-error{background:#fff0ed!important;box-shadow:inset 0 0 0 .35mm #c73
   .recovery-row-actions button{flex:1}
 }
 @media(max-width:360px){
-  .editor-head-chain-of-custody .coc-controls{
-    grid-template-columns:repeat(2,minmax(0,1fr))
-  }
-  .editor-head-chain-of-custody .coc-controls>select,
-  .editor-head-chain-of-custody .coc-controls>[data-action="remove-coc-page"]{
-    grid-column:1/-1
-  }
   .editor-head .page-jump-controls{grid-column:1/-1}
   .editor-head:not(.editor-head-chain-of-custody){grid-template-columns:repeat(2,minmax(0,1fr))}
 }
@@ -739,6 +757,39 @@ input.field-error{background:#fff0ed!important;box-shadow:inset 0 0 0 .35mm #c73
   </section>
 </div>
 
+<div id="sample-id-fill-modal" class="modal-backdrop" hidden>
+  <section class="modal project-name-modal" role="dialog" aria-modal="true" aria-labelledby="sample-id-fill-title">
+    <div class="modal-head"><h2 id="sample-id-fill-title">Sample ID 채우기</h2><button type="button" data-close-modal="sample-id-fill-modal">×</button></div>
+    <div class="modal-body">
+      <p id="sample-id-fill-point" class="workspace-reset-summary"></p>
+      <label class="simple-modal-field">채울 Sample ID 개수
+        <input id="sample-id-fill-count" type="number" min="1" max="15" step="1" inputmode="numeric" autocomplete="off" value="1">
+      </label>
+      <p id="sample-id-fill-hint" class="simple-modal-hint">1~15 사이의 정수를 입력하세요.</p>
+    </div>
+    <div class="modal-actions">
+      <button type="button" data-close-modal="sample-id-fill-modal">취소</button>
+      <button id="apply-sample-id-fill" class="primary" type="button">채우기</button>
+    </div>
+  </section>
+</div>
+
+<div id="common-preset-name-modal" class="modal-backdrop" hidden>
+  <section class="modal project-name-modal" role="dialog" aria-modal="true" aria-labelledby="common-preset-name-title">
+    <div class="modal-head"><h2 id="common-preset-name-title">자주 쓰는 정보 저장</h2><button type="button" data-close-modal="common-preset-name-modal">×</button></div>
+    <div class="modal-body">
+      <label class="simple-modal-field">저장 이름
+        <input id="common-preset-name-input" type="text" maxlength="80" autocomplete="off" placeholder="저장 이름 입력">
+      </label>
+      <p id="common-preset-name-hint" class="simple-modal-hint">현재 공통정보 입력값을 새 항목으로 저장합니다.</p>
+    </div>
+    <div class="modal-actions">
+      <button type="button" data-close-modal="common-preset-name-modal">취소</button>
+      <button id="confirm-save-common-preset" class="primary" type="button">새로 저장</button>
+    </div>
+  </section>
+</div>
+
 <div id="print-modal" class="modal-backdrop" hidden>
   <section class="modal print-modal" role="dialog" aria-modal="true" aria-labelledby="print-modal-title">
     <div class="modal-head"><h2 id="print-modal-title">문서 인쇄</h2><button type="button" data-close-modal="print-modal" aria-label="인쇄 창 닫기">×</button></div>
@@ -771,11 +822,13 @@ input.field-error{background:#fff0ed!important;box-shadow:inset 0 0 0 .35mm #c73
         <label class="simple-modal-field">확인을 위해 <strong>초기화</strong>를 입력하세요.
           <input id="workspace-reset-confirm-input" type="text" autocomplete="off" placeholder="초기화">
         </label>
+        <label id="workspace-reset-backup-confirm-row" class="workspace-reset-backup-confirm" hidden><input id="workspace-reset-backup-confirmed" type="checkbox">다운로드 목록에서 백업 파일이 기기에 저장된 것을 확인했습니다.</label>
+        <p id="workspace-reset-backup-status" class="workspace-reset-backup-status" hidden aria-live="polite"></p>
       </div>
     </div>
     <div class="modal-actions">
       <button type="button" data-close-modal="workspace-reset-modal">취소</button>
-      <button id="backup-and-reset-workspace" type="button" disabled>백업 후 초기화</button>
+      <button id="backup-and-reset-workspace" type="button" disabled>백업 다운로드</button>
       <button id="reset-workspace" class="danger" type="button" disabled>초기화 실행</button>
     </div>
   </section>
@@ -896,7 +949,7 @@ input.field-error{background:#fff0ed!important;box-shadow:inset 0 0 0 .35mm #c73
         <label>조사구분<input data-common="surveyType" placeholder="예: A"></label>
         <label>시작 지점번호<input data-common="startPoint" inputmode="numeric" placeholder="001"></label>
         <label>시료명 자리수<select data-common="sampleDigits"><option value="1">1자리</option><option value="2">2자리</option><option value="3">3자리</option></select></label>
-        <label>기본 Matrix<input data-common="defaultMatrix" placeholder="Soil"></label>
+        <label>기본 Matrix<input data-common="defaultMatrix" placeholder="SOIL"></label>
         <label>Vial 다음 번호<input data-common="vialNext" type="number" min="1"></label>
         <div class="common-presets span-3">
           <label>자주 쓰는 정보<select id="common-preset-select"><option value="">저장된 정보 선택</option></select></label>
@@ -1016,12 +1069,37 @@ const RECOVERY_RECENT_LIMIT=10;
 const RECOVERY_DAILY_LIMIT=7;
 const RECOVERY_SIZE_LIMIT=200*1024*1024;
 const FALLBACK_KEY='field-forms-integrated-fallback-v1';
+const PENDING_JOURNAL_KEY='field-forms-pending-input-journal-v1';
+const PENDING_JOURNAL_MAX_ENTRIES=200;
+const PENDING_JOURNAL_MAX_AGE_MS=7*24*60*60*1000;
 const COMMON_PRESET_KEY='field-forms-common-presets-v1';
 const HELP_DISMISSED_KEY='field-forms-help-dismissed-v1';
 const LEGACY_KEYS=['nicem-coc-workspace-v2','nicem-coc-autosave-v1'];
 const DAILY_MAX_ORGANIZATIONS=6;
 const DAILY_MAX_TASKS=5;
 const MAX_SAMPLE_IDS_PER_POINT=15;
+const DEPTH_END_SUGGESTIONS=Object.freeze({
+  '0':['0.15','0.3','0.6','1'],
+  '0.15':['0.3','0.6','1'],
+  '0.3':['0.6','1'],
+  '0.6':['1'],
+  '1':['1.5','2'],
+  '1.5':['2'],
+  '2':['2.5','3'],
+  '2.5':['3'],
+  '3':['4'],
+  '4':['5'],
+  '5':['6'],
+  '6':['7'],
+  '7':['8'],
+  '8':['9'],
+  '9':['10'],
+  '10':['11'],
+  '11':['12'],
+  '12':['13'],
+  '13':['14'],
+  '14':['15']
+});
 const RESULT_INPUT_SHEET_NAME='채취-분석현황_입력';
 const RESULT_INPUT_START_ROW=16;
 const RESULT_INPUT_END_ROW=1015;
@@ -1061,13 +1139,15 @@ let cocOcrState={fileName:'',sourceImage:null,rotation:0,enhance:true,imageData:
 let pendingCocResultExportDocumentId='';
 let projectNameModalMode='create';
 let pendingBackupRestore=null,recoveryTimer=null,lastRecoveryChecksum='';
+let pendingSampleIdFillDocumentId='',pendingCommonPresetValues=null,pendingJournalToken='',workspaceResetBackupPrepared=false;
+let activeDepthSuggestionInput=null,activeDepthSuggestionIndex=-1;
 let cocOcrRequestController=null,cocOcrProgressTimer=null,cocOcrTimeoutTimer=null,cocOcrStartedAt=0,cocOcrTimedOut=false;
 const COC_OCR_CLIENT_TIMEOUT_MS=16*60*1000;
 const undoStack=[],redoStack=[];
 
 function blankSignature(){return {name:'',image:''}}
 function defaultCommon(name='새 프로젝트'){
-  return {displayName:name,projectName:'',surveyArea:'',organization:'',laboratory:'NICEM',workDate:todayISO(),manager:'',recorder:'',checker:'',siteName:'',surveyType:'A',startPoint:'001',sampleDigits:2,defaultMatrix:'Soil',vialNext:1};
+  return {displayName:name,projectName:'',surveyArea:'',organization:'',laboratory:'NICEM',workDate:todayISO(),manager:'',recorder:'',checker:'',siteName:'',surveyType:'A',startPoint:'001',sampleDigits:2,defaultMatrix:'SOIL',vialNext:1};
 }
 function blankCocSample(){return {sampleId:'',depth:'',sampleDate:'',matrix:'',container:'',vial:'',analyses:[],comment:''}}
 function blankSoilSample(){return {sampleId:'',vialId:'',analysis:'',depthFrom:'',depthTo:'',texture:'',sizes:[],colors:[],moisture:'',odor:'',remark:'',_qaQcAuto:false,_qaQcPreviousRemark:''}}
@@ -1111,6 +1191,46 @@ function currentProject(){return workspace.projects.find(p=>p.id===workspace.cur
 function currentDocument(){const p=currentProject();return p?.documents.find(d=>d.id===workspace.currentDocumentId)||null}
 function getAt(root,path){return path.split('.').reduce((value,key)=>value==null?undefined:value[key],root)}
 function setAt(root,path,value){const keys=path.split('.');let target=root;keys.slice(0,-1).forEach(key=>{if(target[key]==null)target[key]={};target=target[key]});target[keys.at(-1)]=value}
+function readPendingInputJournal(){
+  try{
+    const journal=JSON.parse(localStorage.getItem(PENDING_JOURNAL_KEY)||'null');
+    if(!journal||journal.version!==1||typeof journal.token!=='string'||!Array.isArray(journal.patches))return null;
+    if(Date.now()-Number(journal.updatedAt||0)>PENDING_JOURNAL_MAX_AGE_MS){localStorage.removeItem(PENDING_JOURNAL_KEY);return null}
+    return journal;
+  }catch(error){return null}
+}
+function recordPendingInputPatch(doc,path,value){
+  if(!doc||!path)return;
+  const project=workspace.projects.find(item=>item.documents?.some(candidate=>candidate.id===doc.id));if(!project)return;
+  const journal=readPendingInputJournal()||{version:1,token:'',updatedAt:0,patches:[]};
+  const patch={projectId:project.id,documentId:doc.id,path,value:deepClone(value)};
+  journal.patches=journal.patches.filter(item=>!(item.projectId===patch.projectId&&item.documentId===patch.documentId&&item.path===patch.path));
+  journal.patches.push(patch);
+  if(journal.patches.length>PENDING_JOURNAL_MAX_ENTRIES)journal.patches=journal.patches.slice(-PENDING_JOURNAL_MAX_ENTRIES);
+  journal.token=uid('journal');journal.updatedAt=Date.now();
+  try{localStorage.setItem(PENDING_JOURNAL_KEY,JSON.stringify(journal));pendingJournalToken=journal.token}
+  catch(error){console.warn('입력 임시 저널 기록 실패',error)}
+}
+function clearPendingInputJournal(token){
+  if(!token)return;
+  const journal=readPendingInputJournal();
+  if(journal?.token!==token)return;
+  try{localStorage.removeItem(PENDING_JOURNAL_KEY)}catch(error){console.warn(error)}
+  if(pendingJournalToken===token)pendingJournalToken='';
+}
+function applyPendingInputJournal(targetWorkspace){
+  const journal=readPendingInputJournal();if(!journal)return 0;
+  let applied=0;
+  journal.patches.forEach(patch=>{
+    const project=targetWorkspace.projects?.find(item=>item.id===patch.projectId);
+    const doc=project?.documents?.find(item=>item.id===patch.documentId);
+    if(!doc||typeof patch.path!=='string'||!patch.path)return;
+    try{setAt(doc.data,patch.path,deepClone(patch.value));doc.updatedAt=Math.max(Number(doc.updatedAt)||0,Number(journal.updatedAt)||Date.now());applied++}
+    catch(error){console.warn('입력 임시 저널 복구 실패',patch,error)}
+  });
+  pendingJournalToken=journal.token;
+  return applied;
+}
 function showToast(message,ms=2600){const toast=document.getElementById('toast');toast.textContent=message;toast.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.hidden=true,ms)}
 function setStatus(text,error=false){const el=document.getElementById('save-status');el.textContent=text;el.style.color=error?'#ffb3ad':'#9ce4b9'}
 function helpAutoDisplayDismissed(){
@@ -1206,14 +1326,16 @@ async function pruneOrphanRecoveryAssets(){
 }
 async function saveNow(){
   clearTimeout(saveTimer);saveTimer=null;setStatus('저장 중…');
+  const journalToken=pendingJournalToken||readPendingInputJournal()?.token||'';
   try{
     workspace.version=APP_VERSION;
     if(db)await idbPut(workspace);else localStorage.setItem(FALLBACK_KEY,JSON.stringify(workspace));
+    clearPendingInputJournal(journalToken);
     setStatus('저장됨');
   }catch(error){
     console.warn(error);
     if(db){
-      try{localStorage.setItem(FALLBACK_KEY,JSON.stringify(workspace));setStatus('로컬 대체 저장됨');showToast('기본 저장소 오류로 브라우저 대체 저장소에 보관했습니다.',4200);return}
+      try{localStorage.setItem(FALLBACK_KEY,JSON.stringify(workspace));clearPendingInputJournal(journalToken);setStatus('로컬 대체 저장됨');showToast('기본 저장소 오류로 브라우저 대체 저장소에 보관했습니다.',4200);return}
       catch(fallbackError){console.warn(fallbackError)}
     }
     setStatus('저장 실패',true);showToast('저장 공간이 부족하거나 브라우저 저장이 차단되었습니다. 전체 백업을 내려받아 주세요.',5200);
@@ -1343,6 +1465,7 @@ function normalizeCocData(raw,common){
     samples:Array.from({length:21},(_,index)=>{
       const sample={...blankCocSample(),...(chunk[index]&&typeof chunk[index]==='object'?chunk[index]:{})};
       sample.sampleId=normalizeCocSampleIdCase(sample.sampleId);
+      sample.matrix=normalizeCocMatrixShortcut(sample.matrix);
       sample.analyses=Array.isArray(sample.analyses)?sample.analyses.filter(item=>typeof item==='string'):[];
       return sample;
     })
@@ -1374,6 +1497,7 @@ function normalizeWorkspaceData(source){
     const common={...defaultCommon(project.name||'프로젝트'),...(project.common||{})};
     common.sampleDigits=Math.max(1,Math.min(6,Number(common.sampleDigits)||2));
     common.vialNext=Math.max(1,Number(common.vialNext)||1);
+    common.defaultMatrix=normalizeCocMatrixShortcut(common.defaultMatrix)||'SOIL';
     const result={...project,name:String(project.name||common.displayName||'프로젝트'),common};
     result.documents=project.documents.map(doc=>{
       const pageLocks=doc.pageLocks&&typeof doc.pageLocks==='object'&&!Array.isArray(doc.pageLocks)
@@ -1420,6 +1544,19 @@ function applyCommonToDocument(doc,common,force=false){
 function input(path,value,options={}){
   const {type='text',cls='',placeholder='',readonly=false,extra=''}=options;
   return `<input class="${esc(cls)}" type="${esc(type)}" data-path="${esc(path)}" value="${esc(value)}" placeholder="${esc(placeholder)}" ${readonly?'readonly':''} ${extra}>`;
+}
+function cocDepthEditor(path,value,pageIndex,rowIndex,sequenceWarning=null){
+  const parts=splitDepthInputValue(value),validation=validateDepthParts(parts.from,parts.to);
+  const hasStart=Boolean(parts.from),showInvalid=Boolean(String(value||'').trim()&&!validation.valid&&!validation.incomplete);
+  const invalidAttributes=showInvalid?' aria-invalid="true"':'';
+  const sequenceClass=!showInvalid&&sequenceWarning?`depth-sequence-${sequenceWarning.level}`:'';
+  const sequenceAttributes=!showInvalid&&sequenceWarning?` title="${esc(sequenceWarning.message)}" data-depth-sequence-warning="${esc(sequenceWarning.level)}"`:'';
+  return `<div class="coc-depth-editor ${hasStart?'has-start':''} ${showInvalid?'depth-invalid':''} ${sequenceClass}" data-depth-path="${esc(path)}" data-coc-depth="${pageIndex}:${rowIndex}"${sequenceAttributes}>
+    <input type="hidden" data-path="${esc(path)}" data-coc-depth="${pageIndex}:${rowIndex}" value="${esc(value)}">
+    <input type="text" class="coc-depth-part coc-depth-start" inputmode="decimal" autocomplete="off" data-coc-depth-part="start" value="${esc(parts.from)}" aria-label="시작 깊이"${invalidAttributes}>
+    <span class="coc-depth-separator" aria-hidden="true">-</span>
+    <input type="text" class="coc-depth-part coc-depth-end" inputmode="decimal" autocomplete="off" data-coc-depth-part="end" value="${esc(parts.to)}" aria-label="종료 깊이"${invalidAttributes}>
+  </div>`;
 }
 function textarea(path,value,options={}){return `<textarea data-path="${esc(path)}" class="${esc(options.cls||'')}" rows="${options.rows||3}" placeholder="${esc(options.placeholder||'')}" ${options.extra||''}>${esc(value)}</textarea>`}
 function choice(path,value,current,label=value,multiple=false){
@@ -1832,6 +1969,25 @@ function parseDatedBlankSampleId(value){
 function normalizeCocSampleIdCase(value){
   return String(value??'').toUpperCase();
 }
+function previousCocSampleId(doc,pageIndex,rowIndex){
+  const globalIndex=pageIndex*21+rowIndex-1;
+  if(globalIndex<0)return '';
+  const previousPage=doc?.data?.pages?.[Math.floor(globalIndex/21)];
+  return String(previousPage?.samples?.[globalIndex%21]?.sampleId||'').trim();
+}
+function expandCocQaqcShortcut(value,previousSampleId){
+  const normalized=normalizeCocSampleIdCase(value);
+  if(normalized.trim()!=='Q')return {matched:false,value:normalized};
+  const previous=normalizeCocSampleIdCase(previousSampleId).trim();
+  const base=previous.replace(/\s*\(QA\s*\/\s*QC\)\s*$/i,'').trim();
+  return {matched:true,value:base?`${base}(QA/QC)`:''};
+}
+function normalizeCocMatrixShortcut(value){
+  const raw=String(value??''),trimmed=raw.trim();
+  if(/^(?:s|soil)$/i.test(trimmed))return 'SOIL';
+  if(/^(?:w|water)$/i.test(trimmed))return 'WATER';
+  return raw;
+}
 function isDatedBlankSampleId(value){
   return Boolean(parseDatedBlankSampleId(value));
 }
@@ -1870,7 +2026,7 @@ function renderCoc(doc,printMode=false){
   const nextPoint=nextSamplePointLabel();
   const idValidation=cocSampleIdValidation(doc);
   const approvedCount=idValidation.approvedInvalid.length;
-  const controls=printMode?'':`<div class="coc-controls"><span class="cell-selection-hint">${analysisEditMode?'분석 의뢰 체크 편집 중 · 클릭/드래그로 표시 변경':'분석 의뢰 체크는 보호됨 · 편집 모드를 켜야 변경 가능'} · 입력셀 드래그 → Ctrl+C / Ctrl+V / Delete</span><select data-action="coc-profile" aria-label="COC 분석 프로필"><option value="contamination" ${d.profile==='contamination'?'selected':''}>토양오염 전항목</option><option value="physicochemical" ${d.profile==='physicochemical'?'selected':''}>이화학특성</option></select><button type="button" class="analysis-edit-mode-toggle ${analysisEditMode?'is-active':''}" data-action="toggle-coc-analysis-edit" aria-pressed="${analysisEditMode?'true':'false'}">${analysisEditMode?'편집 모드 종료':'체크 편집 모드'}</button><button type="button" data-action="open-document-search">페이지 검색</button><button type="button" data-action="open-coc-analysis-items">분석항목 편집</button><button type="button" data-action="open-coc-sample-id-exceptions">Sample ID 예외${approvedCount?` (${approvedCount})`:''}</button><button type="button" data-action="open-coc-ocr">사진 인식</button><button type="button" data-action="export-coc-result-xlsx">결과입력 XLSX</button><button type="button" data-action="generate-sample-ids" title="${esc(nextPoint)} 지점 Sample ID 채우기">Sample ID 채우기 (${esc(nextPoint)})</button><button type="button" data-action="add-coc-page">페이지 추가</button><button type="button" data-action="clone-coc-page">페이지 복제</button><button type="button" class="danger" data-action="reset-coc-page">현재 페이지 초기화</button><button type="button" data-action="remove-coc-page">페이지 삭제</button></div>`;
+  const controls=printMode?'':`<div class="coc-controls"><span class="cell-selection-hint">${analysisEditMode?'분석 의뢰 체크 편집 중 · 클릭/드래그로 표시 변경':'분석 의뢰 체크는 보호됨 · 편집 모드를 켜야 변경 가능'} · 입력셀 드래그 → Ctrl+C / Ctrl+V / Delete</span><div class="coc-control-group coc-control-group-analysis" role="group" aria-label="분석 설정"><span class="coc-control-group-label">분석 설정</span><select data-action="coc-profile" aria-label="COC 분석 프로필"><option value="contamination" ${d.profile==='contamination'?'selected':''}>토양오염 전항목</option><option value="physicochemical" ${d.profile==='physicochemical'?'selected':''}>이화학특성</option></select><button type="button" class="analysis-edit-mode-toggle ${analysisEditMode?'is-active':''}" data-action="toggle-coc-analysis-edit" aria-pressed="${analysisEditMode?'true':'false'}">${analysisEditMode?'편집 모드 종료':'체크 편집 모드'}</button><button type="button" data-action="open-coc-analysis-items">분석항목 편집</button></div><div class="coc-control-group coc-control-group-sample" role="group" aria-label="시료 입력과 내보내기"><span class="coc-control-group-label">시료 입력·내보내기</span><button type="button" data-action="generate-sample-ids" title="${esc(nextPoint)} 지점 Sample ID 채우기">Sample ID 채우기 (${esc(nextPoint)})</button><button type="button" data-action="open-coc-sample-id-exceptions">Sample ID 예외${approvedCount?` (${approvedCount})`:''}</button><button type="button" data-action="open-coc-ocr">사진 인식</button><button type="button" data-action="export-coc-result-xlsx">결과입력 XLSX</button></div><div class="coc-control-group coc-control-group-page" role="group" aria-label="페이지 관리"><span class="coc-control-group-label">페이지 관리</span><button type="button" data-action="open-document-search">페이지 검색</button><button type="button" data-action="add-coc-page">페이지 추가</button><button type="button" data-action="clone-coc-page">페이지 복제</button><button type="button" class="danger" data-action="reset-coc-page">현재 페이지 초기화</button><button type="button" data-action="remove-coc-page">페이지 삭제</button></div></div>`;
   const reviewButton=idValidation.invalid.length?'<button type="button" data-action="open-coc-sample-id-exceptions">형식 오류 검토</button>':'';
   const issueBanner=!printMode&&idValidation.message?`<div class="sync-banner coc-sync-banner screen-only" style="width:min(100%,1120px);margin:0 auto 10px"><span>${esc(cocSampleIdIssueText(doc))}</span>${reviewButton}</div>`:'';
   const pages=d.pages.map((page,pageIndex)=>{
@@ -1883,7 +2039,7 @@ function renderCoc(doc,printMode=false){
       const sampleIdIssue=idValidation.issueKeys.has(`${pageIndex}:${rowIndex}`);
       return `<tr class="${shade?'shade-row':''}"><td>${rowIndex+1}</td>
         <td>${input(`pages.${pageIndex}.samples.${rowIndex}.sampleId`,s.sampleId,{cls:`sample-id-input ${sampleIdIssue?'coc-sample-id-error':''}`,extra:`data-coc-sample-id="${pageIndex}:${rowIndex}" ${sampleIdIssue?`aria-invalid="true" title="일반 Sample ID는 시료번호 01~${MAX_SAMPLE_IDS_PER_POINT} 범위와 형식·중복 여부를 확인하세요. FB·TB·EB+YYYYMMDD 형식도 사용할 수 있습니다."`:''}`})}</td>
-        <td>${input(`pages.${pageIndex}.samples.${rowIndex}.depth`,s.depth,{placeholder:pageIndex===0&&rowIndex===0?'0-1':'',extra:`data-coc-depth="${pageIndex}:${rowIndex}"`})}</td>
+        <td>${cocDepthEditor(`pages.${pageIndex}.samples.${rowIndex}.depth`,s.depth,pageIndex,rowIndex,cocDepthSequenceWarning(doc,pageIndex,rowIndex))}</td>
         <td>${input(`pages.${pageIndex}.samples.${rowIndex}.sampleDate`,s.sampleDate)}</td>
         <td>${input(`pages.${pageIndex}.samples.${rowIndex}.matrix`,s.matrix)}</td>
         <td>${input(`pages.${pageIndex}.samples.${rowIndex}.container`,s.container)}</td>
@@ -1990,6 +2146,7 @@ function renderSidebar(){
   document.getElementById('document-count').textContent=project?.documents.length||0;
 }
 function renderApp(){
+  hideDepthSuggestions();
   closeDocumentSearch(true);
   clearCocCellSelection();
   renderSidebar();
@@ -2179,8 +2336,8 @@ async function downloadWorkspaceBackup(options={}){
     if(!options.skipSave)await saveNow();
     const {blob}=await createFieldBackupBlob();
     triggerDownload(blob,`현장문서_전체백업_${todayISO()}.fieldbackup`);
-    setBackupProgress(`압축 백업을 저장했습니다. (${formatBytes(blob.size)})`);
-    if(!options.silent)showToast('무결성 검증 정보가 포함된 압축 백업을 저장했습니다.',4200);
+    setBackupProgress(`압축 백업 다운로드를 시작했습니다. (${formatBytes(blob.size)})`);
+    if(!options.silent)showToast('압축 백업 다운로드를 시작했습니다. 다운로드 목록에서 파일 저장 여부를 확인해 주세요.',5200);
     return true;
   }catch(error){
     console.warn(error);setBackupProgress(`백업 생성 실패: ${error.message}`,true);
@@ -2332,21 +2489,48 @@ function openWorkspaceResetModal(){
   document.getElementById('workspace-reset-summary').textContent=`현재 프로젝트 ${projectCount}개, 문서 ${documentCount}개가 초기화 대상입니다.`;
   document.getElementById('workspace-reset-confirm-input').value='';
   document.getElementById('workspace-reset-preferences').checked=false;
-  document.getElementById('backup-and-reset-workspace').disabled=true;
-  document.getElementById('reset-workspace').disabled=true;
+  document.getElementById('workspace-reset-backup-confirmed').checked=false;
+  document.getElementById('workspace-reset-backup-confirm-row').hidden=true;
+  document.getElementById('workspace-reset-backup-status').hidden=true;
+  workspaceResetBackupPrepared=false;
+  document.getElementById('backup-and-reset-workspace').textContent='백업 다운로드';
+  updateWorkspaceResetButtons();
   document.getElementById('workspace-reset-modal').hidden=false;
   requestAnimationFrame(()=>document.getElementById('workspace-reset-confirm-input').focus());
 }
-async function resetWorkspaceToDefault(backupFirst=false){
+function updateWorkspaceResetButtons(){
+  const confirmedText=document.getElementById('workspace-reset-confirm-input').value.trim()==='초기화';
+  const backupConfirmed=document.getElementById('workspace-reset-backup-confirmed').checked;
+  document.getElementById('backup-and-reset-workspace').disabled=!confirmedText||(workspaceResetBackupPrepared&&!backupConfirmed);
+  document.getElementById('reset-workspace').disabled=!confirmedText;
+}
+async function prepareWorkspaceResetBackup(){
   if(document.getElementById('workspace-reset-confirm-input').value.trim()!=='초기화')return;
-  if(backupFirst&&!(await downloadWorkspaceBackup({skipSave:true,silent:true})))return;
+  if(workspaceResetBackupPrepared){
+    if(!document.getElementById('workspace-reset-backup-confirmed').checked)return;
+    await resetWorkspaceToDefault(true,{backupPrepared:true});return;
+  }
+  const button=document.getElementById('backup-and-reset-workspace');
+  button.disabled=true;button.textContent='백업 만드는 중…';
+  const downloaded=await downloadWorkspaceBackup({skipSave:true,silent:true});
+  if(!downloaded){button.textContent='백업 다시 시도';updateWorkspaceResetButtons();return}
+  workspaceResetBackupPrepared=true;
+  document.getElementById('workspace-reset-backup-confirm-row').hidden=false;
+  const status=document.getElementById('workspace-reset-backup-status');
+  status.textContent='백업 다운로드를 시작했습니다. 브라우저 다운로드 목록에서 파일이 실제로 저장되었는지 확인한 뒤 체크해 주세요.';
+  status.hidden=false;button.textContent='확인 후 초기화';updateWorkspaceResetButtons();
+}
+async function resetWorkspaceToDefault(backupFirst=false,options={}){
+  if(document.getElementById('workspace-reset-confirm-input').value.trim()!=='초기화')return;
+  if(backupFirst&&!options.backupPrepared&&!(await downloadWorkspaceBackup({skipSave:true,silent:true})))return;
+  if(backupFirst&&options.backupPrepared&&!document.getElementById('workspace-reset-backup-confirmed').checked)return;
   await createRecoverySnapshot('beforeReset',{silent:true});
   const clearPreferences=document.getElementById('workspace-reset-preferences').checked;
   const project=makeProject('현장조사 프로젝트');
   workspace={version:APP_VERSION,currentProjectId:project.id,currentDocumentId:project.documents[0]?.id||null,projects:[project]};
   undoStack.length=0;redoStack.length=0;activeEditSnapshot=null;
   selectedCocCells.clear();selectedCocPageByDocument.clear();selectedFormPageByDocument.clear();cocAnalysisEditDocuments.clear();documentViewScaleByDocument.clear();collapsedDocumentPages.clear();
-  localStorage.removeItem(FALLBACK_KEY);LEGACY_KEYS.forEach(key=>localStorage.removeItem(key));
+  localStorage.removeItem(FALLBACK_KEY);localStorage.removeItem(PENDING_JOURNAL_KEY);pendingJournalToken='';LEGACY_KEYS.forEach(key=>localStorage.removeItem(key));
   if(clearPreferences){
     localStorage.removeItem(COMMON_PRESET_KEY);
     localStorage.removeItem('fieldFormsCocOcrEndpoint');
@@ -2354,7 +2538,7 @@ async function resetWorkspaceToDefault(backupFirst=false){
   document.getElementById('project-search').value='';
   document.getElementById('workspace-reset-modal').hidden=true;
   renderApp();updateHistoryButtons();await saveNow();
-  showToast(backupFirst?'백업 파일을 내려받고 기본 작업공간으로 초기화했습니다.':'기본 작업공간으로 초기화했습니다.',5200);
+  showToast(backupFirst?'백업 파일 저장 확인 후 기본 작업공간으로 초기화했습니다.':'기본 작업공간으로 초기화했습니다.',5200);
 }
 function applyDocumentViewScale(scale){
   const normalized=Math.max(.35,Math.min(1.5,Number(scale)||1));
@@ -2577,14 +2761,29 @@ function updateBoundInput(target){
   const doc=currentDocument();if(!doc)return;
   if(target.closest('.page.page-locked'))return;
   const path=target.dataset.path;
-  if(target.dataset.cocSampleId)target.value=normalizeCocSampleIdCase(target.value);
+  if(target.dataset.cocSampleId){
+    const [pageIndex,rowIndex]=target.dataset.cocSampleId.split(':').map(Number);
+    const expanded=expandCocQaqcShortcut(target.value,previousCocSampleId(doc,pageIndex,rowIndex));
+    target.value=expanded.value;
+    if(expanded.matched&&!expanded.value)showToast('바로 윗칸의 Sample ID를 먼저 입력해 주세요.',3600);
+  }
+  if(doc.type==='chain-of-custody'&&/\.matrix$/.test(path||''))target.value=normalizeCocMatrixShortcut(target.value);
   const value=target.type==='checkbox'?target.checked:target.type==='number'?(target.value===''?'':Number(target.value)):target.value;
   setAt(doc.data,path,value);doc.updatedAt=Date.now();
   if(target.dataset.cocSampleId){
     const [pageIndex,rowIndex]=target.dataset.cocSampleId.split(':').map(Number);
     const sample=doc.data.pages[pageIndex].samples[rowIndex];
     const common=currentProject().common;
-    if(!sample.sampleId){sample.depth='';sample.sampleDate='';sample.matrix='';sample.container='';sample.vial='';sample.analyses=[]}
+    if(!sample.sampleId){
+      sample.depth='';sample.sampleDate='';sample.matrix='';sample.container='';sample.vial='';sample.analyses=[];
+      const depthEditor=target.closest('tr')?.querySelector('.coc-depth-editor');
+      if(depthEditor){
+        depthEditor.querySelectorAll('.coc-depth-part').forEach(input=>input.value='');
+        const hidden=depthEditor.querySelector('input[type="hidden"][data-path]');if(hidden)hidden.value='';
+        depthEditor.classList.remove('has-start','depth-invalid');
+        setCocDepthEditorValidity(depthEditor,{valid:true,incomplete:false,message:''});
+      }
+    }
     else{if(!sample.sampleDate)sample.sampleDate=common.workDate;if(!sample.matrix)sample.matrix=common.defaultMatrix;updateCocContainer(doc,sample)}
     syncCocSamplesToSoil();
     const issue=cocSampleIdValidation(doc).issueKeys.has(`${pageIndex}:${rowIndex}`);
@@ -2592,6 +2791,7 @@ function updateBoundInput(target){
     target.toggleAttribute('aria-invalid',issue);
     target.title=issue?'일반 Sample ID 또는 FB·TB·EB+YYYYMMDD 형식과 중복 여부를 확인하세요.':'';
     updateRenderedContainerCounts(doc,pageIndex);
+    refreshCocDepthSequenceWarnings(doc);
   }
   if(target.dataset.cocVial)syncCocSamplesToSoil();
   if(target.dataset.cocDepth)syncCocSamplesToSoil();
@@ -2617,11 +2817,174 @@ function updateBoundInput(target){
     if(pointInput){pointInput.value=soilPage.pointNo;pointInput.classList.toggle('field-error',Boolean(soilPage.pointError))}
     if(pointError){pointError.textContent=soilPage.pointError;pointError.hidden=!soilPage.pointError}
   }
+  if(target.dataset.cocSampleId){
+    const [pageIndex,rowIndex]=target.dataset.cocSampleId.split(':').map(Number);
+    const samplePath=`pages.${pageIndex}.samples.${rowIndex}`;
+    recordPendingInputPatch(doc,samplePath,getAt(doc.data,samplePath));
+  }else if(target.dataset.soilSampleId){
+    const [pageIndex,sampleIndex]=target.dataset.soilSampleId.split(':').map(Number);
+    const samplePath=formPagePath(pageIndex,`samples.${sampleIndex}`);
+    recordPendingInputPatch(doc,samplePath,getAt(doc.data,samplePath));
+  }else if(path){
+    recordPendingInputPatch(doc,path,getAt(doc.data,path));
+  }
   scheduleSave();
 }
-function parseDepthRange(value){
-  const match=String(value||'').trim().match(/^(-?\d+(?:\.\d+)?)\s*m?\s*(?:-|~|–|—|to)\s*(-?\d+(?:\.\d+)?)\s*m?$/i);
-  return match?{from:match[1],to:match[2]}:{from:'',to:''};
+function depthNumberState(value){
+  const raw=String(value??'').trim().replace(',','.');
+  if(/^(?:\d+(?:\.\d+)?|\.\d+)$/.test(raw)&&Number(raw)>=0)return 'valid';
+  if(raw===''||/^\d+\.$/.test(raw))return 'incomplete';
+  return 'invalid';
+}
+function sanitizeDepthPartValue(value){
+  const digitsAndDots=String(value??'').replaceAll(',','.').replace(/[^\d.]/g,'');
+  const firstDot=digitsAndDots.indexOf('.');
+  return firstDot<0?digitsAndDots:digitsAndDots.slice(0,firstDot+1)+digitsAndDots.slice(firstDot+1).replaceAll('.','');
+}
+function normalizeDepthNumber(value){
+  const raw=String(value??'').trim().replace(',','.');
+  return depthNumberState(raw)==='valid'?String(Number(raw)):raw;
+}
+function depthSuggestionsFor(value){
+  const key=normalizeDepthNumber(value);
+  return [...(DEPTH_END_SUGGESTIONS[key]||[])];
+}
+function ensureDepthSuggestionPopover(){
+  let popover=document.getElementById('depth-suggestion-popover');
+  if(popover)return popover;
+  popover=document.createElement('div');
+  popover.id='depth-suggestion-popover';
+  popover.className='depth-suggestion-popover screen-only';
+  popover.setAttribute('role','listbox');
+  popover.setAttribute('aria-label','종료 깊이 추천값');
+  popover.hidden=true;
+  document.body.appendChild(popover);
+  return popover;
+}
+function hideDepthSuggestions(){
+  const popover=document.getElementById('depth-suggestion-popover');
+  if(popover)popover.hidden=true;
+  if(activeDepthSuggestionInput){
+    activeDepthSuggestionInput.setAttribute('aria-expanded','false');
+    activeDepthSuggestionInput.removeAttribute('aria-activedescendant');
+  }
+  activeDepthSuggestionInput=null;activeDepthSuggestionIndex=-1;
+}
+function positionDepthSuggestionPopover(input,popover){
+  if(!input?.isConnected||popover.hidden)return;
+  const rect=input.getBoundingClientRect();
+  const width=Math.min(320,Math.max(150,popover.offsetWidth||150,rect.width*3));
+  popover.style.width=`${width}px`;
+  const left=Math.max(8,Math.min(rect.left,window.innerWidth-width-8));
+  let top=rect.bottom+4;
+  if(top+popover.offsetHeight>window.innerHeight-8)top=Math.max(8,rect.top-popover.offsetHeight-4);
+  popover.style.left=`${left}px`;popover.style.top=`${top}px`;
+}
+function showDepthSuggestions(container){
+  const startInput=container?.querySelector('[data-coc-depth-part="start"]');
+  const endInput=container?.querySelector('[data-coc-depth-part="end"]');
+  const suggestions=depthSuggestionsFor(startInput?.value);
+  if(!endInput||String(endInput.value||'').trim()||!suggestions.length){hideDepthSuggestions();return}
+  const popover=ensureDepthSuggestionPopover();
+  popover.innerHTML=suggestions.map((value,index)=>`<button type="button" role="option" id="depth-suggestion-${index}" data-depth-suggestion="${esc(value)}" aria-selected="false">${esc(value)}</button>`).join('');
+  activeDepthSuggestionInput=endInput;activeDepthSuggestionIndex=-1;
+  endInput.setAttribute('aria-expanded','true');
+  endInput.setAttribute('aria-controls',popover.id);
+  popover.hidden=false;
+  requestAnimationFrame(()=>positionDepthSuggestionPopover(endInput,popover));
+}
+function moveDepthSuggestionSelection(step){
+  const popover=document.getElementById('depth-suggestion-popover');
+  const buttons=[...(popover?.querySelectorAll('[data-depth-suggestion]')||[])];
+  if(!buttons.length||!activeDepthSuggestionInput)return false;
+  activeDepthSuggestionIndex=(activeDepthSuggestionIndex+step+buttons.length)%buttons.length;
+  buttons.forEach((button,index)=>{
+    const selected=index===activeDepthSuggestionIndex;
+    button.classList.toggle('is-active',selected);
+    button.setAttribute('aria-selected',selected?'true':'false');
+  });
+  const selected=buttons[activeDepthSuggestionIndex];
+  activeDepthSuggestionInput.setAttribute('aria-activedescendant',selected.id);
+  return true;
+}
+function applyDepthSuggestion(value){
+  const endInput=activeDepthSuggestionInput;
+  if(!endInput?.isConnected)return false;
+  const suggestion=String(value??'').trim();
+  if(!suggestion)return false;
+  endInput.value=suggestion;
+  updateCocDepthEditor(endInput,{final:true});
+  hideDepthSuggestions();
+  endInput.focus();endInput.select();
+  return true;
+}
+function parseCocDepthRange(value){
+  const number='(?:\\d+(?:\\.\\d+)?|\\.\\d+)';
+  const match=String(value||'').trim().replaceAll(',','.').match(new RegExp(`^(${number})\\s*m?\\s*(?:-|~|–|—|to)\\s*(${number})\\s*m?$`,'i'));
+  if(!match)return {from:'',to:''};
+  return {from:normalizeDepthNumber(match[1]),to:normalizeDepthNumber(match[2])};
+}
+function splitDepthInputValue(value){
+  const raw=String(value??'').trim().replaceAll(',','.');
+  if(!raw)return {from:'',to:''};
+  const parsed=parseCocDepthRange(raw);
+  if(parsed.from&&parsed.to)return parsed;
+  const separator=raw.indexOf('-');
+  if(separator>=0&&raw.indexOf('-',separator+1)<0){
+    return {from:raw.slice(0,separator).trim(),to:raw.slice(separator+1).trim()};
+  }
+  return {from:raw,to:''};
+}
+function validateDepthParts(from,to){
+  const start=String(from??'').trim(),end=String(to??'').trim();
+  if(!start&&!end)return {valid:true,incomplete:false,message:''};
+  const startState=depthNumberState(start),endState=depthNumberState(end);
+  if(startState==='incomplete'||(startState==='valid'&&!end)||endState==='incomplete'){
+    return {valid:false,incomplete:true,message:'시작 깊이와 종료 깊이를 모두 입력해 주세요.'};
+  }
+  if(startState!=='valid'||endState!=='valid'){
+    return {valid:false,incomplete:false,message:'깊이는 0 이상의 숫자로 입력해 주세요.'};
+  }
+  if(Number(end)<=Number(start)){
+    return {valid:false,incomplete:false,message:'종료 깊이는 시작 깊이보다 커야 합니다.'};
+  }
+  return {valid:true,incomplete:false,message:''};
+}
+function setCocDepthEditorValidity(container,validation,showIncomplete=false){
+  const showError=!validation.valid&&(!validation.incomplete||showIncomplete);
+  container.classList.toggle('depth-invalid',showError);
+  container.querySelectorAll('.coc-depth-part').forEach(input=>{
+    input.setCustomValidity(showError?validation.message:'');
+    input.toggleAttribute('aria-invalid',showError);
+    input.title=showError?validation.message:'';
+  });
+}
+function updateCocDepthEditor(target,{final=false}={}){
+  const doc=currentDocument(),container=target.closest('.coc-depth-editor');
+  if(doc?.type!=='chain-of-custody'||!container||container.closest('.page.page-locked'))return false;
+  const startInput=container.querySelector('[data-coc-depth-part="start"]');
+  const endInput=container.querySelector('[data-coc-depth-part="end"]');
+  if(target===startInput&&!String(startInput.value||'').trim())endInput.value='';
+  startInput.value=sanitizeDepthPartValue(startInput.value);
+  endInput.value=sanitizeDepthPartValue(endInput.value);
+  if(final){
+    startInput.value=normalizeDepthNumber(startInput.value);
+    endInput.value=normalizeDepthNumber(endInput.value);
+  }
+  const start=String(startInput.value||'').trim(),end=String(endInput.value||'').trim();
+  container.classList.toggle('has-start',Boolean(start));
+  const value=start?`${start}-${end}`:'';
+  const hidden=container.querySelector('input[type="hidden"][data-path]');
+  if(hidden)hidden.value=value;
+  setAt(doc.data,container.dataset.depthPath,value);doc.updatedAt=Date.now();
+  recordPendingInputPatch(doc,container.dataset.depthPath,value);
+  const validation=validateDepthParts(start,end);
+  setCocDepthEditorValidity(container,validation,final);
+  refreshCocDepthSequenceWarnings(doc);
+  if(final||end)hideDepthSuggestions();else showDepthSuggestions(container);
+  if(validation.valid||final)syncCocSamplesToSoil();
+  scheduleSave();
+  return validation.valid;
 }
 function parseStructuredSampleId(value){
   const sampleId=String(value||'').trim();
@@ -2633,6 +2996,48 @@ function parseStructuredSampleId(value){
 }
 function pointKeyFromSampleId(value){
   return parseStructuredSampleId(value)?.pointKey||'';
+}
+function cocDepthSequenceWarning(doc,pageIndex,rowIndex){
+  if(doc?.type!=='chain-of-custody')return null;
+  const page=doc.data?.pages?.[pageIndex],current=page?.samples?.[rowIndex];
+  const previous=rowIndex>0?page?.samples?.[rowIndex-1]:doc.data?.pages?.[pageIndex-1]?.samples?.at(-1);
+  if(!current||!previous||cocSampleCountGroup(current.sampleId)!=='main'||cocSampleCountGroup(previous.sampleId)!=='main')return null;
+  const approvedIds=new Set((doc.data.approvedInvalidSampleIds||[]).map(value=>normalizeCocSampleIdCase(value).trim()));
+  if(approvedIds.has(normalizeCocSampleIdCase(current.sampleId).trim())||approvedIds.has(normalizeCocSampleIdCase(previous.sampleId).trim()))return null;
+  const currentId=parseStructuredSampleId(current.sampleId),previousId=parseStructuredSampleId(previous.sampleId);
+  if(!currentId||!previousId||currentId.pointKey!==previousId.pointKey)return null;
+  const currentDepth=parseCocDepthRange(current.depth),previousDepth=parseCocDepthRange(previous.depth);
+  if(!currentDepth.from||!currentDepth.to||!previousDepth.from||!previousDepth.to)return null;
+  const currentStart=Number(currentDepth.from),previousStart=Number(previousDepth.from),previousEnd=Number(previousDepth.to);
+  if(currentStart<previousStart){
+    return {level:'reverse',message:`깊이 역순: 윗행 ${previousDepth.from}-${previousDepth.to}보다 낮은 구간 ${currentDepth.from}-${currentDepth.to}이 입력되었습니다.`};
+  }
+  if(currentStart<previousEnd){
+    return {level:'overlap',message:`깊이 구간 중첩: 윗행 ${previousDepth.from}-${previousDepth.to}과 현재 ${currentDepth.from}-${currentDepth.to}이 겹칩니다.`};
+  }
+  return null;
+}
+function applyCocDepthSequenceWarning(container,warning){
+  if(!container)return;
+  container.classList.toggle('depth-sequence-reverse',warning?.level==='reverse');
+  container.classList.toggle('depth-sequence-overlap',warning?.level==='overlap');
+  if(warning){
+    container.dataset.depthSequenceWarning=warning.level;
+    container.title=warning.message;
+  }else{
+    delete container.dataset.depthSequenceWarning;
+    container.removeAttribute('title');
+  }
+  if(!container.classList.contains('depth-invalid')){
+    container.querySelectorAll('.coc-depth-part').forEach(input=>{input.title=warning?.message||''});
+  }
+}
+function refreshCocDepthSequenceWarnings(doc){
+  if(doc?.type!=='chain-of-custody')return;
+  editor.querySelectorAll('.coc-depth-editor[data-coc-depth]').forEach(container=>{
+    const [pageIndex,rowIndex]=container.dataset.cocDepth.split(':').map(Number);
+    applyCocDepthSequenceWarning(container,cocDepthSequenceWarning(doc,pageIndex,rowIndex));
+  });
 }
 function soilSampleSequence(value){
   const sampleName=parseStructuredSampleId(value)?.sampleName||'';
@@ -2656,6 +3061,52 @@ function validateSampleIdFillCount(value){
     return {count:null,message:`Sample ID는 한 지점당 최대 ${MAX_SAMPLE_IDS_PER_POINT}개까지 채울 수 있습니다.`};
   }
   return {count,message:''};
+}
+function openSampleIdFillModal(doc=currentDocument()){
+  const project=currentProject();
+  if(!doc||doc.type!=='chain-of-custody'||!project)return;
+  if(hasLockedCocPage(doc))return showToast('잠긴 COC 페이지가 있어 Sample ID 자동 채우기를 실행할 수 없습니다. 먼저 잠금을 해제해 주세요.',4200);
+  if(!project.common.siteName)return showToast('공통정보에서 사이트명을 먼저 입력해 주세요.');
+  pendingSampleIdFillDocumentId=doc.id;
+  const pointLabel=nextSamplePointLabel(project.common),input=document.getElementById('sample-id-fill-count');
+  document.getElementById('sample-id-fill-point').textContent=`${pointLabel} 지점에 생성할 Sample ID 개수를 입력하세요.`;
+  document.getElementById('sample-id-fill-hint').textContent=`1~${MAX_SAMPLE_IDS_PER_POINT} 사이의 정수를 입력하세요.`;
+  document.getElementById('sample-id-fill-hint').classList.remove('warning');
+  input.max=String(MAX_SAMPLE_IDS_PER_POINT);input.value='1';
+  document.getElementById('sample-id-fill-modal').hidden=false;
+  requestAnimationFrame(()=>{input.focus();input.select()});
+}
+function applySampleIdFillModal(){
+  const project=currentProject(),doc=project?.documents.find(item=>item.id===pendingSampleIdFillDocumentId);
+  if(!doc||doc.type!=='chain-of-custody'){document.getElementById('sample-id-fill-modal').hidden=true;return}
+  const input=document.getElementById('sample-id-fill-count'),validation=validateSampleIdFillCount(input.value);
+  const hint=document.getElementById('sample-id-fill-hint');
+  if(validation.message){
+    hint.textContent=validation.message;hint.classList.add('warning');input.focus();input.select();return;
+  }
+  const c=project.common,count=validation.count,pointLabel=nextSamplePointLabel(c);
+  let addedPages=0;
+  mutate(()=>{
+    const point=Number.parseInt(c.startPoint,10)||1,width=String(c.startPoint||'001').length,digits=Number(c.sampleDigits)||2;
+    let blanks=doc.data.pages.flatMap(page=>page.samples).filter(sample=>!sample.sampleId);
+    const remaining=Math.max(0,count-blanks.length);
+    addedPages=Math.ceil(remaining/21);
+    for(let index=0;index<addedPages;index++)doc.data.pages.push({id:uid('page'),samples:Array.from({length:21},blankCocSample)});
+    blanks=doc.data.pages.flatMap(page=>page.samples).filter(sample=>!sample.sampleId).slice(0,count);
+    blanks.forEach((sample,index)=>{
+      sample.sampleId=normalizeCocSampleIdCase(`${c.siteName}-${c.surveyType||''}${String(point).padStart(width,'0')}-${String(index+1).padStart(digits,'0')}`);
+      sample.sampleDate=c.workDate;sample.matrix=normalizeCocMatrixShortcut(c.defaultMatrix)||'SOIL';updateCocContainer(doc,sample);
+    });
+    if(addedPages)selectedCocPageByDocument.set(doc.id,doc.data.pages.at(-1).id);
+    syncCocSamplesToSoil(project);
+    c.startPoint=String(point+1).padStart(width,'0');
+  });
+  pendingSampleIdFillDocumentId='';
+  document.getElementById('sample-id-fill-modal').hidden=true;
+  if(addedPages){
+    requestAnimationFrame(()=>editor.querySelector('.coc-page.active-page')?.scrollIntoView({behavior:'smooth',block:'start'}));
+    showToast(`${pointLabel} 지점의 Sample ID ${count}개를 채우고 COC ${addedPages}페이지를 추가했습니다.`);
+  }else showToast(`${pointLabel} 지점의 Sample ID ${count}개를 채웠습니다.`);
 }
 function buildSoilSyncLayouts(fieldSamples,preferredPointOrder=[]){
   const groups=new Map();
@@ -3099,7 +3550,7 @@ function syncCocSamplesToSoil(project=currentProject(),syncSampleIds=true){
     });
     soilSamples.forEach(sample=>{
       const cocSample=cocBySampleId.get(String(sample.sampleId||'').trim());
-      const depth=parseDepthRange(cocSample?.depth);
+      const depth=parseCocDepthRange(cocSample?.depth);
       sample.vialId=cocSample?.vial||'';
       sample.analysis=Array.isArray(cocSample?.analyses)?cocSample.analyses.join(', '):'';
       sample.depthFrom=depth.from;
@@ -3553,7 +4004,11 @@ function pasteCocClipboardGrid(startCell,text){
         const column=startColumn+columnOffset,descriptor=cocColumnDescriptor(doc,column);
         if(!descriptor)return;
         if(descriptor.type==='field'){
-          sample[descriptor.field]=descriptor.field==='sampleId'?normalizeCocSampleIdCase(value):value;
+          sample[descriptor.field]=descriptor.field==='sampleId'
+            ?expandCocQaqcShortcut(value,previousCocSampleId(doc,pageIndex,rowIndex)).value
+            :descriptor.field==='matrix'
+              ?normalizeCocMatrixShortcut(value)
+              :value;
           if(descriptor.field==='sampleId')sampleIdSamples.add(sample);
         }else{
           const checked=cocAnalysisValueIsChecked(value),itemIndex=sample.analyses.indexOf(descriptor.item);
@@ -3581,7 +4036,7 @@ function pasteCocClipboardGrid(startCell,text){
   requestAnimationFrame(()=>{
     highlightPastedCocCells(pastedCoordinates);
     const first=topLeftSelectedCocCell();
-    const input=first?.querySelector('input[data-path]');
+    const input=first?.querySelector('input[data-path]:not([type="hidden"]),[data-coc-depth-part="start"]');
     if(input){input.focus();input.select()}
   });
   showToast(`${appliedCount}개 셀을 붙여넣었습니다.${addedPages?` 새 페이지 ${addedPages}개를 추가했습니다.`:''}`,4200);
@@ -3636,12 +4091,43 @@ editor.addEventListener('keydown',event=>{
     event.target.value=String(Math.round(current*100));event.target.blur();
   }
 });
-document.addEventListener('focusin',event=>{if(event.target.matches('[data-path]')&&!activeEditSnapshot)activeEditSnapshot=JSON.stringify(workspace)});
-document.addEventListener('focusout',event=>{if(event.target.matches('[data-path]'))setTimeout(finalizeEdit,0)});
-document.addEventListener('input',event=>{if(event.target.matches('[data-path]')){formatTimeInput(event.target);updateBoundInput(event.target)}});
-document.addEventListener('change',event=>{if(event.target.matches('[data-path]')){formatTimeInput(event.target,true);updateBoundInput(event.target);if(currentDocument()?.type==='daily-work-log'&&event.target.type==='number')renderApp()}});
+document.addEventListener('focusin',event=>{
+  if(event.target.matches('[data-path],[data-coc-depth-part]')&&!activeEditSnapshot)activeEditSnapshot=JSON.stringify(workspace);
+  if(event.target.matches('[data-coc-depth-part]'))requestAnimationFrame(()=>showDepthSuggestions(event.target.closest('.coc-depth-editor')));
+});
+document.addEventListener('focusout',event=>{
+  if(event.target.matches('[data-coc-depth-part]')){
+    const container=event.target.closest('.coc-depth-editor');
+    if(event.relatedTarget?.closest?.('.coc-depth-editor')===container)return;
+    hideDepthSuggestions();
+    updateCocDepthEditor(event.target,{final:true});
+    finalizeEdit();
+    return;
+  }
+  if(event.target.matches('[data-path]'))setTimeout(finalizeEdit,0);
+});
+document.addEventListener('input',event=>{
+  if(event.target.matches('[data-coc-depth-part]')){updateCocDepthEditor(event.target);return}
+  if(event.target.matches('[data-path]')){formatTimeInput(event.target);updateBoundInput(event.target)}
+});
+document.addEventListener('change',event=>{
+  if(event.target.matches('[data-coc-depth-part]'))return;
+  if(event.target.matches('[data-path]')){formatTimeInput(event.target,true);updateBoundInput(event.target);if(currentDocument()?.type==='daily-work-log'&&event.target.type==='number')renderApp()}
+});
 document.addEventListener('paste',event=>{
   const text=event.clipboardData?.getData('text/plain')||'';
+  if(event.target.matches('[data-coc-depth-part]')&&!/[\t\r\n]/.test(text)){
+    const parts=parseCocDepthRange(text);
+    if(parts.from&&parts.to){
+      event.preventDefault();
+      const container=event.target.closest('.coc-depth-editor');
+      container.querySelector('[data-coc-depth-part="start"]').value=parts.from;
+      container.querySelector('[data-coc-depth-part="end"]').value=parts.to;
+      updateCocDepthEditor(event.target,{final:true});
+      container.querySelector('[data-coc-depth-part="end"]').focus();
+    }
+    return;
+  }
   if(!/[\t\r\n]/.test(text))return;
   const eventCell=event.target.closest?.('.coc-table tbody td');
   const startCell=isSelectableCocCell(eventCell)?eventCell:topLeftSelectedCocCell();
@@ -3656,6 +4142,7 @@ editor.addEventListener('wheel',event=>{
   adjustDocumentViewScale(event.deltaY<0 ? .05 : -.05);
 },{passive:false});
 document.addEventListener('pointerdown',event=>{
+  if(event.target.closest('[data-depth-suggestion]')){event.preventDefault();return}
   const cell=event.target.closest('.coc-table tbody td');
   if(!isSelectableCocCell(cell)){clearCocCellSelection();return}
   clearCocCellSelection();
@@ -3685,6 +4172,8 @@ document.addEventListener('pointerup',()=>{
 });
 document.addEventListener('click',async event=>{
   if(suppressCocClick){suppressCocClick=false;event.preventDefault();return}
+  const depthSuggestion=event.target.closest('[data-depth-suggestion]');
+  if(depthSuggestion){event.preventDefault();applyDepthSuggestion(depthSuggestion.dataset.depthSuggestion);return}
   const sidebarToggle=event.target.closest('[data-sidebar-toggle]');
   if(sidebarToggle){
     const section=sidebarToggle.closest('.side-section'),collapsed=!section.classList.contains('collapsed');
@@ -3860,34 +4349,7 @@ async function handleAction(action,target){
     return;
   }
   if(action==='generate-sample-ids'){
-    if(hasLockedCocPage(doc))return showToast('잠긴 COC 페이지가 있어 Sample ID 자동 채우기를 실행할 수 없습니다. 먼저 잠금을 해제해 주세요.',4200);
-    const c=project.common;
-    const pointLabel=nextSamplePointLabel(c);
-    const requestedCount=prompt(`${pointLabel} 지점에서 채울 Sample ID 개수를 입력하세요. (1~${MAX_SAMPLE_IDS_PER_POINT})`,'1');
-    if(requestedCount===null)return;
-    const countValidation=validateSampleIdFillCount(requestedCount);
-    if(countValidation.message)return showToast(countValidation.message,4600);
-    const count=countValidation.count;
-    if(!c.siteName)return showToast('공통정보에서 사이트명을 먼저 입력해 주세요.');
-    let addedPages=0;
-    mutate(()=>{
-      const point=Number.parseInt(c.startPoint,10)||1,width=String(c.startPoint||'001').length,digits=Number(c.sampleDigits)||2;
-      let blanks=doc.data.pages.flatMap(page=>page.samples).filter(s=>!s.sampleId);
-      const remaining=Math.max(0,count-blanks.length);
-      addedPages=Math.ceil(remaining/21);
-      for(let index=0;index<addedPages;index++)doc.data.pages.push({id:uid('page'),samples:Array.from({length:21},blankCocSample)});
-      blanks=doc.data.pages.flatMap(page=>page.samples).filter(s=>!s.sampleId).slice(0,count);
-      blanks.forEach((s,i)=>{s.sampleId=normalizeCocSampleIdCase(`${c.siteName}-${c.surveyType||''}${String(point).padStart(width,'0')}-${String(i+1).padStart(digits,'0')}`);s.sampleDate=c.workDate;s.matrix=c.defaultMatrix;updateCocContainer(doc,s)});
-      if(addedPages)selectedCocPageByDocument.set(doc.id,doc.data.pages.at(-1).id);
-      syncCocSamplesToSoil(project);
-      c.startPoint=String(point+1).padStart(width,'0');
-    });
-    if(addedPages){
-      requestAnimationFrame(()=>editor.querySelector('.coc-page.active-page')?.scrollIntoView({behavior:'smooth',block:'start'}));
-      showToast(`${pointLabel} 지점의 Sample ID ${count}개를 채우고 COC ${addedPages}페이지를 추가했습니다.`);
-    }else{
-      showToast(`${pointLabel} 지점의 Sample ID ${count}개를 채웠습니다.`);
-    }
+    openSampleIdFillModal(doc);
     return;
   }
   if(action==='add-coc-page')mutate(()=>{
@@ -4123,13 +4585,15 @@ document.getElementById('open-help').addEventListener('click',openHelpModal);
 document.getElementById('rename-project').addEventListener('click',()=>openProjectNameModal('rename'));
 document.getElementById('save-project-name').addEventListener('click',saveProjectNameModal);
 document.getElementById('project-name-input').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();saveProjectNameModal()}});
+document.getElementById('apply-sample-id-fill').addEventListener('click',applySampleIdFillModal);
+document.getElementById('sample-id-fill-count').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();applySampleIdFillModal()}});
+document.getElementById('confirm-save-common-preset').addEventListener('click',saveCommonPresetFromModal);
+document.getElementById('common-preset-name-input').addEventListener('input',updateCommonPresetNameModalState);
+document.getElementById('common-preset-name-input').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();saveCommonPresetFromModal()}});
 document.getElementById('open-workspace-reset').addEventListener('click',openWorkspaceResetModal);
-document.getElementById('workspace-reset-confirm-input').addEventListener('input',event=>{
-  const enabled=event.target.value.trim()==='초기화';
-  document.getElementById('backup-and-reset-workspace').disabled=!enabled;
-  document.getElementById('reset-workspace').disabled=!enabled;
-});
-document.getElementById('backup-and-reset-workspace').addEventListener('click',()=>resetWorkspaceToDefault(true));
+document.getElementById('workspace-reset-confirm-input').addEventListener('input',updateWorkspaceResetButtons);
+document.getElementById('workspace-reset-backup-confirmed').addEventListener('change',updateWorkspaceResetButtons);
+document.getElementById('backup-and-reset-workspace').addEventListener('click',prepareWorkspaceResetBackup);
 document.getElementById('reset-workspace').addEventListener('click',()=>resetWorkspaceToDefault(false));
 document.getElementById('delete-project').addEventListener('click',async ()=>{
   const p=currentProject();if(!p||!confirm(`“${p.name}” 프로젝트를 삭제할까요?`))return;
@@ -4162,7 +4626,10 @@ document.getElementById('delete-document').addEventListener('click',async ()=>{
   });
 });
 function populateCommonForm(common){
-  document.querySelectorAll('[data-common]').forEach(control=>{const value=common[control.dataset.common];control.value=value??''});
+  document.querySelectorAll('[data-common]').forEach(control=>{
+    const key=control.dataset.common,value=key==='defaultMatrix'?normalizeCocMatrixShortcut(common[key]):common[key];
+    control.value=value??'';
+  });
 }
 function commonFormValues(){
   const values=defaultCommon('새 프로젝트');
@@ -4170,6 +4637,7 @@ function commonFormValues(){
     const key=control.dataset.common;
     values[key]=control.type==='number'?Number(control.value)||1:key==='sampleDigits'?Number(control.value):control.value;
   });
+  values.defaultMatrix=normalizeCocMatrixShortcut(values.defaultMatrix)||'SOIL';
   return values;
 }
 function commonPresets(){
@@ -4189,6 +4657,37 @@ function renderCommonPresetOptions(selectedId=''){
   document.getElementById('load-common-preset').disabled=disabled;
   document.getElementById('delete-common-preset').disabled=disabled;
 }
+function updateCommonPresetNameModalState(){
+  const input=document.getElementById('common-preset-name-input'),name=input.value.trim();
+  const existing=commonPresets().find(item=>item.name.toLocaleLowerCase()===name.toLocaleLowerCase());
+  const hint=document.getElementById('common-preset-name-hint'),button=document.getElementById('confirm-save-common-preset');
+  hint.classList.toggle('warning',Boolean(existing));
+  hint.textContent=existing?`“${existing.name}” 항목이 이미 있습니다. 저장하면 현재 입력값으로 덮어씁니다.`:'현재 공통정보 입력값을 새 항목으로 저장합니다.';
+  button.textContent=existing?'덮어쓰기':'새로 저장';
+  button.disabled=!name;
+}
+function openCommonPresetNameModal(){
+  const presets=commonPresets(),values=commonFormValues(),selectedId=document.getElementById('common-preset-select').value;
+  const selected=presets.find(item=>item.id===selectedId);
+  pendingCommonPresetValues=values;
+  const suggested=selected?.name||values.organization||values.siteName||values.displayName||`공통정보 ${presets.length+1}`;
+  const input=document.getElementById('common-preset-name-input');
+  input.value=suggested;updateCommonPresetNameModalState();
+  document.getElementById('common-preset-name-modal').hidden=false;
+  requestAnimationFrame(()=>{input.focus();input.select()});
+}
+function saveCommonPresetFromModal(){
+  const input=document.getElementById('common-preset-name-input'),name=input.value.trim();
+  if(!name){input.focus();return}
+  const presets=commonPresets(),values=pendingCommonPresetValues||commonFormValues();
+  let preset=presets.find(item=>item.name.toLocaleLowerCase()===name.toLocaleLowerCase());
+  if(preset){preset.name=name;preset.values=values;preset.updatedAt=Date.now()}
+  else{preset={id:uid('common-preset'),name,values,createdAt:Date.now(),updatedAt:Date.now()};presets.push(preset)}
+  try{
+    saveCommonPresets(presets);renderCommonPresetOptions(preset.id);pendingCommonPresetValues=null;
+    document.getElementById('common-preset-name-modal').hidden=true;showToast(`“${name}” 정보를 저장했습니다.`);
+  }catch(error){showToast('자주 쓰는 정보를 저장하지 못했습니다.',4200)}
+}
 document.getElementById('common-info').addEventListener('click',()=>{
   const p=currentProject();if(!p)return showToast('프로젝트를 먼저 만들어 주세요.');
   populateCommonForm(p.common);renderCommonPresetOptions();document.getElementById('common-modal').hidden=false;
@@ -4206,16 +4705,7 @@ document.getElementById('load-common-preset').addEventListener('click',()=>{
   showToast(`“${preset.name}” 정보를 불러왔습니다. 저장을 눌러 확정하세요.`,4200);
 });
 document.getElementById('save-common-preset').addEventListener('click',()=>{
-  const presets=commonPresets(),values=commonFormValues();
-  const suggested=values.organization||values.siteName||values.displayName||`공통정보 ${presets.length+1}`;
-  const entered=prompt('저장할 정보의 이름을 입력해 주세요.',suggested);if(entered==null)return;
-  const name=entered.trim();if(!name)return showToast('저장 이름을 입력해 주세요.');
-  let preset=presets.find(item=>item.name.toLowerCase()===name.toLowerCase());
-  if(preset&&!confirm(`“${preset.name}” 저장 정보를 현재 입력값으로 덮어쓸까요?`))return;
-  if(preset){preset.name=name;preset.values=values;preset.updatedAt=Date.now()}
-  else{preset={id:uid('common-preset'),name,values,createdAt:Date.now(),updatedAt:Date.now()};presets.push(preset)}
-  try{saveCommonPresets(presets);renderCommonPresetOptions(preset.id);showToast(`“${name}” 정보를 저장했습니다.`)}
-  catch(error){showToast('자주 쓰는 정보를 저장하지 못했습니다.',4200)}
+  openCommonPresetNameModal();
 });
 document.getElementById('delete-common-preset').addEventListener('click',()=>{
   const id=document.getElementById('common-preset-select').value,presets=commonPresets(),preset=presets.find(item=>item.id===id);
@@ -4334,8 +4824,10 @@ function openPrintModal(){
 window.addEventListener('afterprint',()=>{document.body.classList.remove('printing');document.getElementById('print-root').innerHTML=''});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushPendingSave()});
 window.addEventListener('pagehide',flushPendingSave);
+document.addEventListener('scroll',()=>{if(activeDepthSuggestionInput)hideDepthSuggestions()},{capture:true,passive:true});
 let viewScaleTimer=null;
 window.addEventListener('resize',()=>{
+  hideDepthSuggestions();
   clearTimeout(viewScaleTimer);
   viewScaleTimer=setTimeout(()=>{updateDocumentViewScale();setupMobileEditorHeadPinning()},60);
 });
@@ -4362,6 +4854,46 @@ document.addEventListener('keydown',event=>{
     if(event.key==='+'||event.key==='='){event.preventDefault();adjustDocumentViewScale(.05);return}
     if(event.key==='-'){event.preventDefault();adjustDocumentViewScale(-.05);return}
     if(event.key==='0'){event.preventDefault();fitDocumentViewScale();return}
+  }
+  if(event.target.matches('[data-coc-depth-part]')&&!event.isComposing&&!event.ctrlKey&&!event.metaKey&&!event.altKey){
+    const container=event.target.closest('.coc-depth-editor');
+    const startInput=container.querySelector('[data-coc-depth-part="start"]');
+    const endInput=container.querySelector('[data-coc-depth-part="end"]');
+    const isStart=event.target===startInput;
+    const popover=document.getElementById('depth-suggestion-popover');
+    const suggestionsOpen=activeDepthSuggestionInput===endInput&&popover&&!popover.hidden;
+    if(suggestionsOpen&&(event.key==='ArrowDown'||event.key==='ArrowUp')){
+      event.preventDefault();moveDepthSuggestionSelection(event.key==='ArrowDown'?1:-1);return;
+    }
+    if(suggestionsOpen&&event.key==='Enter'&&activeDepthSuggestionIndex>=0){
+      event.preventDefault();
+      const selected=popover.querySelectorAll('[data-depth-suggestion]')[activeDepthSuggestionIndex];
+      if(selected)applyDepthSuggestion(selected.dataset.depthSuggestion);
+      return;
+    }
+    if(suggestionsOpen&&event.key==='Escape'){event.preventDefault();hideDepthSuggestions();return}
+    const moveToEnd=event.key==='Enter'||event.key==='-'||
+      (event.key==='ArrowRight'&&event.target.selectionStart===event.target.value.length&&event.target.selectionEnd===event.target.value.length);
+    if(isStart&&moveToEnd){
+      event.preventDefault();
+      if(depthNumberState(startInput.value)!=='valid'){
+        const validation={valid:false,incomplete:false,message:'시작 깊이를 0 이상의 숫자로 입력해 주세요.'};
+        setCocDepthEditorValidity(container,validation,true);startInput.reportValidity();return;
+      }
+      endInput.focus();endInput.select();return;
+    }
+    if(!isStart&&event.key==='Enter'){
+      event.preventDefault();
+      if(!updateCocDepthEditor(event.target,{final:true})){endInput.reportValidity();return}
+      finalizeEdit();
+      const starts=[...editor.querySelectorAll('.coc-page .coc-depth-start')];
+      const nextInput=starts[starts.indexOf(startInput)+1];
+      if(nextInput){
+        event.target.blur();
+        setTimeout(()=>{nextInput.focus();nextInput.select()},0);
+      }
+      return;
+    }
   }
   if(event.key==='Enter'&&!event.isComposing&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&event.target.matches('.coc-table tbody input[data-path]')){
     const cell=event.target.closest('td'),columnIndex=cell?.cellIndex;
@@ -4427,6 +4959,7 @@ function migrateLegacy(){
   return false;
 }
 async function init(){
+  let recoveredInputCount=0;
   try{db=await openDatabase()}catch(error){console.warn('IndexedDB unavailable',error)}
   try{lastRecoveryChecksum=(await recoveryList())[0]?.checksum||''}catch(error){console.warn('복구본 상태 확인 실패',error)}
   try{
@@ -4436,9 +4969,12 @@ async function init(){
     else if(!migrateLegacy()){const p=makeProject('현장조사 프로젝트');workspace.projects=[p];workspace.currentProjectId=p.id;workspace.currentDocumentId=p.documents[0].id}
   }catch(error){console.warn(error);const p=makeProject('현장조사 프로젝트');workspace.projects=[p];workspace.currentProjectId=p.id;workspace.currentDocumentId=p.documents[0].id}
   if(validateWorkspace(workspace))workspace=normalizeWorkspaceData(workspace);
+  recoveredInputCount=applyPendingInputJournal(workspace);
+  if(recoveredInputCount&&validateWorkspace(workspace))workspace=normalizeWorkspaceData(workspace);
   applySoilDefaultSelections(workspace);
   const p=currentProject()||workspace.projects[0];if(p){workspace.currentProjectId=p.id;if(!p.documents.some(d=>d.id===workspace.currentDocumentId))workspace.currentDocumentId=p.documents[0]?.id||null;workspace.projects.forEach(project=>syncCocSamplesToSoil(project))}
   renderApp();updateHistoryButtons();await saveNow();
+  if(recoveredInputCount)showToast(`저장 직전의 입력 변경 ${recoveredInputCount}건을 자동 복구했습니다.`,4800);
   if(!lastRecoveryChecksum)await createRecoverySnapshot('interval',{silent:true,skipIfUnchanged:true});
   clearInterval(recoveryTimer);
   recoveryTimer=setInterval(()=>createRecoverySnapshot('interval',{silent:true,skipIfUnchanged:true}),RECOVERY_INTERVAL_MS);
