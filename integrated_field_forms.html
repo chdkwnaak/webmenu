@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light">
-<meta name="application-version" content="1.1.4">
-<title>현장문서 통합 관리 v1.1.4</title>
+<meta name="application-version" content="1.2.0">
+<title>현장문서 통합 관리 v1.2.0</title>
 <style>
 :root{
   color-scheme:light only;
@@ -316,6 +316,24 @@ input.field-error{background:#fff0ed!important;box-shadow:inset 0 0 0 .35mm #c73
 .common-preset-actions{display:flex;flex-wrap:wrap;gap:5px}
 .common-preset-actions button{padding:7px 9px;font-size:12px}
 .analysis-manager-modal{width:min(640px,100%)}
+.soil-hwpx-modal{width:min(900px,100%)}
+.soil-hwpx-options{display:grid;grid-template-columns:minmax(180px,1fr) minmax(180px,1fr);gap:10px;margin-bottom:12px}
+.soil-hwpx-option{display:grid;gap:5px;padding:10px;border:1px solid #c5d2db;border-radius:7px;background:#f7fafc;font-size:12px;font-weight:800}
+.soil-hwpx-option input[type="number"]{width:100%;padding:8px;border:1px solid #aebbc5;border-radius:6px}
+.soil-hwpx-option.check{grid-template-columns:auto 1fr;align-items:center}
+.soil-hwpx-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:12px}
+.soil-hwpx-summary-item{padding:9px;border:1px solid #c9d5dd;border-radius:7px;background:#eef6fb;text-align:center}
+.soil-hwpx-summary-item strong{display:block;color:#173a5e;font-size:17px}
+.soil-hwpx-summary-item span{display:block;margin-top:2px;color:#607584;font-size:10px}
+.soil-hwpx-issues{display:grid;gap:5px;margin:0 0 12px}
+.soil-hwpx-issue{padding:7px 9px;border-left:4px solid #d69b23;border-radius:5px;background:#fff7df;color:#624a12;font-size:11px;line-height:1.45}
+.soil-hwpx-issue.error{border-left-color:#c43e32;background:#fff0ed;color:#8f2d26}
+.soil-hwpx-termination{display:grid;gap:7px}
+.soil-hwpx-termination-row{display:grid;grid-template-columns:minmax(130px,.7fr) minmax(170px,1fr) minmax(170px,1fr);align-items:center;gap:7px;padding:8px;border:1px solid #ccd7df;border-radius:7px;background:#fff}
+.soil-hwpx-termination-row strong{color:#173a5e;font-size:12px}
+.soil-hwpx-termination-row select,.soil-hwpx-termination-row input{min-width:0;padding:7px;border:1px solid #aebbc5;border-radius:5px}
+.soil-hwpx-empty{padding:15px;border:1px dashed #aebdc8;border-radius:7px;color:#607584;text-align:center;font-size:12px}
+#generate-soil-hwpx[disabled]{cursor:not-allowed;opacity:.5}
 .analysis-manager-intro{margin:0 0 12px;color:#526878;font-size:12px;line-height:1.5}
 .analysis-manager-add{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;margin-bottom:12px}
 .analysis-manager-add input{min-width:0;padding:9px;border:1px solid #aebbc5;border-radius:6px}
@@ -498,7 +516,10 @@ input.field-error{background:#fff0ed!important;box-shadow:inset 0 0 0 .35mm #c73
   .backup-manager-grid{grid-template-columns:1fr}
   .backup-panel.full{grid-column:auto}
   .ocr-body{grid-template-columns:1fr}.ocr-review-wrap{max-height:48vh}
-  .modal-backdrop{padding:8px}.modal{max-height:96dvh}.modal-body{padding:12px}
+    .modal-backdrop{padding:8px}.modal{max-height:96dvh}.modal-body{padding:12px}
+    .soil-hwpx-options{grid-template-columns:1fr}
+    .soil-hwpx-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .soil-hwpx-termination-row{grid-template-columns:1fr}
 }
 @media(max-width:480px){
   .app-toolbar{
@@ -699,7 +720,7 @@ input.field-error{background:#fff0ed!important;box-shadow:inset 0 0 0 .35mm #c73
 </head>
 <body>
 <header class="app-toolbar">
-  <div class="brand"><span class="brand-mark">FIELD</span><span class="brand-title">현장문서 통합 관리</span><span id="app-version-badge" class="app-version-badge" title="현재 앱 버전">v1.1.4</span></div>
+  <div class="brand"><span class="brand-mark">FIELD</span><span class="brand-title">현장문서 통합 관리</span><span id="app-version-badge" class="app-version-badge" title="현재 앱 버전">v1.2.0</span></div>
   <button id="new-project" class="ghost" type="button">새 프로젝트</button>
   <button id="common-info" class="ghost" type="button">공통정보</button>
   <button id="open-help" class="ghost" type="button">도움말</button>
@@ -1089,13 +1110,36 @@ input.field-error{background:#fff0ed!important;box-shadow:inset 0 0 0 .35mm #c73
   </section>
 </div>
 
+<div id="soil-hwpx-modal" class="modal-backdrop" hidden>
+  <section class="modal soil-hwpx-modal" role="dialog" aria-modal="true" aria-labelledby="soil-hwpx-title">
+    <div class="modal-head"><h2 id="soil-hwpx-title">시추기록부 HWPX 내보내기</h2><button type="button" data-close-modal="soil-hwpx-modal" aria-label="시추기록부 내보내기 닫기">×</button></div>
+    <div class="modal-body">
+      <div class="soil-hwpx-options">
+        <label class="soil-hwpx-option">파일당 지점 수
+          <input id="soil-hwpx-points-per-file" type="number" min="1" max="100" step="1" value="10" inputmode="numeric">
+        </label>
+        <label class="soil-hwpx-option check"><input id="soil-hwpx-single-file" type="checkbox"><span>모든 지점을 한 HWPX 파일로 생성</span></label>
+      </div>
+      <div id="soil-hwpx-summary" class="soil-hwpx-summary"></div>
+      <div id="soil-hwpx-issues" class="soil-hwpx-issues"></div>
+      <h3 style="margin:0 0 8px;color:#173a5e;font-size:14px">마지막 시료층 종료사유</h3>
+      <p class="analysis-manager-intro">마지막 시료층의 Remark가 비어 있는 지점은 종료사유를 선택해야 생성할 수 있습니다. 선택한 값은 현장기록지에도 저장됩니다.</p>
+      <div id="soil-hwpx-termination-list" class="soil-hwpx-termination"></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" data-close-modal="soil-hwpx-modal">취소</button>
+      <button id="generate-soil-hwpx" class="primary" type="button">HWPX 생성</button>
+    </div>
+  </section>
+</div>
+
 <div id="toast" class="toast" hidden aria-live="polite"></div>
 <input id="coc-result-template-input" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
 <div id="print-root"></div>
 
 <script>
 'use strict';
-const APP_VERSION='1.1.4';
+const APP_VERSION='1.2.0';
 const DATA_SCHEMA_VERSION=3;
 const DB_NAME='field-forms-integrated-db';
 const DB_VERSION=3;
@@ -1164,6 +1208,14 @@ const COC_CONTAINER_HELP_ROWS=[
   {code:'V',targetHtml:'<strong>BTEX</strong> <span class="help-container-target-note">(벤젠, 톨루엔, 에틸벤젠, 크실렌)</span><br><strong>TCE, PCE, 1,2-디클로로에탄</strong>',methodHtml:'한쪽이 터진 <strong>10 mL 주사기</strong>(테플론·스테인리스·알루미늄·유리) 또는 <strong>30 mL 시험관</strong>(메틸알코올 10 mL 미리 주입)에 <strong>5~10 g</strong>을 분취합니다. 밀봉 후 <strong>0~4℃ 냉장상태</strong>로 운반합니다.'},
   {code:'별도',targetHtml:'수분보정용 시료',methodHtml:'입구가 넓은 <strong>200 mL 이상 유리병</strong>에 가득 담아 밀봉 후 <strong>0~4℃ 냉장상태</strong>로 운반합니다.'}
 ];
+const SOIL_HWPX_LAYERS_PER_PAGE=7;
+const SOIL_HWPX_DEFAULT_POINTS_PER_FILE=10;
+const SOIL_HWPX_TERMINATION_REASONS=['풍화암 종료','풍화대 확인','인력채취불가','지하수 확인','임의종료','직접 입력'];
+const SOIL_HWPX_COLOR_MAP=Object.freeze({'황갈~암갈':'1','적~적갈':'2','담회~백':'3','담록~암록':'4','암회~흑':'5'});
+const SOIL_HWPX_MOISTURE_MAP=Object.freeze({V:'DM',M:'MM',S:'WA',Dry:'DM',Moist:'MM',Wet:'WA'});
+const SOIL_HWPX_TEMPLATE_BASE64='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';
+const SOIL_HWPX_TEMPLATE_BASE64_FIXED=SOIL_HWPX_TEMPLATE_BASE64.slice(0,11648)+'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';
+const SOIL_HWPX_TEMPLATE_BASE64_FINAL=SOIL_HWPX_TEMPLATE_BASE64_FIXED.slice(0,16103)+'AAAgAAAAhACeWwt0MAQAAYwMAABYAAAAAAAAAAAAgAICB7CcAAE1FVEEtSU5GL2NvbnRhaW5lci5yZGZQSwECFAAUAAAACAAAACEA8Dnz1XkCAABDBwAAFAAAAAAAAAAAACAAgIEsKQAAQ29udGVudHMvY29udGVudC5ocGZQSwECFAAUAAAACAAAACEAH5gl1AgBAADbAQAAFgAAAAAAAAAAACAAgIHXKwAATUVUQS1JTkYvY29udGFpbmVyLnhtbFBLAQIUABQAAAAIAAAAIQBvK+BccQAAAIYAAAAVAAAAAAAAAAAAIACAgRMtAABNRVRBLUlORi9tYW5pZmVzdC54bWxQSwUGAAAAAAoACgB7AgAAty0AAAAA';
 const SIZE_GROUPS=[
   {label:'모래',codes:['VCS','CS','MS','FS','VFS']},
   {label:'미사',codes:['LVCS','LCS','LMS','LFS','LVFS']},
@@ -1194,6 +1246,7 @@ let projectNameModalMode='create';
 let pendingBackupRestore=null,recoveryTimer=null,lastRecoveryChecksum='';
 let pendingSampleIdFillDocumentId='',pendingCommonPresetValues=null,pendingJournalToken='',workspaceResetBackupPrepared=false;
 let activeDepthSuggestionInput=null,activeDepthSuggestionIndex=-1;
+let soilHwpxExportState={documentId:'',groups:[],issues:[],terminationReasons:{},customReasons:{}};
 let cocOcrRequestController=null,cocOcrProgressTimer=null,cocOcrTimeoutTimer=null,cocOcrStartedAt=0,cocOcrTimedOut=false;
 const COC_OCR_CLIENT_TIMEOUT_MS=16*60*1000;
 const undoStack=[],redoStack=[];
@@ -1845,7 +1898,7 @@ function renderSoil(doc,printMode=false){
   const syncEnabled=doc.data.cocSyncEnabled!==false;
   const syncControls=`<div class="soil-sync-controls ${syncEnabled?'':'sync-disabled-warning'}" aria-live="polite" ${syncEnabled?'':'role="status" title="주의: COC 변경사항이 현장기록지에 자동 반영되지 않습니다."'}><label class="soil-sync-toggle"><input type="checkbox" data-action="soil-coc-sync-enabled" ${syncEnabled?'checked':''}> <span>${syncEnabled?'COC 자동 연동':'⚠ COC 연동 해제됨'}</span></label><select data-action="soil-coc-source" aria-label="연결할 COC 문서">${sourceOptions}</select></div>`;
   const pageJump=`<div class="page-jump-controls"><input class="page-jump-input" type="number" min="1" max="${pageCount}" step="1" inputmode="numeric" value="${selectedPage+1}" aria-label="이동할 페이지 번호"><span class="page-jump-total">/ ${pageCount}</span><button type="button" data-action="jump-form-page">이동</button></div>`;
-  const controls=printMode?'':formPageControls(`${pageJump}${syncControls}`);
+  const controls=printMode?'':formPageControls(`<button type="button" data-action="open-soil-hwpx-export">시추기록부 HWPX</button>${pageJump}${syncControls}`);
   const pages=formPages(doc).map((d,pageIndex)=>{
     while(d.samples.length<10)d.samples.push(blankSoilSample());
     const path=field=>formPagePath(pageIndex,field);
@@ -2384,6 +2437,283 @@ async function createFieldBackupBlob(){
 function triggerDownload(blob,fileName){
   const anchor=document.createElement('a');anchor.href=URL.createObjectURL(blob);anchor.download=fileName;anchor.click();
   setTimeout(()=>URL.revokeObjectURL(anchor.href),1500);
+}
+function soilHwpxSampleHasData(sample){
+  if(!sample||typeof sample!=='object')return false;
+  return ['sampleId','vialId','analysis','depthFrom','depthTo','texture','moisture','odor','remark'].some(key=>String(sample[key]??'').trim())||
+    (Array.isArray(sample.sizes)&&sample.sizes.length)||(Array.isArray(sample.colors)&&sample.colors.length);
+}
+function soilHwpxPointSortValue(value){
+  return String(value||'').replace(/\d+/g,digits=>digits.padStart(12,'0'));
+}
+function collectSoilHwpxGroups(doc){
+  const project=currentProject(),issues=[],byPoint=new Map(),groups=[];
+  formPages(doc).forEach((page,pageIndex)=>{
+    const populated=(page.samples||[]).map((sample,sampleIndex)=>({sample,sampleIndex})).filter(item=>soilHwpxSampleHasData(item.sample));
+    if(!populated.length)return;
+    const derived=[...new Set(populated.map(item=>pointKeyFromSampleId(item.sample.sampleId)).filter(Boolean))];
+    let pointKey=String(page.pointNo||'').trim();
+    if(!pointKey&&derived.length===1)pointKey=derived[0];
+    if(!pointKey){
+      pointKey=`미지정-${pageIndex+1}`;
+      issues.push({level:'error',message:`${pageIndex+1}페이지의 지점번호를 확인할 수 없습니다.`});
+    }
+    if(derived.length>1)issues.push({level:'error',message:`${pageIndex+1}페이지에 서로 다른 지점의 Sample ID가 함께 있습니다: ${derived.join(', ')}`});
+    let group=byPoint.get(pointKey);
+    if(!group){
+      group={key:pointKey,firstPageIndex:pageIndex,pages:[],samples:[]};
+      byPoint.set(pointKey,group);groups.push(group);
+    }
+    group.pages.push({page,pageIndex});
+    populated.forEach(({sample,sampleIndex})=>{
+      const parsed=String(sample.sampleId||'').trim()?parseStructuredSampleId(sample.sampleId):null;
+      if(sample.sampleId&&!parsed)issues.push({level:'warning',message:`${pageIndex+1}페이지 ${sampleIndex+1}행 Sample ID 형식을 해석하지 못했습니다: ${sample.sampleId}`});
+      const from=String(sample.depthFrom??'').trim(),to=String(sample.depthTo??'').trim();
+      if(!to||!Number.isFinite(Number(to)))issues.push({level:'error',message:`${pointKey} ${sampleIndex+1}행의 종료 깊이를 숫자로 입력해 주세요.`});
+      if(from&&!Number.isFinite(Number(from)))issues.push({level:'error',message:`${pointKey} ${sampleIndex+1}행의 시작 깊이를 숫자로 입력해 주세요.`});
+      if(from&&to&&Number.isFinite(Number(from))&&Number.isFinite(Number(to))&&Number(to)<Number(from)){
+        issues.push({level:'error',message:`${pointKey} ${sampleIndex+1}행의 종료 깊이가 시작 깊이보다 작습니다.`});
+      }
+      (sample.colors||[]).filter(value=>!SOIL_HWPX_COLOR_MAP[value]).forEach(value=>issues.push({level:'warning',message:`${pointKey}의 색상 코드 “${value}”는 출력 코드로 변환할 수 없습니다.`}));
+      const moistureValues=Array.isArray(sample.moisture)?sample.moisture:[sample.moisture];
+      moistureValues.filter(Boolean).filter(value=>!SOIL_HWPX_MOISTURE_MAP[value]).forEach(value=>issues.push({level:'warning',message:`${pointKey}의 수분 코드 “${value}”는 출력 코드로 변환할 수 없습니다.`}));
+      group.samples.push({sample,page,pageIndex,sampleIndex,sequence:soilSampleSequence(sample.sampleId),sourceOrder:pageIndex*100+sampleIndex});
+    });
+  });
+  groups.forEach(group=>{
+    group.samples.sort((a,b)=>{
+      const as=Number.isFinite(a.sequence)?a.sequence:Number.POSITIVE_INFINITY;
+      const bs=Number.isFinite(b.sequence)?b.sequence:Number.POSITIVE_INFINITY;
+      return as-bs||Number(a.sample.depthFrom||0)-Number(b.sample.depthFrom||0)||a.sourceOrder-b.sourceOrder;
+    });
+  });
+  groups.sort((a,b)=>a.firstPageIndex-b.firstPageIndex||soilHwpxPointSortValue(a.key).localeCompare(soilHwpxPointSortValue(b.key),'ko'));
+  const common=project?.common||{};
+  if(!String(common.projectName||doc.data.projectName||'').trim())issues.push({level:'warning',message:'과업명이 비어 있습니다.'});
+  if(!String(common.surveyArea||doc.data.area||'').trim())issues.push({level:'warning',message:'조사지역이 비어 있습니다.'});
+  if(!String(common.organization||'').trim())issues.push({level:'warning',message:'수행기관이 비어 있습니다.'});
+  if(!groups.length)issues.push({level:'error',message:'내보낼 시료층 데이터가 없습니다.'});
+  return {groups,issues};
+}
+function soilHwpxMissingTermination(group){
+  const remark=String(group?.samples?.at(-1)?.sample?.remark||'').trim();
+  return !remark||remark==='특이사항 없음'||remark==='QA/QC';
+}
+function soilHwpxPageDefinitions(groups){
+  const definitions=[];
+  groups.forEach(group=>{
+    chunksOf(group.samples,SOIL_HWPX_LAYERS_PER_PAGE).forEach((samples,index)=>{
+      definitions.push({group,samples,continuation:index>0,pointLabel:`${group.key}${index>0?'(계속)':''}`});
+    });
+  });
+  return definitions;
+}
+function soilHwpxExportOptions(){
+  const singleFile=document.getElementById('soil-hwpx-single-file')?.checked;
+  const input=document.getElementById('soil-hwpx-points-per-file');
+  const parsed=Number(input?.value);
+  const pointsPerFile=singleFile?Math.max(1,soilHwpxExportState.groups.length):Math.max(1,Math.min(100,Number.isSafeInteger(parsed)?parsed:SOIL_HWPX_DEFAULT_POINTS_PER_FILE));
+  if(input){input.disabled=singleFile;if(!singleFile)input.value=String(pointsPerFile)}
+  return {singleFile,pointsPerFile};
+}
+function renderSoilHwpxExportModal(){
+  const state=soilHwpxExportState,{pointsPerFile}=soilHwpxExportOptions();
+  const pages=soilHwpxPageDefinitions(state.groups),fileCount=Math.max(1,Math.ceil(state.groups.length/pointsPerFile));
+  document.getElementById('soil-hwpx-summary').innerHTML=[
+    ['지점',state.groups.length],['시료층',state.groups.reduce((sum,group)=>sum+group.samples.length,0)],['HWPX 페이지',pages.length],['생성 파일',fileCount]
+  ].map(([label,value])=>`<div class="soil-hwpx-summary-item"><strong>${value}</strong><span>${label}</span></div>`).join('');
+  document.getElementById('soil-hwpx-issues').innerHTML=state.issues.length
+    ?state.issues.map(issue=>`<div class="soil-hwpx-issue ${issue.level==='error'?'error':''}">${issue.level==='error'?'오류':'확인'} · ${esc(issue.message)}</div>`).join('')
+    :'';
+  const missing=state.groups.filter(soilHwpxMissingTermination);
+  document.getElementById('soil-hwpx-termination-list').innerHTML=missing.length?missing.map(group=>{
+    const selected=state.terminationReasons[group.key]||'',custom=state.customReasons[group.key]||'';
+    return `<div class="soil-hwpx-termination-row" data-hwpx-point="${esc(group.key)}"><strong>${esc(group.key)}</strong><select data-hwpx-termination="${esc(group.key)}"><option value="">종료사유 선택</option>${SOIL_HWPX_TERMINATION_REASONS.map(reason=>`<option value="${esc(reason)}" ${selected===reason?'selected':''}>${esc(reason)}</option>`).join('')}</select><input data-hwpx-custom="${esc(group.key)}" type="text" maxlength="60" value="${esc(custom)}" placeholder="직접 입력" ${selected==='직접 입력'?'':'disabled'}></div>`;
+  }).join(''):'<div class="soil-hwpx-empty">모든 지점의 마지막 시료층에 종료사유가 입력되어 있습니다.</div>';
+  const unresolved=missing.some(group=>{
+    const selected=state.terminationReasons[group.key];
+    return !selected||(selected==='직접 입력'&&!String(state.customReasons[group.key]||'').trim());
+  });
+  document.getElementById('generate-soil-hwpx').disabled=state.issues.some(issue=>issue.level==='error')||unresolved;
+}
+function openSoilHwpxExportModal(doc=currentDocument()){
+  if(doc?.type!=='soil-sampling-record')return;
+  const collected=collectSoilHwpxGroups(doc);
+  soilHwpxExportState={documentId:doc.id,groups:collected.groups,issues:collected.issues,terminationReasons:{},customReasons:{}};
+  const limit=document.getElementById('soil-hwpx-points-per-file');
+  limit.value=String(SOIL_HWPX_DEFAULT_POINTS_PER_FILE);
+  document.getElementById('soil-hwpx-single-file').checked=false;
+  renderSoilHwpxExportModal();
+  document.getElementById('soil-hwpx-modal').hidden=false;
+}
+function soilHwpxFormatNumber(value){
+  const text=String(value??'').trim();if(!text)return '';
+  const numeric=Number(text);if(!Number.isFinite(numeric))return text;
+  if(Object.is(numeric,-0)||numeric===0)return '0';
+  if(Number.isInteger(numeric))return numeric.toFixed(1);
+  return String(Number(numeric.toFixed(6)));
+}
+function soilHwpxSampleValues(sample){
+  const start=Number(sample.depthFrom),end=Number(sample.depthTo);
+  const orderedSizes=SIZE_GROUPS.flatMap(group=>group.codes).filter(code=>(sample.sizes||[]).includes(code));
+  const extraSizes=(sample.sizes||[]).filter(code=>!orderedSizes.includes(code));
+  const moisture=(Array.isArray(sample.moisture)?sample.moisture:[sample.moisture]).filter(Boolean).map(value=>SOIL_HWPX_MOISTURE_MAP[value]||value);
+  let odor='';if(sample.odor==='무취')odor='무';else if(sample.odor==='강한취기'||sample.odor==='보통취기')odor='유';
+  return {
+    depth:soilHwpxFormatNumber(sample.depthTo),
+    thickness:Number.isFinite(start)&&Number.isFinite(end)?soilHwpxFormatNumber(end-start):'',
+    sizes:[...orderedSizes,...extraSizes],
+    colors:(sample.colors||[]).map(value=>SOIL_HWPX_COLOR_MAP[value]||value).join(', '),
+    moisture,
+    odor,
+    remark:String(sample.remark||'').trim()||'특이사항 없음'
+  };
+}
+function soilHwpxAnalyses(group){
+  const values=[];
+  group.samples.forEach(({sample})=>{
+    const items=Array.isArray(sample.analysis)?sample.analysis:String(sample.analysis||'').split(/[,/\n]+/);
+    items.map(value=>String(value).trim()).filter(Boolean).forEach(value=>{if(!values.includes(value))values.push(value)});
+  });
+  return values;
+}
+function soilHwpxHeader(definition){
+  const project=currentProject(),common=project?.common||{},pages=definition.group.pages.map(item=>item.page),page=pages[0]||{};
+  const selectedEquipment=[...new Set(pages.flatMap(item=>Array.isArray(item.equipment)?item.equipment:[]))];
+  const equipment=['equipment','manual','trowel'].map(value=>`${selectedEquipment.includes(value)?'☑':'☐'} ${value}`).join('  ');
+  const maximumDepth=Math.max(...definition.group.samples.map(item=>Number(item.sample.depthTo)).filter(Number.isFinite),0);
+  const start=String(page.timeStart||'').trim(),end=String(page.timeEnd||'').trim();
+  return {
+    projectName:String(page.projectName||common.projectName||''),
+    area:String(page.area||common.surveyArea||''),
+    pointNo:definition.pointLabel,
+    category:'사진참조',
+    position:`이격거리    m,  □ ${soilHwpxFormatNumber(maximumDepth)} m`,
+    dateTime:[page.date||common.workDate,[start,end].filter(Boolean).join('~')].filter(Boolean).join(' '),
+    organization:String(common.organization||''),
+    analyses:soilHwpxAnalyses(definition.group),
+    equipment
+  };
+}
+const hwpxLocalName=node=>String(node?.localName||node?.nodeName||'').split(':').at(-1);
+function hwpxElements(root,name){return [...root.getElementsByTagName('*')].filter(node=>hwpxLocalName(node)===name)}
+function hwpxDirectChildren(root,name){return [...root.children].filter(node=>hwpxLocalName(node)===name)}
+function hwpxCell(table,rowIndex,columnIndex){
+  const row=hwpxElements(table,'tr')[rowIndex];if(!row)return null;
+  return hwpxDirectChildren(row,'tc').find(cell=>{
+    const address=hwpxElements(cell,'cellAddr')[0];
+    return Number(address?.getAttribute('colAddr'))===columnIndex;
+  })||null;
+}
+let soilHwpxXmlId=2200000000;
+function setHwpxCellText(table,rowIndex,columnIndex,value){
+  const cell=hwpxCell(table,rowIndex,columnIndex);if(!cell)return;
+  const subList=hwpxDirectChildren(cell,'subList')[0];if(!subList)return;
+  const existing=hwpxDirectChildren(subList,'p'),base=existing[0];if(!base)return;
+  existing.slice(1).forEach(paragraph=>paragraph.remove());
+  const lines=Array.isArray(value)?value.map(item=>String(item??'')):String(value??'').split('\n');
+  (lines.length?lines:['']).forEach((line,index)=>{
+    const paragraph=index===0?base:base.cloneNode(true);
+    paragraph.setAttribute('id',String(soilHwpxXmlId++));
+    hwpxElements(paragraph,'linesegarray').forEach(node=>node.remove());
+    const texts=hwpxElements(paragraph,'t');
+    if(texts[0])texts[0].textContent=line;
+    texts.slice(1).forEach(text=>text.remove());
+    if(index>0)subList.appendChild(paragraph);
+  });
+}
+function fillSoilHwpxTable(table,definition){
+  const header=soilHwpxHeader(definition);
+  [[1,5,header.projectName],[2,5,header.area],[3,5,header.pointNo],[4,5,header.category],[5,5,header.position],[6,5,header.dateTime],[7,5,header.organization],[8,5,header.analyses],[9,5,header.equipment]].forEach(([row,column,value])=>setHwpxCellText(table,row,column,value));
+  for(let index=0;index<SOIL_HWPX_LAYERS_PER_PAGE;index++){
+    const row=12+index*4,item=definition.samples[index],values=item?soilHwpxSampleValues(item.sample):{depth:'',thickness:'',sizes:[],colors:'',moisture:[],odor:'',remark:''};
+    setHwpxCellText(table,row,3,values.depth);
+    setHwpxCellText(table,row,4,values.thickness);
+    setHwpxCellText(table,row,6,values.sizes);
+    setHwpxCellText(table,row,7,values.colors);
+    setHwpxCellText(table,row,8,'');
+    setHwpxCellText(table,row,9,values.moisture);
+    setHwpxCellText(table,row,10,values.odor);
+    setHwpxCellText(table,row,11,values.remark);
+    setHwpxCellText(table,row,13,'');
+    setHwpxCellText(table,row+3,0,values.depth);
+  }
+}
+function decodeBase64Bytes(value){
+  const binary=atob(value),bytes=new Uint8Array(binary.length);
+  for(let index=0;index<binary.length;index++)bytes[index]=binary.charCodeAt(index);
+  return bytes;
+}
+async function buildSoilHwpxBlob(definitions){
+  if(typeof JSZip==='undefined')throw new Error('HWPX 생성 모듈을 불러오지 못했습니다.');
+  const zip=await JSZip.loadAsync(decodeBase64Bytes(SOIL_HWPX_TEMPLATE_BASE64_FINAL));
+  const source=await zip.file('Contents/section0.xml').async('string');
+  const xml=new DOMParser().parseFromString(source,'application/xml');
+  if(xml.querySelector('parsererror'))throw new Error('내장 HWPX 템플릿 XML을 읽지 못했습니다.');
+  const root=xml.documentElement,template=hwpxDirectChildren(root,'p')[0];
+  if(!template)throw new Error('내장 HWPX 템플릿의 페이지를 찾지 못했습니다.');
+  hwpxDirectChildren(root,'p').forEach(node=>node.remove());
+  definitions.forEach((definition,index)=>{
+    const paragraph=template.cloneNode(true);
+    paragraph.setAttribute('id',String(soilHwpxXmlId++));
+    paragraph.setAttribute('pageBreak',index?'1':'0');
+    if(index)hwpxDirectChildren(paragraph,'run').filter(run=>hwpxElements(run,'secPr').length).forEach(run=>run.remove());
+    const table=hwpxElements(paragraph,'tbl')[0];
+    if(!table)throw new Error('내장 HWPX 템플릿의 표를 찾지 못했습니다.');
+    table.setAttribute('id',String(soilHwpxXmlId++));
+    fillSoilHwpxTable(table,definition);
+    hwpxElements(paragraph,'linesegarray').forEach(node=>node.remove());
+    root.appendChild(paragraph);
+  });
+  const serialized=new XMLSerializer().serializeToString(xml);
+  zip.file('Contents/section0.xml',serialized,{compression:'DEFLATE'});
+  zip.file('Preview/PrvText.txt',`현장 시추 기록부\n${definitions.map(item=>item.pointLabel).join(', ')}`,{compression:'DEFLATE'});
+  zip.file('mimetype','application/hwp+zip',{compression:'STORE'});
+  return zip.generateAsync({type:'blob',mimeType:'application/hwp+zip',compression:'DEFLATE',compressionOptions:{level:6}});
+}
+function soilHwpxSafeFilePart(value,fallback='시추기록부'){
+  const sanitized=String(value||'').trim().replace(/[\\/:*?"<>|]+/g,'_').replace(/\s+/g,' ').slice(0,70);
+  return sanitized||fallback;
+}
+async function generateSoilHwpxExport(){
+  const doc=currentDocument();
+  if(doc?.type!=='soil-sampling-record'||doc.id!==soilHwpxExportState.documentId)return;
+  const missing=soilHwpxExportState.groups.filter(soilHwpxMissingTermination);
+  if(missing.length){
+    mutate(()=>{
+      missing.forEach(group=>{
+        const selected=soilHwpxExportState.terminationReasons[group.key];
+        const reason=selected==='직접 입력'?String(soilHwpxExportState.customReasons[group.key]||'').trim():selected;
+        const last=group.samples.at(-1)?.sample;if(!last||!reason)return;
+        last.remark=String(last.remark||'').trim()==='QA/QC'?`QA/QC / ${reason}`:reason;
+      });
+    },{render:false});
+  }
+  const refreshed=collectSoilHwpxGroups(doc);
+  if(refreshed.issues.some(issue=>issue.level==='error')){soilHwpxExportState.groups=refreshed.groups;soilHwpxExportState.issues=refreshed.issues;renderSoilHwpxExportModal();return}
+  const {pointsPerFile}=soilHwpxExportOptions(),batches=chunksOf(refreshed.groups,pointsPerFile);
+  const project=currentProject(),projectName=soilHwpxSafeFilePart(project?.common?.projectName||project?.name),date=String(project?.common?.workDate||todayISO()).replace(/\D/g,'')||todayISO().replace(/\D/g,'');
+  const button=document.getElementById('generate-soil-hwpx');button.disabled=true;button.textContent='생성 중…';
+  try{
+    const outputs=[];
+    for(let index=0;index<batches.length;index++){
+      const batch=batches[index],definitions=soilHwpxPageDefinitions(batch),blob=await buildSoilHwpxBlob(definitions);
+      const range=`지점${String(index*pointsPerFile+1).padStart(3,'0')}-${String(index*pointsPerFile+batch.length).padStart(3,'0')}`;
+      const name=batches.length===1?`현장시추기록부_${projectName}_${date}.hwpx`:`현장시추기록부_${String(index+1).padStart(2,'0')}_${range}.hwpx`;
+      outputs.push({name,blob});
+    }
+    if(outputs.length===1)triggerDownload(outputs[0].blob,outputs[0].name);
+    else{
+      const packageZip=new JSZip();
+      outputs.forEach(output=>packageZip.file(output.name,output.blob));
+      const packageBlob=await packageZip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+      triggerDownload(packageBlob,`현장시추기록부_${projectName}_${date}.zip`);
+    }
+    document.getElementById('soil-hwpx-modal').hidden=true;
+    showToast(`${refreshed.groups.length}개 지점의 시추기록부 다운로드를 시작했습니다. 한글에서 열어 사진을 추가해 주세요.`,5200);
+  }catch(error){
+    console.warn(error);showToast(`HWPX를 생성하지 못했습니다: ${error.message||error}`,6000);
+  }finally{button.textContent='HWPX 생성';button.disabled=false}
 }
 function setBackupProgress(message,error=false){
   const element=document.getElementById('backup-progress');if(!element)return;
@@ -4333,6 +4663,7 @@ async function handleAction(action,target){
     if(hasLockedCocPage(doc))return showToast('잠긴 COC 페이지가 있어 사진 인식 결과를 적용할 수 없습니다. 먼저 잠금을 해제해 주세요.',4200);
     openCocOcrModal();return
   }
+  if(action==='open-soil-hwpx-export'){openSoilHwpxExportModal(doc);return}
   if(action==='export-coc-result-xlsx'){startCocResultExport(doc);return}
   if(action==='add-form-page'){
     mutate(()=>{
@@ -4898,6 +5229,24 @@ document.getElementById('print-project-option').addEventListener('click',()=>{
   const project=currentProject();if(!project?.documents?.length)return;
   document.getElementById('print-modal').hidden=true;printDocuments(project.documents);
 });
+document.getElementById('soil-hwpx-points-per-file').addEventListener('input',renderSoilHwpxExportModal);
+document.getElementById('soil-hwpx-single-file').addEventListener('change',renderSoilHwpxExportModal);
+document.getElementById('soil-hwpx-termination-list').addEventListener('change',event=>{
+  const select=event.target.closest('[data-hwpx-termination]');if(!select)return;
+  soilHwpxExportState.terminationReasons[select.dataset.hwpxTermination]=select.value;
+  renderSoilHwpxExportModal();
+});
+document.getElementById('soil-hwpx-termination-list').addEventListener('input',event=>{
+  const input=event.target.closest('[data-hwpx-custom]');if(!input)return;
+  soilHwpxExportState.customReasons[input.dataset.hwpxCustom]=input.value;
+  const missing=soilHwpxExportState.groups.filter(soilHwpxMissingTermination);
+  const unresolved=missing.some(group=>{
+    const selected=soilHwpxExportState.terminationReasons[group.key];
+    return !selected||(selected==='직접 입력'&&!String(soilHwpxExportState.customReasons[group.key]||'').trim());
+  });
+  document.getElementById('generate-soil-hwpx').disabled=soilHwpxExportState.issues.some(issue=>issue.level==='error')||unresolved;
+});
+document.getElementById('generate-soil-hwpx').addEventListener('click',generateSoilHwpxExport);
 document.getElementById('document-search-input').addEventListener('input',event=>performDocumentSearch(event.target.value));
 document.getElementById('document-search-input').addEventListener('keydown',event=>{
   if(event.key==='Enter'){
