@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light">
-<meta name="application-version" content="1.0.1">
-<title>현장문서 통합 관리 v1.0.1</title>
+<meta name="application-version" content="1.1.4">
+<title>현장문서 통합 관리 v1.1.4</title>
 <style>
 :root{
   color-scheme:light only;
@@ -356,6 +356,20 @@ input.field-error{background:#fff0ed!important;box-shadow:inset 0 0 0 .35mm #c73
 .help-section-body{padding:10px 13px;color:#3e5668;font-size:12px;line-height:1.6}
 .help-section-body ul{margin:0;padding-left:18px}
 .help-section-body li+li{margin-top:4px}
+.help-container-table{width:100%;margin:0 0 5px;border-collapse:collapse;background:#fff;font-size:11px;line-height:1.35}
+.help-container-table th,.help-container-table td{padding:5px 6px;border:1px solid #c7d3dc;text-align:left;vertical-align:top}
+.help-container-table th{background:#eef6fb;color:#173a5e}
+.help-container-code{width:38px;white-space:nowrap;text-align:center!important;font-weight:900}
+.help-container-target{width:30%}
+.help-container-target strong{font-weight:800}
+.help-container-target .help-container-target-note{color:#607584;font-size:9.5px}
+.help-container-method strong{color:#173a5e}
+.help-container-legend{margin:3px 0 0;color:#526878;font-size:10.5px;line-height:1.35}
+.help-container-reference{margin-top:6px;padding:6px 8px;border-left:3px solid #6d91aa;border-radius:4px;background:#f3f8fb;color:#405a6d;font-size:10.5px;line-height:1.4}
+.help-container-reference strong{display:inline-block;margin:0 7px 0 0;color:#173a5e}
+.help-container-reference ul{display:inline;margin:0;padding:0;list-style:none}
+.help-container-reference li{display:inline}
+.help-container-reference li+li::before{content:" · ";color:#6d91aa;font-weight:900}
 .help-notice{margin:12px 0 0;padding:10px 12px;border-left:4px solid #e5a529;border-radius:5px;background:#fff7df;color:#624a12;font-size:12px;line-height:1.55}
 .help-dismiss-option{display:flex;align-items:center;gap:7px;margin-right:auto;color:#425d70;font-size:12px;font-weight:700}
 .help-dismiss-option input{width:17px;height:17px;margin:0}
@@ -685,7 +699,7 @@ input.field-error{background:#fff0ed!important;box-shadow:inset 0 0 0 .35mm #c73
 </head>
 <body>
 <header class="app-toolbar">
-  <div class="brand"><span class="brand-mark">FIELD</span><span class="brand-title">현장문서 통합 관리</span><span id="app-version-badge" class="app-version-badge" title="현재 앱 버전">v1.0.1</span></div>
+  <div class="brand"><span class="brand-mark">FIELD</span><span class="brand-title">현장문서 통합 관리</span><span id="app-version-badge" class="app-version-badge" title="현재 앱 버전">v1.1.4</span></div>
   <button id="new-project" class="ghost" type="button">새 프로젝트</button>
   <button id="common-info" class="ghost" type="button">공통정보</button>
   <button id="open-help" class="ghost" type="button">도움말</button>
@@ -870,6 +884,24 @@ input.field-error{background:#fff0ed!important;box-shadow:inset 0 0 0 .35mm #c73
             <li>입력된 페이지를 삭제할 때는 확인창이 표시되며, 삭제 직후에는 되돌리기로 복구할 수 있습니다.</li>
             <li>현재 페이지 초기화는 선택한 페이지만 비우고 다른 페이지와 공통정보는 유지합니다.</li>
           </ul></div>
+        </details>
+        <details class="help-section">
+          <summary>COC Container Type 기준</summary>
+          <div class="help-section-body">
+            <table class="help-container-table">
+              <thead><tr><th class="help-container-code">구분</th><th class="help-container-target">대상 항목</th><th>시료 채취·보관 및 운반 방법</th></tr></thead>
+              <tbody id="container-type-help-body"></tbody>
+            </table>
+            <p class="help-container-legend"><strong>용기 코드:</strong> P Plastic · G Glass Bottle · V Vial　 <strong>복수 항목:</strong> 필요한 용기를 함께 표시(예: TPH + BTEX → G, V)</p>
+            <p class="help-container-legend"><strong>자동 분류:</strong> 다이옥신 → G(세부 시험기준 확인) · 이화학특성 → P</p>
+            <div class="help-container-reference">
+              <strong>근거</strong>
+              <ul>
+                <li><cite>ES 07130.c_시료의 채취 및 조제</cite>: 2.1.2.2, 2.2.2.3, 2.2.2.5, 2.2.2.4 등</li>
+                <li>“토양오염공정시험기준에 따른 시료채취 및 보관 방법”</li>
+              </ul>
+            </div>
+          </div>
         </details>
         <details class="help-section">
           <summary>모바일과 태블릿 사용</summary>
@@ -1063,7 +1095,7 @@ input.field-error{background:#fff0ed!important;box-shadow:inset 0 0 0 .35mm #c73
 
 <script>
 'use strict';
-const APP_VERSION='1.0.1';
+const APP_VERSION='1.1.4';
 const DATA_SCHEMA_VERSION=3;
 const DB_NAME='field-forms-integrated-db';
 const DB_VERSION=3;
@@ -1120,6 +1152,18 @@ const TYPE_META={
 };
 const CONTAMINATION_ITEMS=['TPH','BTEX','TCE','PCE','1,2-DCA','Cu','As','Zn','Ni','Cd','Pb','Cr6+','Hg','F','CN','Phenol','유기인','PCB','벤조(a)피렌'];
 const PHYSICO_ITEMS=['pH','EC','염농도','유효인산','유기물함량','치환성양이온','전질소(T-N)','CEC','토성','공극률','유효수분량','토양경도'];
+const COC_CONTAINER_TYPE_RULES=[
+  {code:'P',name:'Plastic',items:['Cu','As','Zn','Ni','Cd','Pb','Cr6+','Hg','F','pH']},
+  {code:'G',name:'Glass Bottle',items:['TPH','CN','Phenol','유기인','PCB','벤조(a)피렌','다이옥신','Dioxin']},
+  {code:'V',name:'Vial',items:['BTEX','TCE','PCE','1,2-DCA']}
+];
+const COC_CONTAINER_HELP_ROWS=[
+  {code:'P',targetHtml:'<strong>중금속류</strong> <span class="help-container-target-note">(카드뮴, 구리, 납, 비소, 수은, 6가크롬, 아연, 니켈 등)</span><br><strong>불소, pH</strong>',methodHtml:'폴리에틸렌 봉투에 약 <strong>300 g</strong>을 분취하여 보관합니다.'},
+  {code:'G',targetHtml:'시안, 유기인화합물, 페놀류, PCB',methodHtml:'입구가 넓은 유리병에 약 <strong>300 g</strong>을 분취하여 보관합니다.'},
+  {code:'G',targetHtml:'벤조(a)피렌, TPH',methodHtml:'입구가 넓은 유리병에 공간이 없도록 가득 담아 밀봉 후 <strong>0~4℃ 냉장상태</strong>로 운반합니다.'},
+  {code:'V',targetHtml:'<strong>BTEX</strong> <span class="help-container-target-note">(벤젠, 톨루엔, 에틸벤젠, 크실렌)</span><br><strong>TCE, PCE, 1,2-디클로로에탄</strong>',methodHtml:'한쪽이 터진 <strong>10 mL 주사기</strong>(테플론·스테인리스·알루미늄·유리) 또는 <strong>30 mL 시험관</strong>(메틸알코올 10 mL 미리 주입)에 <strong>5~10 g</strong>을 분취합니다. 밀봉 후 <strong>0~4℃ 냉장상태</strong>로 운반합니다.'},
+  {code:'별도',targetHtml:'수분보정용 시료',methodHtml:'입구가 넓은 <strong>200 mL 이상 유리병</strong>에 가득 담아 밀봉 후 <strong>0~4℃ 냉장상태</strong>로 운반합니다.'}
+];
 const SIZE_GROUPS=[
   {label:'모래',codes:['VCS','CS','MS','FS','VFS']},
   {label:'미사',codes:['LVCS','LCS','LMS','LFS','LVFS']},
@@ -1247,7 +1291,13 @@ function helpAutoDisplayDismissed(){
 }
 function openHelpModal(){
   document.getElementById('help-dont-show-again').checked=helpAutoDisplayDismissed();
+  renderContainerTypeHelp();
   document.getElementById('help-modal').hidden=false;
+}
+function renderContainerTypeHelp(){
+  const target=document.getElementById('container-type-help-body');
+  if(!target)return;
+  target.innerHTML=COC_CONTAINER_HELP_ROWS.map(row=>`<tr><td class="help-container-code">${esc(row.code)}</td><td class="help-container-target">${row.targetHtml}</td><td class="help-container-method">${row.methodHtml}</td></tr>`).join('');
 }
 function closeHelpModal(){
   const dismissed=document.getElementById('help-dont-show-again').checked;
@@ -3572,13 +3622,12 @@ function syncCocSamplesToSoil(project=currentProject(),syncSampleIds=true){
 function updateCocContainer(doc,sample){
   const profile=doc.data.profile;
   const selected=sample.analyses||[];
-  const types=[];
-  if(profile==='physicochemical'){if(selected.length)types.push('P')}
-  else{
-    if(selected.some(x=>['Cu','As','Zn','Ni','Cd','Pb','Cr6+','Hg','F'].includes(x)))types.push('P');
-    if(selected.some(x=>['TPH','CN','Phenol','유기인','PCB','벤조(a)피렌'].includes(x)))types.push('G');
-    if(selected.some(x=>['BTEX','TCE','PCE','1,2-DCA'].includes(x)))types.push('V');
-  }
+  const selectedKeys=new Set(selected.map(normalizeResultAnalysisKey));
+  const types=profile==='physicochemical'
+    ?(selected.length?['P']:[])
+    :COC_CONTAINER_TYPE_RULES
+      .filter(rule=>rule.items.some(item=>selectedKeys.has(normalizeResultAnalysisKey(item))))
+      .map(rule=>rule.code);
   sample.container=types.join(', ');
   const common=currentProject().common;
   if(types.includes('V')&&sample.sampleId&&!String(sample.vial).trim()){sample.vial=String(common.vialNext||1);common.vialNext=(Number(common.vialNext)||1)+1}
