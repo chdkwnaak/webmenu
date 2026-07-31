@@ -1,0 +1,29 @@
+첨부한 COC 사진을 분석하여 Sample ID, Depth, Sample Date, Matrix, Container, Number of vial,
+ 체크된 분석항목을 추출하고, 제공한 JSON 구조와 필드명을 정확히 유지하여 JSON 코드만 출력해줘.
+ 보이지 않는 값은 추측하지 말고 빈 문자열로 작성해줘.
+
+예시는 다음과 같습니다.
+{
+  "projectName": "○○부대 토양환경평가",
+  "area": "A구역",
+  "laboratory": "NICEM",
+  "manager": "홍길동",
+  "samples": [
+    {
+      "no": "1",
+      "sampleId": "YC-A001-01",
+      "depth": "0-0.15",
+      "sampleDate": "2026-07-30",
+      "matrix": "SOIL",
+      "container": "P, V",
+      "vial": "2",
+      "analyses": ["TPH", "BTEX"],
+      "comment": "",
+      "confidence": 0.95
+    }
+  ]
+}
+
+출력된 내용을 UTF-8 형식의 .json 파일로 저장하면 됩니다. 
+다만 현재 불러오기 과정에서도 사용자가 인식 결과를 검토한 후 COC에 반영하도록 되어 있으므로, 
+수기 숫자·체크 항목은 반드시 확인하는 것이 좋습니다.

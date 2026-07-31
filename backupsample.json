@@ -1,0 +1,1475 @@
+{
+  "format": "FIELD-FORMS-WORKSPACE",
+  "version": 3,
+  "exportedAt": "2026-07-29T05:49:23.080Z",
+  "workspace": {
+    "version": 3,
+    "currentProjectId": "project-ms4d3fti-4qtjul",
+    "currentDocumentId": "doc-ms4d3fti-e0w93h",
+    "projects": [
+      {
+        "id": "project-ms4d3fti-4qtjul",
+        "name": "0729",
+        "common": {
+          "displayName": "0729",
+          "projectName": "토양환경평가",
+          "surveyArea": "경기 연천",
+          "organization": "NICEM",
+          "laboratory": "NICEM",
+          "workDate": "2026-07-28",
+          "manager": "윤대근",
+          "recorder": "최정민",
+          "checker": "윤대근",
+          "siteName": "YC",
+          "surveyType": "A",
+          "startPoint": "001",
+          "sampleDigits": 2,
+          "defaultMatrix": "Soil",
+          "vialNext": 2026
+        },
+        "documents": [
+          {
+            "id": "doc-ms4d3fti-cxbl22",
+            "type": "safety-training",
+            "title": "안전 1",
+            "createdAt": 1785225375702,
+            "updatedAt": 1785303686687,
+            "data": {
+              "projectName": "토양환경평가",
+              "organization": "NICEM",
+              "date": "2026-07-28",
+              "area": "경기 연천",
+              "workContent": "",
+              "trainingContent": "",
+              "participants": [
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "affiliation": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                }
+              ],
+              "photos": [],
+              "extraPages": []
+            }
+          },
+          {
+            "id": "doc-ms4d3fti-e0w93h",
+            "type": "chain-of-custody",
+            "title": "COC 1",
+            "createdAt": 1785225375702,
+            "updatedAt": 1785303523047,
+            "data": {
+              "projectName": "토양환경평가",
+              "area": "경기 연천",
+              "laboratory": "NICEM",
+              "manager": "윤대근",
+              "profile": "contamination",
+              "analysisItemsByProfile": {
+                "contamination": [
+                  "TPH",
+                  "BTEX",
+                  "TCE",
+                  "PCE",
+                  "Cu",
+                  "As",
+                  "Zn",
+                  "Ni",
+                  "Cd",
+                  "Pb",
+                  "Cr6+",
+                  "Hg",
+                  "PCB",
+                  "벤조(a)피렌"
+                ],
+                "physicochemical": [
+                  "pH",
+                  "EC",
+                  "염농도",
+                  "유효인산",
+                  "유기물함량",
+                  "치환성양이온",
+                  "전질소(T-N)",
+                  "CEC",
+                  "토성",
+                  "공극률",
+                  "유효수분량",
+                  "토양경도"
+                ]
+              },
+              "approvedInvalidSampleIds": [],
+              "pages": [
+                {
+                  "id": "page-ms4d3fti-zdjzkh",
+                  "samples": [
+                    {
+                      "sampleId": "YC-A001-01",
+                      "depth": "",
+                      "sampleDate": "2026-07-28",
+                      "matrix": "Soil",
+                      "container": "G, V",
+                      "vial": "2001",
+                      "analyses": [
+                        "TPH",
+                        "BTEX"
+                      ],
+                      "comment": ""
+                    },
+                    {
+                      "sampleId": "YC-A001-02",
+                      "depth": "",
+                      "sampleDate": "2026-07-28",
+                      "matrix": "Soil",
+                      "container": "G, V",
+                      "vial": "2002",
+                      "analyses": [
+                        "TPH",
+                        "BTEX"
+                      ],
+                      "comment": ""
+                    },
+                    {
+                      "sampleId": "YC-A001-03",
+                      "depth": "",
+                      "sampleDate": "2026-07-28",
+                      "matrix": "Soil",
+                      "container": "G, V",
+                      "vial": "2003",
+                      "analyses": [
+                        "TPH",
+                        "BTEX"
+                      ],
+                      "comment": ""
+                    },
+                    {
+                      "sampleId": "YC-A001-04",
+                      "depth": "",
+                      "sampleDate": "2026-07-28",
+                      "matrix": "Soil",
+                      "container": "G, V",
+                      "vial": "2004",
+                      "analyses": [
+                        "TPH",
+                        "BTEX"
+                      ],
+                      "comment": ""
+                    },
+                    {
+                      "sampleId": "YC-A001-05",
+                      "depth": "",
+                      "sampleDate": "2026-07-28",
+                      "matrix": "Soil",
+                      "container": "G, V",
+                      "vial": "2005",
+                      "analyses": [
+                        "TPH",
+                        "BTEX"
+                      ],
+                      "comment": ""
+                    },
+                    {
+                      "sampleId": "YC-A001-06",
+                      "depth": "",
+                      "sampleDate": "2026-07-28",
+                      "matrix": "Soil",
+                      "container": "G, V",
+                      "vial": "2006",
+                      "analyses": [
+                        "TPH",
+                        "BTEX"
+                      ],
+                      "comment": ""
+                    },
+                    {
+                      "sampleId": "YC-A002-01",
+                      "depth": "",
+                      "sampleDate": "2026-07-28",
+                      "matrix": "Soil",
+                      "container": "G, V",
+                      "vial": "2007",
+                      "analyses": [
+                        "TPH",
+                        "BTEX"
+                      ],
+                      "comment": ""
+                    },
+                    {
+                      "sampleId": "YC-A002-02",
+                      "depth": "",
+                      "sampleDate": "2026-07-28",
+                      "matrix": "Soil",
+                      "container": "G, V",
+                      "vial": "2008",
+                      "analyses": [
+                        "TPH",
+                        "BTEX"
+                      ],
+                      "comment": ""
+                    },
+                    {
+                      "sampleId": "YC-A002-03",
+                      "depth": "",
+                      "sampleDate": "2026-07-28",
+                      "matrix": "Soil",
+                      "container": "G, V",
+                      "vial": "2009",
+                      "analyses": [
+                        "TPH",
+                        "BTEX"
+                      ],
+                      "comment": ""
+                    },
+                    {
+                      "sampleId": "YC-A002-04",
+                      "depth": "",
+                      "sampleDate": "2026-07-28",
+                      "matrix": "Soil",
+                      "container": "G, V",
+                      "vial": "2010",
+                      "analyses": [
+                        "TPH",
+                        "BTEX"
+                      ],
+                      "comment": ""
+                    },
+                    {
+                      "sampleId": "YC-A002-05",
+                      "depth": "",
+                      "sampleDate": "2026-07-28",
+                      "matrix": "Soil",
+                      "container": "G, V",
+                      "vial": "2011",
+                      "analyses": [
+                        "TPH",
+                        "BTEX"
+                      ],
+                      "comment": ""
+                    },
+                    {
+                      "sampleId": "YC-A002-06",
+                      "depth": "",
+                      "sampleDate": "2026-07-28",
+                      "matrix": "Soil",
+                      "container": "G, V",
+                      "vial": "2012",
+                      "analyses": [
+                        "TPH",
+                        "BTEX"
+                      ],
+                      "comment": ""
+                    },
+                    {
+                      "sampleId": "YC-A003-01",
+                      "depth": "",
+                      "sampleDate": "2026-07-28",
+                      "matrix": "Soil",
+                      "container": "G, V",
+                      "vial": "2013",
+                      "analyses": [
+                        "TPH",
+                        "BTEX"
+                      ],
+                      "comment": ""
+                    },
+                    {
+                      "sampleId": "YC-A003-02",
+                      "depth": "",
+                      "sampleDate": "2026-07-28",
+                      "matrix": "Soil",
+                      "container": "G, V",
+                      "vial": "2014",
+                      "analyses": [
+                        "TPH",
+                        "BTEX"
+                      ],
+                      "comment": ""
+                    },
+                    {
+                      "sampleId": "YC-A003-03",
+                      "depth": "",
+                      "sampleDate": "2026-07-28",
+                      "matrix": "Soil",
+                      "container": "G, V",
+                      "vial": "2015",
+                      "analyses": [
+                        "TPH",
+                        "BTEX"
+                      ],
+                      "comment": ""
+                    },
+                    {
+                      "sampleId": "YC-A003-04",
+                      "depth": "",
+                      "sampleDate": "2026-07-28",
+                      "matrix": "Soil",
+                      "container": "G, V",
+                      "vial": "2016",
+                      "analyses": [
+                        "TPH",
+                        "BTEX"
+                      ],
+                      "comment": ""
+                    },
+                    {
+                      "sampleId": "YC-A003-05",
+                      "depth": "",
+                      "sampleDate": "2026-07-28",
+                      "matrix": "Soil",
+                      "container": "G, V",
+                      "vial": "2017",
+                      "analyses": [
+                        "TPH",
+                        "BTEX"
+                      ],
+                      "comment": ""
+                    },
+                    {
+                      "sampleId": "YC-A003-06",
+                      "depth": "",
+                      "sampleDate": "2026-07-28",
+                      "matrix": "Soil",
+                      "container": "G, V",
+                      "vial": "2018",
+                      "analyses": [
+                        "TPH",
+                        "BTEX"
+                      ],
+                      "comment": ""
+                    },
+                    {
+                      "sampleId": "YC-A004-01",
+                      "depth": "",
+                      "sampleDate": "2026-07-28",
+                      "matrix": "Soil",
+                      "container": "G, V",
+                      "vial": "2019",
+                      "analyses": [
+                        "TPH",
+                        "BTEX"
+                      ],
+                      "comment": ""
+                    },
+                    {
+                      "sampleId": "YC-A004-02",
+                      "depth": "",
+                      "sampleDate": "2026-07-28",
+                      "matrix": "Soil",
+                      "container": "G, V",
+                      "vial": "2020",
+                      "analyses": [
+                        "TPH",
+                        "BTEX"
+                      ],
+                      "comment": ""
+                    },
+                    {
+                      "sampleId": "YC-A004-02(QA/QC)",
+                      "depth": "",
+                      "sampleDate": "2026-07-28",
+                      "matrix": "Soil",
+                      "container": "G, V",
+                      "vial": "2021",
+                      "analyses": [
+                        "TPH",
+                        "BTEX"
+                      ],
+                      "comment": ""
+                    }
+                  ]
+                }
+              ],
+              "relinquished": [
+                {
+                  "name": "",
+                  "organization": "NICEM",
+                  "date": "2026-07-28",
+                  "time": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "organization": "NICEM",
+                  "date": "2026-07-28",
+                  "time": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                }
+              ],
+              "received": [
+                {
+                  "name": "",
+                  "organization": "",
+                  "date": "2026-07-28",
+                  "time": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                },
+                {
+                  "name": "",
+                  "organization": "",
+                  "date": "2026-07-28",
+                  "time": "",
+                  "signature": {
+                    "name": "",
+                    "image": ""
+                  }
+                }
+              ],
+              "receipt": {
+                "condition": false,
+                "documentation": false,
+                "chilled": false,
+                "batch": ""
+              }
+            }
+          },
+          {
+            "id": "doc-ms4d3fti-sxbesz",
+            "type": "daily-work-log",
+            "title": "일일 1",
+            "createdAt": 1785225375702,
+            "updatedAt": 1785303704942,
+            "data": {
+              "projectName": "토양환경평가",
+              "area": "경기 연천",
+              "date": "2026-07-28",
+              "weather": "",
+              "organizations": [
+                {
+                  "name": "",
+                  "people": "",
+                  "vehicles": "",
+                  "comment": ""
+                },
+                {
+                  "name": "",
+                  "people": "",
+                  "vehicles": "",
+                  "comment": ""
+                },
+                {
+                  "name": "",
+                  "people": "",
+                  "vehicles": "",
+                  "comment": ""
+                },
+                {
+                  "name": "",
+                  "people": "",
+                  "vehicles": "",
+                  "comment": ""
+                },
+                {
+                  "name": "",
+                  "people": "",
+                  "vehicles": "",
+                  "comment": ""
+                },
+                {
+                  "name": "",
+                  "people": "",
+                  "vehicles": "",
+                  "comment": ""
+                }
+              ],
+              "tasks": [
+                {
+                  "name": "토양 시료채취",
+                  "points": "",
+                  "samples": "",
+                  "comment": ""
+                },
+                {
+                  "name": "지하수 관정설치",
+                  "points": "",
+                  "samples": "",
+                  "comment": ""
+                },
+                {
+                  "name": "지하수 시료채취",
+                  "points": "",
+                  "samples": "",
+                  "comment": ""
+                },
+                {
+                  "name": "",
+                  "points": "",
+                  "samples": "",
+                  "comment": ""
+                },
+                {
+                  "name": "",
+                  "points": "",
+                  "samples": "",
+                  "comment": ""
+                }
+              ],
+              "note": "",
+              "author": {
+                "name": "최정민",
+                "image": ""
+              },
+              "checker": {
+                "name": "윤대근",
+                "image": ""
+              },
+              "extraPages": []
+            }
+          },
+          {
+            "id": "doc-ms5nol1a-6x1v25",
+            "type": "soil-sampling-record",
+            "title": "토양 1",
+            "createdAt": 1785303624574,
+            "updatedAt": 1785303659303,
+            "data": {
+              "_soilDefaultsVersion": 1,
+              "sourceCocDocumentId": "doc-ms4d3fti-e0w93h",
+              "cocSyncEnabled": true,
+              "syncError": "",
+              "projectName": "토양환경평가",
+              "area": "경기 연천",
+              "date": "2026-07-28",
+              "timeStart": "",
+              "timeEnd": "",
+              "pointNo": "YC-A001",
+              "surface": "비포장",
+              "equipment": [
+                "equipment"
+              ],
+              "weather": "Sun",
+              "terrain": "E",
+              "slope": "FT",
+              "samples": [
+                {
+                  "sampleId": "YC-A001-01",
+                  "vialId": "2001",
+                  "analysis": "TPH, BTEX",
+                  "depthFrom": "",
+                  "depthTo": "",
+                  "texture": "",
+                  "sizes": [],
+                  "colors": [],
+                  "moisture": "",
+                  "odor": "",
+                  "remark": "",
+                  "_qaQcAuto": false,
+                  "_qaQcPreviousRemark": ""
+                },
+                {
+                  "sampleId": "YC-A001-02",
+                  "vialId": "2002",
+                  "analysis": "TPH, BTEX",
+                  "depthFrom": "",
+                  "depthTo": "",
+                  "texture": "",
+                  "sizes": [],
+                  "colors": [],
+                  "moisture": "",
+                  "odor": "",
+                  "remark": "",
+                  "_qaQcAuto": false,
+                  "_qaQcPreviousRemark": ""
+                },
+                {
+                  "sampleId": "YC-A001-03",
+                  "vialId": "2003",
+                  "analysis": "TPH, BTEX",
+                  "depthFrom": "",
+                  "depthTo": "",
+                  "texture": "",
+                  "sizes": [],
+                  "colors": [],
+                  "moisture": "",
+                  "odor": "",
+                  "remark": "",
+                  "_qaQcAuto": false,
+                  "_qaQcPreviousRemark": ""
+                },
+                {
+                  "sampleId": "YC-A001-04",
+                  "vialId": "2004",
+                  "analysis": "TPH, BTEX",
+                  "depthFrom": "",
+                  "depthTo": "",
+                  "texture": "",
+                  "sizes": [],
+                  "colors": [],
+                  "moisture": "",
+                  "odor": "",
+                  "remark": "",
+                  "_qaQcAuto": false,
+                  "_qaQcPreviousRemark": ""
+                },
+                {
+                  "sampleId": "YC-A001-05",
+                  "vialId": "2005",
+                  "analysis": "TPH, BTEX",
+                  "depthFrom": "",
+                  "depthTo": "",
+                  "texture": "",
+                  "sizes": [],
+                  "colors": [],
+                  "moisture": "",
+                  "odor": "",
+                  "remark": "",
+                  "_qaQcAuto": false,
+                  "_qaQcPreviousRemark": ""
+                },
+                {
+                  "sampleId": "YC-A001-06",
+                  "vialId": "2006",
+                  "analysis": "TPH, BTEX",
+                  "depthFrom": "",
+                  "depthTo": "",
+                  "texture": "",
+                  "sizes": [],
+                  "colors": [],
+                  "moisture": "",
+                  "odor": "",
+                  "remark": "",
+                  "_qaQcAuto": false,
+                  "_qaQcPreviousRemark": ""
+                },
+                {
+                  "sampleId": "",
+                  "vialId": "",
+                  "analysis": "",
+                  "depthFrom": "",
+                  "depthTo": "",
+                  "texture": "",
+                  "sizes": [],
+                  "colors": [],
+                  "moisture": "",
+                  "odor": "",
+                  "remark": "",
+                  "_qaQcAuto": false,
+                  "_qaQcPreviousRemark": ""
+                },
+                {
+                  "sampleId": "",
+                  "vialId": "",
+                  "analysis": "",
+                  "depthFrom": "",
+                  "depthTo": "",
+                  "texture": "",
+                  "sizes": [],
+                  "colors": [],
+                  "moisture": "",
+                  "odor": "",
+                  "remark": "",
+                  "_qaQcAuto": false,
+                  "_qaQcPreviousRemark": ""
+                },
+                {
+                  "sampleId": "",
+                  "vialId": "",
+                  "analysis": "",
+                  "depthFrom": "",
+                  "depthTo": "",
+                  "texture": "",
+                  "sizes": [],
+                  "colors": [],
+                  "moisture": "",
+                  "odor": "",
+                  "remark": "",
+                  "_qaQcAuto": false,
+                  "_qaQcPreviousRemark": ""
+                },
+                {
+                  "sampleId": "",
+                  "vialId": "",
+                  "analysis": "",
+                  "depthFrom": "",
+                  "depthTo": "",
+                  "texture": "",
+                  "sizes": [],
+                  "colors": [],
+                  "moisture": "",
+                  "odor": "",
+                  "remark": "",
+                  "_qaQcAuto": false,
+                  "_qaQcPreviousRemark": ""
+                }
+              ],
+              "recorder": {
+                "name": "최정민",
+                "image": ""
+              },
+              "checker": {
+                "name": "윤대근",
+                "image": ""
+              },
+              "pointError": "",
+              "extraPages": [
+                {
+                  "_soilDefaultsVersion": 1,
+                  "sourceCocDocumentId": "",
+                  "cocSyncEnabled": true,
+                  "syncError": "",
+                  "projectName": "토양환경평가",
+                  "area": "경기 연천",
+                  "date": "2026-07-28",
+                  "timeStart": "",
+                  "timeEnd": "",
+                  "pointNo": "YC-A002",
+                  "surface": "비포장",
+                  "equipment": [
+                    "equipment"
+                  ],
+                  "weather": "Sun",
+                  "terrain": "E",
+                  "slope": "FT",
+                  "samples": [
+                    {
+                      "sampleId": "YC-A002-01",
+                      "vialId": "2007",
+                      "analysis": "TPH, BTEX",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "YC-A002-02",
+                      "vialId": "2008",
+                      "analysis": "TPH, BTEX",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "YC-A002-03",
+                      "vialId": "2009",
+                      "analysis": "TPH, BTEX",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "YC-A002-04",
+                      "vialId": "2010",
+                      "analysis": "TPH, BTEX",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "YC-A002-05",
+                      "vialId": "2011",
+                      "analysis": "TPH, BTEX",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "YC-A002-06",
+                      "vialId": "2012",
+                      "analysis": "TPH, BTEX",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "",
+                      "vialId": "",
+                      "analysis": "",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "",
+                      "vialId": "",
+                      "analysis": "",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "",
+                      "vialId": "",
+                      "analysis": "",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "",
+                      "vialId": "",
+                      "analysis": "",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    }
+                  ],
+                  "recorder": {
+                    "name": "최정민",
+                    "image": ""
+                  },
+                  "checker": {
+                    "name": "윤대근",
+                    "image": ""
+                  },
+                  "pointError": ""
+                },
+                {
+                  "_soilDefaultsVersion": 1,
+                  "sourceCocDocumentId": "",
+                  "cocSyncEnabled": true,
+                  "syncError": "",
+                  "projectName": "토양환경평가",
+                  "area": "경기 연천",
+                  "date": "2026-07-28",
+                  "timeStart": "",
+                  "timeEnd": "",
+                  "pointNo": "YC-A003",
+                  "surface": "비포장",
+                  "equipment": [
+                    "equipment"
+                  ],
+                  "weather": "Sun",
+                  "terrain": "E",
+                  "slope": "FT",
+                  "samples": [
+                    {
+                      "sampleId": "YC-A003-01",
+                      "vialId": "2013",
+                      "analysis": "TPH, BTEX",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "YC-A003-02",
+                      "vialId": "2014",
+                      "analysis": "TPH, BTEX",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "YC-A003-03",
+                      "vialId": "2015",
+                      "analysis": "TPH, BTEX",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "YC-A003-04",
+                      "vialId": "2016",
+                      "analysis": "TPH, BTEX",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "YC-A003-05",
+                      "vialId": "2017",
+                      "analysis": "TPH, BTEX",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "YC-A003-06",
+                      "vialId": "2018",
+                      "analysis": "TPH, BTEX",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "",
+                      "vialId": "",
+                      "analysis": "",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "",
+                      "vialId": "",
+                      "analysis": "",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "",
+                      "vialId": "",
+                      "analysis": "",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "",
+                      "vialId": "",
+                      "analysis": "",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    }
+                  ],
+                  "recorder": {
+                    "name": "최정민",
+                    "image": ""
+                  },
+                  "checker": {
+                    "name": "윤대근",
+                    "image": ""
+                  },
+                  "pointError": ""
+                },
+                {
+                  "_soilDefaultsVersion": 1,
+                  "sourceCocDocumentId": "",
+                  "cocSyncEnabled": true,
+                  "syncError": "",
+                  "projectName": "토양환경평가",
+                  "area": "경기 연천",
+                  "date": "2026-07-28",
+                  "timeStart": "",
+                  "timeEnd": "",
+                  "pointNo": "YC-A004",
+                  "surface": "비포장",
+                  "equipment": [
+                    "equipment"
+                  ],
+                  "weather": "Sun",
+                  "terrain": "E",
+                  "slope": "FT",
+                  "samples": [
+                    {
+                      "sampleId": "YC-A004-01",
+                      "vialId": "2019",
+                      "analysis": "TPH, BTEX",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "YC-A004-02",
+                      "vialId": "2020",
+                      "analysis": "TPH, BTEX",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "QA/QC",
+                      "_qaQcAuto": true,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "",
+                      "vialId": "",
+                      "analysis": "",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "",
+                      "vialId": "",
+                      "analysis": "",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "",
+                      "vialId": "",
+                      "analysis": "",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "",
+                      "vialId": "",
+                      "analysis": "",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "",
+                      "vialId": "",
+                      "analysis": "",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "",
+                      "vialId": "",
+                      "analysis": "",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "",
+                      "vialId": "",
+                      "analysis": "",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    },
+                    {
+                      "sampleId": "",
+                      "vialId": "",
+                      "analysis": "",
+                      "depthFrom": "",
+                      "depthTo": "",
+                      "texture": "",
+                      "sizes": [],
+                      "colors": [],
+                      "moisture": "",
+                      "odor": "",
+                      "remark": "",
+                      "_qaQcAuto": false,
+                      "_qaQcPreviousRemark": ""
+                    }
+                  ],
+                  "recorder": {
+                    "name": "최정민",
+                    "image": ""
+                  },
+                  "checker": {
+                    "name": "윤대근",
+                    "image": ""
+                  },
+                  "pointError": ""
+                }
+              ]
+            }
+          }
+        ],
+        "createdAt": 1785225375702,
+        "updatedAt": 1785303704942
+      }
+    ]
+  },
+  "preferences": {
+    "commonPresets": [
+      {
+        "id": "common-preset-ms5c46am-1wax5s",
+        "name": "연천",
+        "values": {
+          "displayName": "0729",
+          "projectName": "토양환경평가",
+          "surveyArea": "경기 연천",
+          "organization": "NICEM",
+          "laboratory": "NICEM",
+          "workDate": "2026-07-28",
+          "manager": "윤대근",
+          "recorder": "최정민",
+          "checker": "윤대근",
+          "siteName": "YC",
+          "surveyType": "A",
+          "startPoint": "001",
+          "sampleDigits": 2,
+          "defaultMatrix": "Soil",
+          "vialNext": 2001
+        },
+        "createdAt": 1785284196574,
+        "updatedAt": 1785284250948
+      }
+    ],
+    "ocrEndpoint": "http://127.0.0.1:8765/api/coc-ocr"
+  }
+}
