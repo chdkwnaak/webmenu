@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light">
-<meta name="application-version" content="1.2.0">
-<title>현장문서 통합 관리 v1.2.0</title>
+<meta name="application-version" content="1.2.9">
+<title>현장문서 통합 관리 v1.2.9</title>
 <style>
 :root{
   color-scheme:light only;
@@ -78,6 +78,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .analysis-edit-mode-toggle.is-active{border-color:#16704a;background:#25855a;color:#fff}
 .analysis-edit-mode-toggle.is-active:hover{background:#1d704c}
 .page-jump-controls{display:flex;align-items:center;gap:4px;min-width:0}
+.page-jump-controls .soil-page-view-order{width:94px;min-width:82px;height:31px;padding:3px 5px;border:1px solid #aebfca;border-radius:6px;background:#fff;color:#173a5e;font-size:11px;font-weight:800}
 .page-jump-controls input{width:58px;height:31px;padding:3px 5px;border:1px solid #aebfca;border-radius:6px;text-align:center;font-size:11px;font-weight:800}
 .page-jump-controls .page-jump-total{flex:0 0 auto;color:#526d80;font-size:10px;font-weight:800;white-space:nowrap}
 .page-jump-controls button{height:31px;padding:4px 7px;font-size:11px}
@@ -608,9 +609,10 @@ input.field-error{background:#fff0ed!important;box-shadow:inset 0 0 0 .35mm #c73
     width:100%;min-width:0;max-width:none
   }
   .editor-head .page-jump-controls{
-    grid-column:span 2;display:grid;grid-template-columns:minmax(0,1fr) auto auto;
+    grid-column:span 2;display:grid;grid-template-columns:minmax(82px,1.15fr) minmax(48px,.65fr) auto auto;
     width:100%;gap:3px
   }
+  .editor-head .page-jump-controls .soil-page-view-order{width:100%;min-width:0;height:30px}
   .editor-head .page-jump-controls input,
   .editor-head .page-jump-controls button{width:100%;min-width:0;height:30px}
   .editor-head-chain-of-custody{
@@ -693,6 +695,8 @@ input.field-error{background:#fff0ed!important;box-shadow:inset 0 0 0 .35mm #c73
 }
 @media(max-width:360px){
   .editor-head .page-jump-controls{grid-column:1/-1}
+  .editor-head-soil-sampling-record .page-jump-controls{grid-template-columns:minmax(0,1fr) auto auto}
+  .editor-head .page-jump-controls .soil-page-view-order{grid-column:1/-1}
   .editor-head:not(.editor-head-chain-of-custody){grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @page safety{size:A4 portrait;margin:0}
@@ -715,12 +719,15 @@ input.field-error{background:#fff0ed!important;box-shadow:inset 0 0 0 .35mm #c73
   input,textarea,select{border:0!important;box-shadow:none!important;background:transparent!important}
   .choice{border-color:#777}.choice.selected{background:#555!important;color:#fff!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}
   .shade-row td,.form-table th{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  .batch-apply-btn{display:none!important}
 }
+.batch-apply-btn{display:inline-grid;place-items:center;width:18px;height:18px;margin-left:3px;padding:0;border:0;border-radius:4px;background:#dceef9;color:#0c649f;font-size:12px;font-weight:900;line-height:1;vertical-align:middle;box-shadow:0 1px 3px #1976b933}
+.batch-apply-btn:hover,.batch-apply-btn:focus-visible{background:#c3e4f8;color:#084d7a;outline:1px solid #1976b9}
 </style>
 </head>
 <body>
 <header class="app-toolbar">
-  <div class="brand"><span class="brand-mark">FIELD</span><span class="brand-title">현장문서 통합 관리</span><span id="app-version-badge" class="app-version-badge" title="현재 앱 버전">v1.2.0</span></div>
+  <div class="brand"><span class="brand-mark">FIELD</span><span class="brand-title">현장문서 통합 관리</span><span id="app-version-badge" class="app-version-badge" title="현재 앱 버전">v1.2.9</span></div>
   <button id="new-project" class="ghost" type="button">새 프로젝트</button>
   <button id="common-info" class="ghost" type="button">공통정보</button>
   <button id="open-help" class="ghost" type="button">도움말</button>
@@ -1139,7 +1146,7 @@ input.field-error{background:#fff0ed!important;box-shadow:inset 0 0 0 .35mm #c73
 
 <script>
 'use strict';
-const APP_VERSION='1.2.0';
+const APP_VERSION='1.2.9';
 const DATA_SCHEMA_VERSION=3;
 const DB_NAME='field-forms-integrated-db';
 const DB_VERSION=3;
@@ -1213,6 +1220,9 @@ const SOIL_HWPX_DEFAULT_POINTS_PER_FILE=10;
 const SOIL_HWPX_TERMINATION_REASONS=['풍화암 종료','풍화대 확인','인력채취불가','지하수 확인','임의종료','직접 입력'];
 const SOIL_HWPX_COLOR_MAP=Object.freeze({'황갈~암갈':'1','적~적갈':'2','담회~백':'3','담록~암록':'4','암회~흑':'5'});
 const SOIL_HWPX_MOISTURE_MAP=Object.freeze({V:'DM',M:'MM',S:'WA',Dry:'DM',Moist:'MM',Wet:'WA'});
+const SOIL_HWPX_WEATHER_MAP=Object.freeze({Sun:'S','맑음':'S',Cloudy:'C','구름':'C',Rain:'R','비':'R','Rain Sun':'R/S','맑음, 비':'R/S',Other:'O','기타':'O'});
+const SOIL_HWPX_TERRAIN_MAP=Object.freeze({A:'A','정상':'A',B:'B','경사지':'B',C:'C','절개지':'C',D:'D','계곡':'D',E:'E','평야':'E',F:'F','단구':'F'});
+const SOIL_HWPX_SLOPE_MAP=Object.freeze({FT:'FT','0~2%':'FT',VLS:'VLS','2~7%':'VLS',LS:'LS','7~15%':'LS',S:'S','15~30%':'S',SS:'SS','30~60%':'SS',VSS:'VSS','>60%':'VSS'});
 const SOIL_HWPX_TEMPLATE_BASE64='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';
 const SOIL_HWPX_TEMPLATE_BASE64_FIXED=SOIL_HWPX_TEMPLATE_BASE64.slice(0,11648)+'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';
 const SOIL_HWPX_TEMPLATE_BASE64_FINAL=SOIL_HWPX_TEMPLATE_BASE64_FIXED.slice(0,16103)+'AAAgAAAAhACeWwt0MAQAAYwMAABYAAAAAAAAAAAAgAICB7CcAAE1FVEEtSU5GL2NvbnRhaW5lci5yZGZQSwECFAAUAAAACAAAACEA8Dnz1XkCAABDBwAAFAAAAAAAAAAAACAAgIEsKQAAQ29udGVudHMvY29udGVudC5ocGZQSwECFAAUAAAACAAAACEAH5gl1AgBAADbAQAAFgAAAAAAAAAAACAAgIHXKwAATUVUQS1JTkYvY29udGFpbmVyLnhtbFBLAQIUABQAAAAIAAAAIQBvK+BccQAAAIYAAAAVAAAAAAAAAAAAIACAgRMtAABNRVRBLUlORi9tYW5pZmVzdC54bWxQSwUGAAAAAAoACgB7AgAAty0AAAAA';
@@ -1256,12 +1266,42 @@ function defaultCommon(name='새 프로젝트'){
   return {displayName:name,projectName:'',surveyArea:'',organization:'',laboratory:'NICEM',workDate:todayISO(),manager:'',recorder:'',checker:'',siteName:'',surveyType:'A',startPoint:'001',sampleDigits:2,defaultMatrix:'SOIL',vialNext:1};
 }
 function blankCocSample(){return {sampleId:'',depth:'',sampleDate:'',matrix:'',container:'',vial:'',analyses:[],comment:''}}
-function blankSoilSample(){return {sampleId:'',vialId:'',analysis:'',depthFrom:'',depthTo:'',texture:'',sizes:[],colors:[],moisture:'',odor:'',remark:'',_qaQcAuto:false,_qaQcPreviousRemark:''}}
+function blankSoilSample(){return {sampleId:'',vialId:'',analysis:'',depthFrom:'',depthTo:'',texture:'',sizes:[],colors:[],moisture:'',odor:'',remark:'',_qaQcAuto:false,_qaQcPreviousRemark:'',_surfaceRemarkAuto:false,_surfaceRemarkSource:'',_surfaceRemarkDepth:''}}
 function defaultSafety(common){
   return {_pageId:uid('page'),projectName:common.projectName,organization:common.organization,date:common.workDate,area:common.surveyArea,workContent:'',trainingContent:'',participants:Array.from({length:24},()=>({name:'',affiliation:'',signature:blankSignature()})),photos:[]};
 }
 function defaultSoil(common){
-  return {_pageId:uid('page'),_soilDefaultsVersion:1,sourceCocDocumentId:'',cocSyncEnabled:true,syncError:'',projectName:common.projectName,area:common.surveyArea,date:common.workDate,timeStart:'',timeEnd:'',pointNo:'',surface:'비포장',equipment:['equipment'],weather:'Sun',terrain:'E',slope:'FT',samples:Array.from({length:10},blankSoilSample),recorder:{name:common.recorder,image:''},checker:{name:common.checker,image:''}};
+  return {_pageId:uid('page'),_soilDefaultsVersion:1,sourceCocDocumentId:'',cocSyncEnabled:true,syncError:'',soilPageViewOrder:'coc',projectName:common.projectName,area:common.surveyArea,date:common.workDate,timeStart:'',timeEnd:'',pointNo:'',surface:'비포장',equipment:['equipment'],weather:'Sun',terrain:'E',slope:'FT',samples:Array.from({length:10},blankSoilSample),recorder:{name:common.recorder,image:''},checker:{name:common.checker,image:''}};
+}
+function soilSurfaceRemarkTemplate(surface,depthFrom=''){
+  const depth=soilHwpxFormatNumber(depthFrom);
+  if(surface==='ASP')return depth?`아스콘 ${depth}m`:'아스콘  m';
+  if(surface==='CONC')return depth?`콘크리트 ${depth}m`:'콘크리트  m';
+  return '';
+}
+function applySoilSurfaceRemark(page){
+  if(!page||typeof page!=='object')return false;
+  if(!Array.isArray(page.samples))page.samples=[];
+  while(page.samples.length<10)page.samples.push(blankSoilSample());
+  let changed=false;
+  page.samples.slice(1).forEach(sample=>{
+    const previous=soilSurfaceRemarkTemplate(sample?._surfaceRemarkSource,sample?._surfaceRemarkDepth);
+    if(sample?._surfaceRemarkAuto===true&&String(sample.remark||'').trim()===previous.trim()){
+      sample.remark='';sample._surfaceRemarkAuto=false;sample._surfaceRemarkSource='';sample._surfaceRemarkDepth='';changed=true;
+    }
+  });
+  const sample=page.samples[0],depth=String(sample.depthFrom??'').trim(),desired=soilSurfaceRemarkTemplate(page.surface,depth),current=String(sample.remark||'');
+  if(sample._qaQcAuto===true)return changed;
+  const previous=soilSurfaceRemarkTemplate(sample._surfaceRemarkSource,sample._surfaceRemarkDepth);
+  const managed=sample._surfaceRemarkAuto===true||!current||(previous&&current===previous);
+  if(!desired){
+    if(!sample._surfaceRemarkAuto&&!(previous&&current===previous))return changed;
+    sample.remark='';sample._surfaceRemarkAuto=false;sample._surfaceRemarkSource='';sample._surfaceRemarkDepth='';return current!==''||changed;
+  }
+  if(!managed)return changed;
+  changed=current!==desired||sample._surfaceRemarkAuto!==true||sample._surfaceRemarkSource!==page.surface||changed;
+  sample.remark=desired;sample._surfaceRemarkAuto=true;sample._surfaceRemarkSource=page.surface;sample._surfaceRemarkDepth=depth;
+  return changed;
 }
 function defaultCoc(common){
   return {projectName:common.projectName,area:common.surveyArea,laboratory:common.laboratory||'NICEM',manager:common.manager,profile:'contamination',analysisItemsByProfile:{contamination:[...CONTAMINATION_ITEMS],physicochemical:[...PHYSICO_ITEMS]},approvedInvalidSampleIds:[],pages:[{id:uid('page'),samples:Array.from({length:21},blankCocSample)}],relinquished:[{name:'',organization:common.organization||'NICEM',date:common.workDate,time:'',signature:blankSignature()},{name:'',organization:common.organization||'NICEM',date:common.workDate,time:'',signature:blankSignature()}],received:[{name:'',organization:'',date:common.workDate,time:'',signature:blankSignature()},{name:'',organization:'',date:common.workDate,time:'',signature:blankSignature()}],receipt:{condition:false,documentation:false,chilled:false,batch:''}};
@@ -1272,13 +1312,15 @@ function defaultDaily(common){
 function applySoilDefaultSelections(targetWorkspace=workspace){
   targetWorkspace.projects?.forEach(project=>project.documents?.filter(doc=>doc.type==='soil-sampling-record').forEach(doc=>{
     [doc.data,...(Array.isArray(doc.data.extraPages)?doc.data.extraPages:[])].forEach(page=>{
-      if(Number(page._soilDefaultsVersion||0)>=1)return;
-      if(!page.surface)page.surface='비포장';
-      if(!Array.isArray(page.equipment)||!page.equipment.length)page.equipment=['equipment'];
-      if(!page.weather)page.weather='Sun';
-      if(!page.terrain)page.terrain='E';
-      if(!page.slope)page.slope='FT';
-      page._soilDefaultsVersion=1;
+      if(Number(page._soilDefaultsVersion||0)<1){
+        if(!page.surface)page.surface='비포장';
+        if(!Array.isArray(page.equipment)||!page.equipment.length)page.equipment=['equipment'];
+        if(!page.weather)page.weather='Sun';
+        if(!page.terrain)page.terrain='E';
+        if(!page.slope)page.slope='FT';
+        page._soilDefaultsVersion=1;
+      }
+      applySoilSurfaceRemark(page);
     });
   }));
 }
@@ -1620,6 +1662,7 @@ function normalizeWorkspaceData(source){
         const pages=normalizeSafetyPages(doc.data,common);normalizedDoc.data=pages[0];normalizedDoc.data.extraPages=pages.slice(1);
       }else if(doc.type==='soil-sampling-record'){
         const pages=normalizeSoilPages(doc.data,common);normalizedDoc.data=pages[0];normalizedDoc.data.extraPages=pages.slice(1);
+        normalizedDoc.data.soilPageViewOrder=doc.data?.soilPageViewOrder==='point'?'point':'coc';
       }else if(doc.type==='chain-of-custody'){
         normalizedDoc.data=normalizeCocData(doc.data,common);
       }else{
@@ -1720,6 +1763,32 @@ function setDocumentPageCollapsed(page,button,collapsed){
   if(icon)icon.textContent=collapsed?'▾':'▴';
 }
 function formPages(doc){return [doc.data,...(Array.isArray(doc.data.extraPages)?doc.data.extraPages:[])]}
+function soilPageViewOrder(doc){
+  return doc?.type==='soil-sampling-record'&&doc.data?.soilPageViewOrder==='point'?'point':'coc';
+}
+function soilPagePointSortValue(page){
+  const pointNo=String(page?.pointNo||'').trim();
+  if(pointNo&&pointNo!=='오류')return pointNo;
+  return (Array.isArray(page?.samples)?page.samples:[]).map(sample=>pointKeyFromSampleId(sample?.sampleId)).find(Boolean)||'';
+}
+function soilPageViewEntries(doc,printMode=false){
+  const entries=formPages(doc).map((page,pageIndex)=>({page,pageIndex}));
+  if(doc?.type!=='soil-sampling-record'||soilPageViewOrder(doc)!=='point')return entries;
+  return entries.sort((left,right)=>{
+    const leftPoint=soilPagePointSortValue(left.page),rightPoint=soilPagePointSortValue(right.page);
+    if(Boolean(leftPoint)!==Boolean(rightPoint))return leftPoint?-1:1;
+    const pointOrder=leftPoint&&rightPoint?leftPoint.localeCompare(rightPoint,'ko',{numeric:true,sensitivity:'base'}):0;
+    return pointOrder||left.pageIndex-right.pageIndex;
+  });
+}
+function formPageViewPosition(doc,pageIndex,printMode=false){
+  const position=(doc?.type==='soil-sampling-record'?soilPageViewEntries(doc,printMode):formPages(doc).map((page,index)=>({page,pageIndex:index}))).findIndex(entry=>entry.pageIndex===pageIndex);
+  return position>=0?position:0;
+}
+function updateFormPageJumpInput(doc,pageIndex){
+  const input=editor.querySelector('.page-jump-input');
+  if(input)input.value=String(formPageViewPosition(doc,pageIndex)+1);
+}
 function formPageLockKey(doc,pageIndex,suffix=''){
   const page=formPages(doc)[pageIndex],base=`form-${page?._pageId||pageIndex}`;
   return suffix?`${base}-${suffix}`:base;
@@ -1788,15 +1857,16 @@ function normalizedPageJumpIndex(value,pageCount){
 }
 function jumpToFormPage(doc,value){
   if(!doc||doc.type==='chain-of-custody')return;
-  const pages=formPages(doc),pageIndex=normalizedPageJumpIndex(value,pages.length);
-  if(pageIndex==null){showToast('이동할 페이지 번호를 입력해 주세요.');return}
+  const pages=formPages(doc),viewEntries=doc.type==='soil-sampling-record'?soilPageViewEntries(doc):pages.map((page,pageIndex)=>({page,pageIndex}));
+  const viewIndex=normalizedPageJumpIndex(value,viewEntries.length);
+  if(viewIndex==null){showToast('이동할 페이지 번호를 입력해 주세요.');return}
+  const pageIndex=viewEntries[viewIndex]?.pageIndex??viewIndex;
   selectedFormPageByDocument.set(doc.id,pageIndex);
   const page=editor.querySelector(`.page[data-form-page-index="${pageIndex}"]`);
   editor.querySelectorAll('.page[data-form-page-index]').forEach(item=>item.classList.toggle('active-page',Number(item.dataset.formPageIndex)===pageIndex));
   const foldButton=page?.querySelector('.page-fold-toggle');
   if(page?.classList.contains('page-collapsed')&&foldButton)setDocumentPageCollapsed(page,foldButton,false);
-  const input=editor.querySelector('.page-jump-input');
-  if(input)input.value=String(pageIndex+1);
+  updateFormPageJumpInput(doc,pageIndex);
   requestAnimationFrame(()=>page?.scrollIntoView({behavior:'smooth',block:'start'}));
   const requested=Math.trunc(Number(value));
   if(requested>pages.length)showToast(`전체 ${pages.length}페이지이므로 마지막 페이지로 이동했습니다.`);
@@ -1826,7 +1896,7 @@ function formPageHasMeaningfulData(doc,page,common){
   if(!doc||!page)return false;
   const ignoredKeys=new Set(['extraPages','_pageId']);
   if(doc.type==='soil-sampling-record'){
-    ['sourceCocDocumentId','cocSyncEnabled','syncError'].forEach(key=>ignoredKeys.add(key));
+    ['sourceCocDocumentId','cocSyncEnabled','syncError','soilPageViewOrder'].forEach(key=>ignoredKeys.add(key));
   }
   const current=JSON.stringify(comparablePageValue(page,ignoredKeys));
   const blankCandidates=[blankFormPage(doc,common)];
@@ -1890,21 +1960,22 @@ function renderSafety(doc,printMode=false){
 
 function renderSoil(doc,printMode=false){
   const selectedPage=selectedFormPageIndex(doc),project=currentProject();
-  const pageCount=formPages(doc).length;
+  const viewEntries=soilPageViewEntries(doc,printMode),pageCount=viewEntries.length;
+  const selectedViewPage=formPageViewPosition(doc,selectedPage,printMode);
   const cocDocs=project?.documents.filter(item=>item.type==='chain-of-custody')||[];
   const sourceOptions=cocDocs.length
     ?cocDocs.map(item=>`<option value="${esc(item.id)}" ${item.id===doc.data.sourceCocDocumentId?'selected':''}>${esc(item.title)}</option>`).join('')
     :'<option value="">연결 가능한 COC 없음</option>';
   const syncEnabled=doc.data.cocSyncEnabled!==false;
   const syncControls=`<div class="soil-sync-controls ${syncEnabled?'':'sync-disabled-warning'}" aria-live="polite" ${syncEnabled?'':'role="status" title="주의: COC 변경사항이 현장기록지에 자동 반영되지 않습니다."'}><label class="soil-sync-toggle"><input type="checkbox" data-action="soil-coc-sync-enabled" ${syncEnabled?'checked':''}> <span>${syncEnabled?'COC 자동 연동':'⚠ COC 연동 해제됨'}</span></label><select data-action="soil-coc-source" aria-label="연결할 COC 문서">${sourceOptions}</select></div>`;
-  const pageJump=`<div class="page-jump-controls"><input class="page-jump-input" type="number" min="1" max="${pageCount}" step="1" inputmode="numeric" value="${selectedPage+1}" aria-label="이동할 페이지 번호"><span class="page-jump-total">/ ${pageCount}</span><button type="button" data-action="jump-form-page">이동</button></div>`;
+  const pageJump=`<div class="page-jump-controls"><select class="soil-page-view-order" aria-label="현장기록지 페이지 정렬 기준" title="화면·인쇄·HWPX에 적용할 페이지 정렬 기준"><option value="coc" ${soilPageViewOrder(doc)==='coc'?'selected':''}>COC순</option><option value="point" ${soilPageViewOrder(doc)==='point'?'selected':''}>지점번호순</option></select><input class="page-jump-input" type="number" min="1" max="${pageCount}" step="1" inputmode="numeric" value="${selectedViewPage+1}" aria-label="이동할 페이지 번호"><span class="page-jump-total">/ ${pageCount}</span><button type="button" data-action="jump-form-page">이동</button></div>`;
   const controls=printMode?'':formPageControls(`<button type="button" data-action="open-soil-hwpx-export">시추기록부 HWPX</button>${pageJump}${syncControls}`);
-  const pages=formPages(doc).map((d,pageIndex)=>{
+  const pages=viewEntries.map(({page:d,pageIndex},viewIndex)=>{
     while(d.samples.length<10)d.samples.push(blankSoilSample());
     const path=field=>formPagePath(pageIndex,field);
     const pageKey=formPageLockKey(doc,pageIndex);
-    const pageFold=documentPageFold(doc,pageKey,`토양 현장기록지 ${pageIndex+1}페이지`,printMode);
-    const pageLock=documentPageLock(doc,pageKey,`토양 현장기록지 ${pageIndex+1}페이지`,printMode);
+    const pageFold=documentPageFold(doc,pageKey,`토양 현장기록지 ${viewIndex+1}페이지`,printMode);
+    const pageLock=documentPageLock(doc,pageKey,`토양 현장기록지 ${viewIndex+1}페이지`,printMode);
     const sampleRows=d.samples.map((s,i)=>`<tr>
       <td>${textarea(path(`samples.${i}.sampleId`),s.sampleId,{rows:2,cls:'soil-sample-id',extra:`data-soil-sample-id="${pageIndex}:${i}" wrap="soft"`})}</td>
       <td>${input(path(`samples.${i}.vialId`),s.vialId,{readonly:true})}</td>
@@ -1916,7 +1987,7 @@ function renderSoil(doc,printMode=false){
       <td><div class="soil-options cell-fill-options odor-options">${['강한취기','보통취기','무취'].map(v=>choice(path(`samples.${i}.odor`),v,s.odor,v)).join('')}</div></td>
       <td>${textarea(path(`samples.${i}.remark`),s.remark,{rows:3})}</td>
     </tr>`).join('');
-    return `<section class="page portrait-page soil-page ${!printMode&&pageIndex===selectedPage?'active-page':''} ${pageFold.className} ${pageLock.className}" data-form-page-index="${pageIndex}">
+    return `<section class="page portrait-page soil-page ${!printMode&&pageIndex===selectedPage?'active-page':''} ${pageFold.className} ${pageLock.className}" data-form-page-index="${pageIndex}" data-form-view-index="${viewIndex}">
       ${pageFold.controls}${pageLock.controls}
       <h1 class="document-title" style="margin-bottom:3mm">토양 시료채취 현장 기록지</h1>
       <div class="sync-banner" ${doc.data.syncError?'':'hidden'}>${esc(doc.data.syncError||'')}</div>
@@ -1933,7 +2004,7 @@ function renderSoil(doc,printMode=false){
       </tr></table>
       <table class="form-table soil-table">
         <colgroup><col style="width:11%"><col style="width:7%"><col style="width:8%"><col style="width:7%"><col style="width:24%"><col style="width:15%"><col style="width:8%"><col style="width:8%"><col style="width:12%"></colgroup>
-        <thead><tr><th>Sample ID</th><th>Vial ID</th><th>분석항목</th><th>깊이<br>(Depth)</th><th>토성·입도(Size)</th><th>Color</th><th>Moisture</th><th>Odor</th><th>오염징후 / Remark</th></tr></thead>
+        <thead><tr><th>Sample ID</th><th>Vial ID</th><th>분석항목</th><th>깊이<br>(Depth)</th><th>토성·입도(Size) <button type="button" class="batch-apply-btn screen-only" data-action="soil-batch-apply" data-batch-field="sizes" data-batch-label="토성·입도" aria-label="1번 시료의 토성·입도를 아래 시료에 일괄 적용" title="1번 시료의 토성·입도를 Sample ID가 있는 아래 시료에 일괄 적용">↓</button></th><th>Color <button type="button" class="batch-apply-btn screen-only" data-action="soil-batch-apply" data-batch-field="colors" data-batch-label="색상" aria-label="1번 시료의 색상을 아래 시료에 일괄 적용" title="1번 시료의 색상을 Sample ID가 있는 아래 시료에 일괄 적용">↓</button></th><th>Moisture <button type="button" class="batch-apply-btn screen-only" data-action="soil-batch-apply" data-batch-field="moisture" data-batch-label="수분" aria-label="1번 시료의 수분을 아래 시료에 일괄 적용" title="1번 시료의 수분을 Sample ID가 있는 아래 시료에 일괄 적용">↓</button></th><th>Odor <button type="button" class="batch-apply-btn screen-only" data-action="soil-batch-apply" data-batch-field="odor" data-batch-label="냄새" aria-label="1번 시료의 냄새를 아래 시료에 일괄 적용" title="1번 시료의 냄새를 Sample ID가 있는 아래 시료에 일괄 적용">↓</button></th><th>오염징후 / Remark</th></tr></thead>
         <tbody>${sampleRows}</tbody>
       </table>
       <div class="form-footer"><span>기록자 : ${input(path('recorder.name'),d.recorder.name,{cls:'signature-name'})}</span><span>확인자 : ${input(path('checker.name'),d.checker.name,{cls:'signature-name'})}</span></div>
@@ -2440,15 +2511,15 @@ function triggerDownload(blob,fileName){
 }
 function soilHwpxSampleHasData(sample){
   if(!sample||typeof sample!=='object')return false;
-  return ['sampleId','vialId','analysis','depthFrom','depthTo','texture','moisture','odor','remark'].some(key=>String(sample[key]??'').trim())||
+  const remark=String(sample.remark||'').trim();
+  const surfaceOnly=sample._surfaceRemarkAuto===true&&remark===soilSurfaceRemarkTemplate(sample._surfaceRemarkSource,sample._surfaceRemarkDepth).trim();
+  return ['sampleId','vialId','analysis','depthFrom','depthTo','texture','moisture','odor'].some(key=>String(sample[key]??'').trim())||
+    Boolean(remark&&!surfaceOnly)||
     (Array.isArray(sample.sizes)&&sample.sizes.length)||(Array.isArray(sample.colors)&&sample.colors.length);
-}
-function soilHwpxPointSortValue(value){
-  return String(value||'').replace(/\d+/g,digits=>digits.padStart(12,'0'));
 }
 function collectSoilHwpxGroups(doc){
   const project=currentProject(),issues=[],byPoint=new Map(),groups=[];
-  formPages(doc).forEach((page,pageIndex)=>{
+  soilPageViewEntries(doc).forEach(({page,pageIndex},viewIndex)=>{
     const populated=(page.samples||[]).map((sample,sampleIndex)=>({sample,sampleIndex})).filter(item=>soilHwpxSampleHasData(item.sample));
     if(!populated.length)return;
     const derived=[...new Set(populated.map(item=>pointKeyFromSampleId(item.sample.sampleId)).filter(Boolean))];
@@ -2456,18 +2527,18 @@ function collectSoilHwpxGroups(doc){
     if(!pointKey&&derived.length===1)pointKey=derived[0];
     if(!pointKey){
       pointKey=`미지정-${pageIndex+1}`;
-      issues.push({level:'error',message:`${pageIndex+1}페이지의 지점번호를 확인할 수 없습니다.`});
+      issues.push({level:'error',message:`${viewIndex+1}페이지의 지점번호를 확인할 수 없습니다.`});
     }
-    if(derived.length>1)issues.push({level:'error',message:`${pageIndex+1}페이지에 서로 다른 지점의 Sample ID가 함께 있습니다: ${derived.join(', ')}`});
+    if(derived.length>1)issues.push({level:'error',message:`${viewIndex+1}페이지에 서로 다른 지점의 Sample ID가 함께 있습니다: ${derived.join(', ')}`});
     let group=byPoint.get(pointKey);
     if(!group){
-      group={key:pointKey,firstPageIndex:pageIndex,pages:[],samples:[]};
+      group={key:pointKey,firstPageIndex:pageIndex,firstViewIndex:viewIndex,pages:[],samples:[]};
       byPoint.set(pointKey,group);groups.push(group);
     }
-    group.pages.push({page,pageIndex});
+    group.pages.push({page,pageIndex,viewIndex});
     populated.forEach(({sample,sampleIndex})=>{
       const parsed=String(sample.sampleId||'').trim()?parseStructuredSampleId(sample.sampleId):null;
-      if(sample.sampleId&&!parsed)issues.push({level:'warning',message:`${pageIndex+1}페이지 ${sampleIndex+1}행 Sample ID 형식을 해석하지 못했습니다: ${sample.sampleId}`});
+      if(sample.sampleId&&!parsed)issues.push({level:'warning',message:`${viewIndex+1}페이지 ${sampleIndex+1}행 Sample ID 형식을 해석하지 못했습니다: ${sample.sampleId}`});
       const from=String(sample.depthFrom??'').trim(),to=String(sample.depthTo??'').trim();
       if(!to||!Number.isFinite(Number(to)))issues.push({level:'error',message:`${pointKey} ${sampleIndex+1}행의 종료 깊이를 숫자로 입력해 주세요.`});
       if(from&&!Number.isFinite(Number(from)))issues.push({level:'error',message:`${pointKey} ${sampleIndex+1}행의 시작 깊이를 숫자로 입력해 주세요.`});
@@ -2477,7 +2548,7 @@ function collectSoilHwpxGroups(doc){
       (sample.colors||[]).filter(value=>!SOIL_HWPX_COLOR_MAP[value]).forEach(value=>issues.push({level:'warning',message:`${pointKey}의 색상 코드 “${value}”는 출력 코드로 변환할 수 없습니다.`}));
       const moistureValues=Array.isArray(sample.moisture)?sample.moisture:[sample.moisture];
       moistureValues.filter(Boolean).filter(value=>!SOIL_HWPX_MOISTURE_MAP[value]).forEach(value=>issues.push({level:'warning',message:`${pointKey}의 수분 코드 “${value}”는 출력 코드로 변환할 수 없습니다.`}));
-      group.samples.push({sample,page,pageIndex,sampleIndex,sequence:soilSampleSequence(sample.sampleId),sourceOrder:pageIndex*100+sampleIndex});
+      group.samples.push({sample,page,pageIndex,viewIndex,sampleIndex,sequence:soilSampleSequence(sample.sampleId),sourceOrder:viewIndex*100+sampleIndex});
     });
   });
   groups.forEach(group=>{
@@ -2487,7 +2558,7 @@ function collectSoilHwpxGroups(doc){
       return as-bs||Number(a.sample.depthFrom||0)-Number(b.sample.depthFrom||0)||a.sourceOrder-b.sourceOrder;
     });
   });
-  groups.sort((a,b)=>a.firstPageIndex-b.firstPageIndex||soilHwpxPointSortValue(a.key).localeCompare(soilHwpxPointSortValue(b.key),'ko'));
+  groups.sort((a,b)=>a.firstViewIndex-b.firstViewIndex);
   const common=project?.common||{};
   if(!String(common.projectName||doc.data.projectName||'').trim())issues.push({level:'warning',message:'과업명이 비어 있습니다.'});
   if(!String(common.surveyArea||doc.data.area||'').trim())issues.push({level:'warning',message:'조사지역이 비어 있습니다.'});
@@ -2495,9 +2566,17 @@ function collectSoilHwpxGroups(doc){
   if(!groups.length)issues.push({level:'error',message:'내보낼 시료층 데이터가 없습니다.'});
   return {groups,issues};
 }
+function soilHwpxSurfaceRemarkOnly(value){
+  return /^(?:아스콘|콘크리트)\s*(?:\d+(?:\.\d+)?)?\s*m$/i.test(String(value||'').trim());
+}
 function soilHwpxMissingTermination(group){
   const remark=String(group?.samples?.at(-1)?.sample?.remark||'').trim();
-  return !remark||remark==='특이사항 없음'||remark==='QA/QC';
+  return !remark||remark==='특이사항 없음'||remark==='QA/QC'||soilHwpxSurfaceRemarkOnly(remark);
+}
+function mergeSoilHwpxTerminationRemark(value,reason){
+  const remark=String(value||'').trim(),termination=String(reason||'').trim();
+  if(!termination)return remark;
+  return remark==='QA/QC'||soilHwpxSurfaceRemarkOnly(remark)?`${remark} / ${termination}`:termination;
 }
 function soilHwpxPageDefinitions(groups){
   const definitions=[];
@@ -2553,7 +2632,18 @@ function soilHwpxFormatNumber(value){
   if(Number.isInteger(numeric))return numeric.toFixed(1);
   return String(Number(numeric.toFixed(6)));
 }
-function soilHwpxSampleValues(sample){
+function soilHwpxObservationValues(page){
+  const source=page||{};
+  return [
+    SOIL_HWPX_WEATHER_MAP[String(source.weather||'').trim()]||String(source.weather||'').trim(),
+    SOIL_HWPX_TERRAIN_MAP[String(source.terrain||'').trim()]||String(source.terrain||'').trim(),
+    SOIL_HWPX_SLOPE_MAP[String(source.slope||'').trim()]||String(source.slope||'').trim()
+  ].filter(Boolean);
+}
+function soilHwpxSpacedObservationLines(page){
+  return soilHwpxObservationValues(page).flatMap(value=>['','','',value]);
+}
+function soilHwpxSampleValues(sample,page){
   const start=Number(sample.depthFrom),end=Number(sample.depthTo);
   const orderedSizes=SIZE_GROUPS.flatMap(group=>group.codes).filter(code=>(sample.sizes||[]).includes(code));
   const extraSizes=(sample.sizes||[]).filter(code=>!orderedSizes.includes(code));
@@ -2564,6 +2654,7 @@ function soilHwpxSampleValues(sample){
     thickness:Number.isFinite(start)&&Number.isFinite(end)?soilHwpxFormatNumber(end-start):'',
     sizes:[...orderedSizes,...extraSizes],
     colors:(sample.colors||[]).map(value=>SOIL_HWPX_COLOR_MAP[value]||value).join(', '),
+    observations:soilHwpxSpacedObservationLines(page),
     moisture,
     odor,
     remark:String(sample.remark||'').trim()||'특이사항 없음'
@@ -2575,7 +2666,16 @@ function soilHwpxAnalyses(group){
     const items=Array.isArray(sample.analysis)?sample.analysis:String(sample.analysis||'').split(/[,/\n]+/);
     items.map(value=>String(value).trim()).filter(Boolean).forEach(value=>{if(!values.includes(value))values.push(value)});
   });
-  return values;
+  return values.join(', ');
+}
+function soilHwpxFormatDate(value){
+  const text=String(value||'').trim();if(!text)return '';
+  const match=text.match(/^(\d{4})[-./](\d{1,2})[-./](\d{1,2})$/);
+  return match?`${match[1]}.${match[2].padStart(2,'0')}.${match[3].padStart(2,'0')}`:text;
+}
+function soilHwpxFormatDateTime(date,start,end){
+  const formattedDate=soilHwpxFormatDate(date),time=[start,end].map(value=>String(value||'').trim()).filter(Boolean).join('~');
+  return [formattedDate,time?`(${time})`:''].filter(Boolean).join(' ');
 }
 function soilHwpxHeader(definition){
   const project=currentProject(),common=project?.common||{},pages=definition.group.pages.map(item=>item.page),page=pages[0]||{};
@@ -2588,8 +2688,8 @@ function soilHwpxHeader(definition){
     area:String(page.area||common.surveyArea||''),
     pointNo:definition.pointLabel,
     category:'사진참조',
-    position:`이격거리    m,  □ ${soilHwpxFormatNumber(maximumDepth)} m`,
-    dateTime:[page.date||common.workDate,[start,end].filter(Boolean).join('~')].filter(Boolean).join(' '),
+    collectionLocation:`이격거리    m, 채취깊이: ${soilHwpxFormatNumber(maximumDepth)} m`,
+    dateTime:soilHwpxFormatDateTime(page.date||common.workDate,start,end),
     organization:String(common.organization||''),
     analyses:soilHwpxAnalyses(definition.group),
     equipment
@@ -2609,8 +2709,9 @@ let soilHwpxXmlId=2200000000;
 function setHwpxCellText(table,rowIndex,columnIndex,value){
   const cell=hwpxCell(table,rowIndex,columnIndex);if(!cell)return;
   const subList=hwpxDirectChildren(cell,'subList')[0];if(!subList)return;
-  const existing=hwpxDirectChildren(subList,'p'),base=existing[0];if(!base)return;
-  existing.slice(1).forEach(paragraph=>paragraph.remove());
+  const existing=hwpxDirectChildren(subList,'p');
+  const base=existing.find(paragraph=>hwpxElements(paragraph,'t').length)||existing[0];if(!base)return;
+  existing.filter(paragraph=>paragraph!==base).forEach(paragraph=>paragraph.remove());
   const lines=Array.isArray(value)?value.map(item=>String(item??'')):String(value??'').split('\n');
   (lines.length?lines:['']).forEach((line,index)=>{
     const paragraph=index===0?base:base.cloneNode(true);
@@ -2624,14 +2725,15 @@ function setHwpxCellText(table,rowIndex,columnIndex,value){
 }
 function fillSoilHwpxTable(table,definition){
   const header=soilHwpxHeader(definition);
-  [[1,5,header.projectName],[2,5,header.area],[3,5,header.pointNo],[4,5,header.category],[5,5,header.position],[6,5,header.dateTime],[7,5,header.organization],[8,5,header.analyses],[9,5,header.equipment]].forEach(([row,column,value])=>setHwpxCellText(table,row,column,value));
+  setHwpxCellText(table,5,0,'채취위치');
+  [[1,5,header.projectName],[2,5,header.area],[3,5,header.pointNo],[4,5,header.category],[5,5,header.collectionLocation],[6,5,header.dateTime],[7,5,header.organization],[8,5,header.analyses],[9,5,header.equipment]].forEach(([row,column,value])=>setHwpxCellText(table,row,column,value));
   for(let index=0;index<SOIL_HWPX_LAYERS_PER_PAGE;index++){
-    const row=12+index*4,item=definition.samples[index],values=item?soilHwpxSampleValues(item.sample):{depth:'',thickness:'',sizes:[],colors:'',moisture:[],odor:'',remark:''};
+    const row=12+index*4,item=definition.samples[index],values=item?soilHwpxSampleValues(item.sample,item.page):{depth:'',thickness:'',sizes:[],colors:'',observations:[],moisture:[],odor:'',remark:''};
     setHwpxCellText(table,row,3,values.depth);
     setHwpxCellText(table,row,4,values.thickness);
     setHwpxCellText(table,row,6,values.sizes);
     setHwpxCellText(table,row,7,values.colors);
-    setHwpxCellText(table,row,8,'');
+    setHwpxCellText(table,row,8,values.observations);
     setHwpxCellText(table,row,9,values.moisture);
     setHwpxCellText(table,row,10,values.odor);
     setHwpxCellText(table,row,11,values.remark);
@@ -2685,7 +2787,8 @@ async function generateSoilHwpxExport(){
         const selected=soilHwpxExportState.terminationReasons[group.key];
         const reason=selected==='직접 입력'?String(soilHwpxExportState.customReasons[group.key]||'').trim():selected;
         const last=group.samples.at(-1)?.sample;if(!last||!reason)return;
-        last.remark=String(last.remark||'').trim()==='QA/QC'?`QA/QC / ${reason}`:reason;
+        last.remark=mergeSoilHwpxTerminationRemark(last.remark,reason);
+        last._surfaceRemarkAuto=false;
       });
     },{render:false});
   }
@@ -3014,6 +3117,7 @@ function showDocumentSearchMatch(index,focusTarget=true){
     const pageIndex=Number(page.dataset.formPageIndex),doc=currentDocument();
     selectedFormPageByDocument.set(doc.id,pageIndex);
     editor.querySelectorAll('.page[data-form-page-index]').forEach(item=>item.classList.toggle('active-page',Number(item.dataset.formPageIndex)===pageIndex));
+    updateFormPageJumpInput(doc,pageIndex);
   }
   if(target===page)page.classList.add('document-search-page-hit');else target.classList.add('document-search-hit');
   requestAnimationFrame(()=>{
@@ -3159,6 +3263,11 @@ function updateBoundInput(target){
   if(doc.type==='chain-of-custody'&&/\.matrix$/.test(path||''))target.value=normalizeCocMatrixShortcut(target.value);
   const value=target.type==='checkbox'?target.checked:target.type==='number'?(target.value===''?'':Number(target.value)):target.value;
   setAt(doc.data,path,value);doc.updatedAt=Date.now();
+  const soilRemarkPath=doc.type==='soil-sampling-record'&&String(path||'').match(/^(?:extraPages\.(\d+)\.)?samples\.0\.remark$/);
+  if(soilRemarkPath){
+    const pageIndex=soilRemarkPath[1]===undefined?0:Number(soilRemarkPath[1])+1,sample=formPages(doc)[pageIndex]?.samples?.[0];
+    if(sample){sample._surfaceRemarkAuto=false;sample._surfaceRemarkSource='';sample._surfaceRemarkDepth=''}
+  }
   if(target.dataset.cocSampleId){
     const [pageIndex,rowIndex]=target.dataset.cocSampleId.split(':').map(Number);
     const sample=doc.data.pages[pageIndex].samples[rowIndex];
@@ -3946,7 +4055,11 @@ function syncCocSamplesToSoil(project=currentProject(),syncSampleIds=true){
       sample.depthTo=depth.to;
       setSoilQaQcRemark(sample,qaQcBaseIds.has(String(sample.sampleId||'').trim()));
     });
-    soilPages.forEach((page,pageIndex)=>{if(!isFormPageLocked(soilDoc,pageIndex))updateSoilPagePoint(page)});
+    soilPages.forEach((page,pageIndex)=>{
+      if(isFormPageLocked(soilDoc,pageIndex))return;
+      updateSoilPagePoint(page);
+      applySoilSurfaceRemark(page);
+    });
   });
 }
 function updateCocContainer(doc,sample){
@@ -4462,6 +4575,13 @@ function deleteSelectedCocCells(){
 
 editor.addEventListener('change',event=>{
   if(event.target.matches('.document-zoom-input'))setDocumentViewScaleFromInput(event.target);
+  if(event.target.matches('.soil-page-view-order')){
+    const doc=currentDocument();
+    if(doc?.type!=='soil-sampling-record')return;
+    doc.data.soilPageViewOrder=event.target.value==='point'?'point':'coc';
+    doc.updatedAt=Date.now();renderApp();scheduleSave();
+    showToast(`현장기록지 페이지 정렬을 ${doc.data.soilPageViewOrder==='point'?'지점번호순':'COC순'}으로 변경했습니다. 인쇄와 HWPX에도 적용됩니다.`,4200);
+  }
 });
 editor.addEventListener('keydown',event=>{
   if(event.target.matches('.page-jump-input')){
@@ -4580,6 +4700,7 @@ document.addEventListener('click',async event=>{
     const doc=currentDocument(),pageIndex=Number(formPage.dataset.formPageIndex);
     selectedFormPageByDocument.set(doc.id,pageIndex);
     editor.querySelectorAll('.page[data-form-page-index]').forEach(page=>page.classList.toggle('active-page',Number(page.dataset.formPageIndex)===pageIndex));
+    updateFormPageJumpInput(doc,pageIndex);
   }
   const close=event.target.closest('[data-close-modal]');if(close){
     if(close.dataset.closeModal==='coc-ocr-modal')cancelCocOcrRequest();
@@ -4593,7 +4714,17 @@ document.addEventListener('click',async event=>{
   const choiceButton=event.target.closest('[data-choice-path]');if(choiceButton){
     if(choiceButton.closest('.page.page-locked')){showToast('잠긴 페이지는 수정할 수 없습니다.');return}
     const doc=currentDocument(),path=choiceButton.dataset.choicePath,value=choiceButton.dataset.choiceValue,multiple=choiceButton.dataset.choiceMultiple==='1';
-    mutate(()=>{if(multiple){const arr=getAt(doc.data,path)||[];const index=arr.indexOf(value);if(index>=0)arr.splice(index,1);else arr.push(value)}else setAt(doc.data,path,getAt(doc.data,path)===value?'':value)});
+    mutate(()=>{
+      if(multiple){const arr=getAt(doc.data,path)||[];const index=arr.indexOf(value);if(index>=0)arr.splice(index,1);else arr.push(value)}
+      else setAt(doc.data,path,getAt(doc.data,path)===value?'':value);
+      if(doc.type==='soil-sampling-record'){
+        const surfacePath=String(path||'').match(/^(?:extraPages\.(\d+)\.)?surface$/);
+        if(surfacePath){
+          const pageIndex=surfacePath[1]===undefined?0:Number(surfacePath[1])+1;
+          applySoilSurfaceRemark(formPages(doc)[pageIndex]);
+        }
+      }
+    });
     return;
   }
   const analysisButton=event.target.closest('[data-analysis-item]');if(analysisButton){
@@ -4607,10 +4738,54 @@ document.addEventListener('click',async event=>{
   handleAction(action,event.target.closest('[data-action]'));
 });
 
+const SOIL_BATCH_FIELDS=new Set(['sizes','colors','moisture','odor']);
+function soilBatchValueEmpty(value){
+  return Array.isArray(value)?value.length===0:value==null||String(value).trim()==='';
+}
+function sameSoilBatchValue(left,right){
+  return JSON.stringify(left??'')===JSON.stringify(right??'');
+}
+function cloneSoilBatchValue(value){
+  return Array.isArray(value)?[...value]:(value??'');
+}
+function applySoilBatchField(doc,pageIndex,field,label){
+  if(doc?.type!=='soil-sampling-record'||!SOIL_BATCH_FIELDS.has(field)||!Number.isInteger(pageIndex))return;
+  const page=formPages(doc)[pageIndex];
+  if(!page||!Array.isArray(page.samples)||page.samples.length<2)return;
+  if(isDocumentPageLocked(doc,formPageLockKey(doc,pageIndex))){
+    showToast('잠긴 페이지에는 일괄 적용할 수 없습니다.');
+    return;
+  }
+  const sourceValue=page.samples[0]?.[field];
+  if(soilBatchValueEmpty(sourceValue)){
+    showToast(`1번 시료의 ${label} 값을 먼저 선택해 주세요.`,3600);
+    return;
+  }
+  const targets=page.samples
+    .map((sample,index)=>({sample,index}))
+    .filter(({sample,index})=>index>0&&typeof sample?.sampleId==='string'&&sample.sampleId.trim());
+  if(!targets.length){
+    showToast('일괄 적용할 아래 시료의 Sample ID가 없습니다.',3600);
+    return;
+  }
+  const changed=targets.filter(({sample})=>!sameSoilBatchValue(sample[field],sourceValue));
+  if(!changed.length){
+    showToast(`이미 같은 ${label} 값이 적용되어 있습니다.`,3200);
+    return;
+  }
+  mutate(()=>changed.forEach(({sample})=>{sample[field]=cloneSoilBatchValue(sourceValue)}));
+  showToast(`${label} 값을 아래 시료 ${changed.length}개에 적용했습니다.`,3200);
+}
+
 async function handleAction(action,target){
   const doc=currentDocument(),project=currentProject();if(!doc||!project)return;
   if(action==='coc-profile'){return}
   if(action==='open-document-search'){openDocumentSearch();return}
+  if(action==='soil-batch-apply'){
+    const pageIndex=Number(target.closest('.page')?.dataset.formPageIndex);
+    applySoilBatchField(doc,pageIndex,target.dataset.batchField,target.dataset.batchLabel||'관찰');
+    return;
+  }
   if(action==='close-document-search'){closeDocumentSearch();return}
   if(action==='document-search-prev'){showDocumentSearchMatch(documentSearchState.index-1);return}
   if(action==='document-search-next'){showDocumentSearchMatch(documentSearchState.index+1);return}
@@ -4684,6 +4859,7 @@ async function handleAction(action,target){
   }
   if(action==='reset-form-page'){
     const pageIndex=selectedFormPageIndex(doc);
+    const soilViewOrder=soilPageViewOrder(doc);
     if(!confirm(`${pageIndex+1}번 페이지의 작성 내용을 초기화할까요? 다른 페이지와 프로젝트 공통정보는 유지됩니다.`))return;
     await createRecoverySnapshot('beforeResetPage',{silent:true});
     mutate(()=>{
@@ -4691,6 +4867,7 @@ async function handleAction(action,target){
       if(doc.type==='soil-sampling-record'){
         blank.sourceCocDocumentId=doc.data.sourceCocDocumentId;
         blank.cocSyncEnabled=doc.data.cocSyncEnabled!==false;
+        blank.soilPageViewOrder=soilViewOrder;
       }
       if(pageIndex===0){
         blank.extraPages=doc.data.extraPages||[];
@@ -4706,6 +4883,7 @@ async function handleAction(action,target){
   }
   if(action==='remove-form-page'){
     const pageIndex=selectedFormPageIndex(doc),pageCount=formPages(doc).length;
+    const soilViewOrder=soilPageViewOrder(doc);
     const page=formPages(doc)[pageIndex];
     const hasData=formPageHasMeaningfulData(doc,page,project.common);
     const soilSyncNotice=doc.type==='soil-sampling-record'&&doc.data.cocSyncEnabled!==false?'\n페이지가 다시 자동 생성되지 않도록 이 토양 문서의 COC 자동 연동도 끕니다.':'';
@@ -4723,10 +4901,12 @@ async function handleAction(action,target){
         doc.data=blankFormPage(doc,project.common);
         if(doc.type==='soil-sampling-record')doc.data.sourceCocDocumentId=sourceCocDocumentId;
         if(doc.type==='soil-sampling-record')doc.data.cocSyncEnabled=false;
+        if(doc.type==='soil-sampling-record')doc.data.soilPageViewOrder=soilViewOrder;
         selectedFormPageByDocument.set(doc.id,0);
       }else if(pageIndex===0){
         const extras=doc.data.extraPages||[],replacement=extras.shift();
         replacement.extraPages=extras;doc.data=replacement;
+        if(doc.type==='soil-sampling-record')doc.data.soilPageViewOrder=soilViewOrder;
         selectedFormPageByDocument.set(doc.id,0);
       }else{
         doc.data.extraPages.splice(pageIndex-1,1);
