@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사과 스타일 메모장</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <style>
+        /* ==========================================
+           1. 변수 정의 및 테마 설정 (라이트/다크)
+           ========================================== */
+        :root[data-theme="light"] {
+            --bg-main: #f5f5f7;
+            --bg-sidebar: rgba(245, 245, 247, 0.6);
+            --bg-note-list: #ffffff;
+            --bg-editor: #ffffff;
+            --text-main: #1d1d1f;
+            --text-muted: #86868b;
+            --accent-color: #e4b33c;
+            --accent-hover: #cf9f2b;
+            --border-color: #d2d2d7;
+            --list-hover: #e8e8ed;
+            --list-selected: #fbeec8;
+            --shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        :root[data-theme="dark"] {
+            --bg-main: #1e1e1e;
+            --bg-sidebar: rgba(30, 30, 30, 0.6);
+            --bg-note-list: #252525;
+            --bg-editor: #1e1e1e;
+            --text-main: #f5f5f7;
+            --text-muted: #86868b;
+            --accent-color: #e4b33c;
+            --accent-hover: #f5c75d;
+            --border-color: #3a3a3c;
+            --list-hover: #2c2c2e;
+            --list-selected: #41361c;
+            --shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Apple SD Gothic Neo", sans-serif; }
+
+        body { background-color: var(--bg-main); color: var(--text-main); display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+
+        .app-container { display: flex; width: 95vw; height: 90vh; max-width: 1400px; max-height: 900px; background: var(--bg-editor); border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); overflow: hidden; }
+
+        /* ==========================================
+           2. 레이아웃: 사이드바 (폴더 목록)
+           ========================================== */
+        .sidebar { width: 220px; background: var(--bg-sidebar); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 15px 10px; flex-shrink: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 5px; }
+        .window-buttons { display: flex; gap: 8px; }
+        .win-btn { width: 12px; height: 12px; border-radius: 50%; transition: filter 0.2s; }
+        .win-btn:hover { filter: brightness(0.8); }
+        .win-close { background: #ff5f56; } .win-minimize { background: #ffbd2e; } .win-maximize { background: #27c93f; }
+        .digital-clock { font-size: 12px; font-weight: 500; color: var(--text-main); font-family: monospace; background: rgba(0, 0, 0, 0.05); padding: 2px 6px; border-radius: 4px; }
+        :root[data-theme="dark"] .digital-clock { background: rgba(255, 255, 255, 0.1); }
+        .section-title { font-size: 11px; font-weight: 700; color: var(--text-muted); padding: 0 8px; margin-bottom: 8px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+        .add-folder-btn { border: none; background: transparent; cursor: pointer; font-size: 16px !important; color: var(--text-muted); }
+        .add-folder-btn:hover { color: var(--accent-color); }
+        .folder-list { list-style: none; overflow-y: auto; flex-grow: 1; }
+        .folder-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 6px; cursor: pointer; margin-bottom: 2px; font-size: 14px; }
+        .folder-item:hover { background: var(--list-hover); }
+        .folder-item.active { background: var(--list-selected); font-weight: 600; }
+        .folder-info { display: flex; align-items: center; gap: 8px; overflow: hidden; }
+        .folder-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .folder-count { font-size: 12px; color: var(--text-muted); }
+        .delete-folder-btn { font-size: 14px !important; color: var(--text-muted); visibility: hidden; }
+        .folder-item:hover .delete-folder-btn { visibility: visible; }
+        .delete-folder-btn:hover { color: #ff5f56 !important; }
+        .sidebar-footer { margin-top: auto; display: flex; justify-content: space-between; padding: 10px 5px 0 5px; border-top: 1px solid var(--border-color); }
+        .footer-btn { background: none; border: none; color: var(--text-main); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .footer-btn:hover { color: var(--accent-color); }
+        .toolbar-btn:disabled, .footer-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .toolbar-btn:disabled:hover, .footer-btn:disabled:hover { background: none; color: var(--text-main); }
+
+        /* ==========================================
+           3. 레이아웃: 노트 목록 영역
+           ========================================== */
+        .note-list-container { width: 280px; background: var(--bg-note-list); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; }
+        .search-bar-container { padding: 15px 12px 10px 12px; }
+        .search-bar-wrapper { position: relative; display: flex; align-items: center; }
+        .search-bar-wrapper .material-icons-outlined { position: absolute; left: 8px; color: var(--text-muted); font-size: 18px; }
+        .search-input { width: 100%; padding: 6px 10px 6px 32px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 13px; outline: none; }
+        .note-list-actions { padding: 0 12px 10px 12px; display: flex; justify-content: space-between; align-items: center; }
+        .note-actions-btns { display: flex; gap: 10px; align-items: center; }
+        .action-text-btn { background: none; border: none; color: var(--accent-color); cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; }
+        .action-text-btn:hover { color: var(--accent-hover); }
+        .btn-danger { color: #ff5f56; } .btn-danger:hover { color: #d94038; }
+        .note-list { list-style: none; overflow-y: auto; flex-grow: 1; }
+        .note-item { padding: 12px; border-bottom: 1px solid var(--border-color); cursor: pointer; position: relative; transition: background 0.2s; }
+        .note-item:hover { background: var(--list-hover); }
+        .note-item.active { background: var(--list-selected); }
+        .note-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .note-item-title { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 80%; }
+        .note-item-icons { display: flex; gap: 4px; color: var(--text-muted); }
+        .note-item-icons .material-icons-outlined { font-size: 14px; }
+        .icon-pin.active { color: var(--accent-color); } .icon-lock.active { color: #ff5f56; }
+        .note-item-meta { display: flex; gap: 8px; font-size: 12px; color: var(--text-muted); }
+        .note-item-date { white-space: nowrap; }
+        .note-item-snippet { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* ==========================================
+           4. 레이아웃: 메인 편집 영역
+           ========================================== */
+        .editor-container { flex-grow: 1; background: var(--bg-editor); display: flex; flex-direction: column; min-width: 0; }
+        .editor-toolbar { padding: 10px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--bg-editor); flex-wrap: wrap; gap: 10px; }
+        .toolbar-group { display: flex; gap: 6px; align-items: center; }
+        .toolbar-btn { background: none; border: none; color: var(--text-main); padding: 6px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .toolbar-btn:hover { background: var(--list-hover); color: var(--accent-color); }
+        .toolbar-btn.active { color: var(--accent-color); background: var(--list-selected); }
+        
+        .note-timestamp { text-align: center; font-size: 12px; color: var(--text-muted); padding: 15px 0 0 0; background: var(--bg-editor); user-select: none; }
+        
+        /* 다단(Column) 레이아웃 적용 및 속성 전환 효과 */
+        .editor-main { 
+            flex-grow: 1; padding: 20px 40px 30px 40px; overflow-y: auto; outline: none; font-size: 15px; line-height: 1.6;
+            column-gap: 40px;
+            column-rule: 1px dashed var(--border-color);
+            transition: column-count 0.3s ease;
+        }
+        
+        .editor-main h1 { margin-bottom: 15px; font-size: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; column-span: all; }
+        .editor-main h2 { margin-top: 15px; margin-bottom: 10px; font-size: 20px; }
+        .editor-main ul, .editor-main ol { padding-left: 20px; margin-bottom: 10px; }
+        .editor-main code { background: var(--list-hover); padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+        
+        /* 단 사이에서 요소가 반으로 잘리지 않도록 보호 */
+        .editor-main pre, .editor-main img, .todo-item { break-inside: avoid; page-break-inside: avoid; }
+        
+        .editor-main pre { background: var(--list-hover); padding: 10px; border-radius: 6px; overflow-x: auto; margin: 10px 0; }
+        .editor-main img { max-width: 100%; border-radius: 8px; margin: 15px 0; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
+
+        .todo-item { display: flex; align-items: flex-start; gap: 8px; margin: 4px 0; }
+        .todo-checkbox { margin-top: 5px; cursor: pointer; }
+        .todo-text { flex-grow: 1; outline: none; }
+        .todo-item.checked .todo-text { text-decoration: line-through; color: var(--text-muted); }
+
+        .editor-footer { padding: 8px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-muted); background: var(--bg-editor); }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
+        :root[data-theme="dark"] ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
+
+        .help-dialog { width: min(720px, calc(100vw - 32px)); max-height: min(820px, calc(100vh - 32px)); margin: auto; border: 1px solid var(--border-color); border-radius: 14px; color: var(--text-main); background: var(--bg-editor); box-shadow: var(--shadow); overflow: hidden; }
+        .help-dialog::backdrop { background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(3px); }
+        .help-dialog-header { position: sticky; top: 0; z-index: 1; display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 1px solid var(--border-color); background: var(--bg-editor); }
+        .help-dialog-header h2 { font-size: 20px; }
+        .help-close-btn { border: none; border-radius: 6px; padding: 5px; color: var(--text-main); background: transparent; cursor: pointer; }
+        .help-close-btn:hover { background: var(--list-hover); }
+        .help-dialog-body { padding: 22px; overflow-y: auto; max-height: calc(min(820px, calc(100vh - 32px)) - 68px); line-height: 1.6; }
+        .help-intro { padding: 14px 16px; margin-bottom: 20px; border-radius: 8px; background: var(--list-selected); }
+        .help-section { margin-bottom: 22px; }
+        .help-section:last-child { margin-bottom: 0; }
+        .help-section h3 { margin-bottom: 8px; font-size: 16px; color: var(--accent-hover); }
+        .help-section ol, .help-section ul { padding-left: 22px; }
+        .help-section li { margin: 5px 0; }
+        .help-feature-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+        .help-feature { padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-main); }
+        .help-feature strong { display: block; margin-bottom: 3px; }
+        .shortcut-table { width: 100%; border-collapse: collapse; }
+        .shortcut-table th, .shortcut-table td { padding: 7px 9px; border-bottom: 1px solid var(--border-color); text-align: left; }
+        kbd { padding: 2px 6px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-main); font-family: monospace; }
+
+        @media (max-width: 768px) {
+            body { padding: 0; }
+            .app-container { width: 100vw; height: 100vh; max-width: 100%; max-height: 100%; border-radius: 0; flex-direction: column; }
+            .sidebar { width: 100%; height: 180px; border-right: none; border-bottom: 1px solid var(--border-color); }
+            .note-list-container { width: 100%; height: 250px; border-right: none; border-bottom: 1px solid var(--border-color); }
+            .editor-main { padding: 15px 20px; column-count: 1 !important; /* 모바일에서는 무조건 1단 고정 */ }
+            .delete-folder-btn { visibility: visible; }
+            .help-feature-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- 1. 사이드바 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="window-buttons">
+                    <div class="win-btn win-close" aria-hidden="true"></div>
+                    <div class="win-btn win-minimize" aria-hidden="true"></div>
+                    <div class="win-btn win-maximize" aria-hidden="true"></div>
+                </div>
+                <div class="digital-clock" id="digitalClock">00:00:00</div>
+            </div>
+            
+            <div class="section-title">
+                <span>폴더 목록</span>
+                <button class="material-icons-outlined add-folder-btn" type="button" onclick="createNewFolder()" title="새 폴더 생성" aria-label="새 폴더 생성">add_box</button>
+            </div>
+            <ul class="folder-list" id="folderList"></ul>
+
+            <div class="sidebar-footer">
+                <button class="footer-btn" onclick="showHelp()" title="도움말" aria-label="도움말"><span class="material-icons-outlined">help_outline</span></button>
+                <button class="footer-btn" onclick="toggleTheme()" title="테마 변경" aria-label="테마 변경"><span class="material-icons-outlined" id="themeIcon">dark_mode</span></button>
+                <button class="footer-btn" onclick="exportData()" title="백업 내보내기" aria-label="백업 내보내기"><span class="material-icons-outlined">backup</span></button>
+                <button class="footer-btn" onclick="triggerImport()" title="백업 복원하기" aria-label="백업 복원하기"><span class="material-icons-outlined">restore_page</span></button>
+                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+            </div>
+        </aside>
+
+        <!-- 2. 노트 목록 -->
+        <section class="note-list-container">
+            <div class="search-bar-container">
+                <div class="search-bar-wrapper">
+                    <span class="material-icons-outlined">search</span>
+                    <input type="text" class="search-input" id="searchInput" placeholder="검색어 입력..." aria-label="메모 검색" oninput="renderNotes()">
+                </div>
+            </div>
+            <div class="note-list-actions">
+                <span id="currentFolderName" style="font-size: 12px; font-weight: bold; color: var(--text-muted);">모든 메모</span>
+                <div class="note-actions-btns">
+                    <button class="action-text-btn btn-danger" id="emptyTrashBtn" onclick="emptyTrash()" style="display: none;">
+                        <span class="material-icons-outlined" style="font-size: 16px;">delete_sweep</span>비우기
+                    </button>
+                    <button class="action-text-btn" id="newNoteBtn" onclick="createNewNote()">
+                        <span class="material-icons-outlined" style="font-size: 16px;">edit_note</span>새 메모
+                    </button>
+                </div>
+            </div>
+            <ul class="note-list" id="noteList"></ul>
+        </section>
+
+        <!-- 3. 본문 편집기 -->
+        <main class="editor-container">
+            <div class="editor-toolbar">
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" onclick="execCmd('bold')" title="굵게 (Ctrl+B)" aria-label="굵게"><span class="material-icons-outlined">format_bold</span></button>
+                    <button class="toolbar-btn" onclick="execCmd('underline')" title="밑줄 (Ctrl+U)" aria-label="밑줄"><span class="material-icons-outlined">format_underlined</span></button>
+                    <button class="toolbar-btn" onclick="execCmd('italic')" title="기울임꼴" aria-label="기울임꼴"><span class="material-icons-outlined">format_italic</span></button>
+                    <span style="border-left: 1px solid var(--border-color); height: 16px; margin: 0 4px;"></span>
+                    <button class="toolbar-btn" onclick="execCmd('formatBlock', '<h1>')" title="대제목" aria-label="대제목"><span class="material-icons-outlined">title</span></button>
+                    <button class="toolbar-btn" onclick="insertTodoList()" title="할 일 목록" aria-label="할 일 목록"><span class="material-icons-outlined">assignment_turned_in</span></button>
+                    <button class="toolbar-btn" onclick="insertCodeBlock()" title="코드 블록" aria-label="코드 블록"><span class="material-icons-outlined">code</span></button>
+                    <span style="border-left: 1px solid var(--border-color); height: 16px; margin: 0 4px;"></span>
+                    
+                    <button class="toolbar-btn" onclick="triggerImageUpload()" title="이미지 첨부 (자동 압축)" aria-label="이미지 첨부">
+                        <span class="material-icons-outlined">image</span>
+                    </button>
+                    <input type="file" id="imageUploadInput" accept="image/png, image/jpeg, image/gif, image/webp" style="display: none;" onchange="handleImageUpload(event)">
+                    
+                    <!-- 추가된 다단(Column) 설정 버튼 -->
+                    <button class="toolbar-btn" onclick="toggleColumnCount()" title="단 나누기 (1단/2단/3단)" aria-label="단 나누기">
+                        <span class="material-icons-outlined">view_column</span>
+                        <span id="colCountBadge" style="font-size: 11px; margin-left: 2px; font-weight: bold; width: 8px; text-align: center;">1</span>
+                    </button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" id="toolbarPinBtn" onclick="togglePinCurrentNote()" title="메모 고정" aria-label="메모 고정"><span class="material-icons-outlined">push_pin</span></button>
+                    <button class="toolbar-btn" id="toolbarLockBtn" onclick="toggleLockCurrentNote()" title="잠금" aria-label="메모 잠금"><span class="material-icons-outlined">lock_open</span></button>
+                    <button class="toolbar-btn" onclick="downloadSingleNote('txt')" title="다운로드" aria-label="현재 메모 다운로드"><span class="material-icons-outlined">download</span></button>
+                    <button class="toolbar-btn" onclick="deleteCurrentNote()" title="삭제" aria-label="현재 메모 삭제"><span class="material-icons-outlined" style="color: #ff5f56;">delete</span></button>
+                </div>
+            </div>
+            
+            <div class="note-timestamp" id="noteTimestamp"></div>
+            <div class="editor-main" id="editorMain" contenteditable="true" role="textbox" aria-multiline="true" aria-label="메모 본문" oninput="handleEditorInput()"></div>
+            
+            <div class="editor-footer">
+                <span id="statusMessage" aria-live="polite">자동 저장됨</span>
+                <span id="charCount">공백 포함: 0자 | 단어 수: 0개</span>
+            </div>
+        </main>
+    </div>
+
+    <dialog class="help-dialog" id="helpDialog" aria-labelledby="helpDialogTitle">
+        <div class="help-dialog-header">
+            <h2 id="helpDialogTitle">메모장 사용 도움말</h2>
+            <button class="help-close-btn" type="button" onclick="closeHelp()" aria-label="도움말 닫기"><span class="material-icons-outlined">close</span></button>
+        </div>
+        <div class="help-dialog-body">
+            <p class="help-intro"><strong>처음 오셨나요?</strong><br>왼쪽에서 폴더를 만들고, 가운데에서 메모를 선택한 뒤, 오른쪽 편집기에서 내용을 작성하면 됩니다. 편집 내용은 입력을 멈춘 뒤 자동 저장됩니다.</p>
+
+            <section class="help-section">
+                <h3>빠른 시작</h3>
+                <ol>
+                    <li><strong>폴더 만들기:</strong> 왼쪽 ‘폴더 목록’ 옆의 <span class="material-icons-outlined" aria-hidden="true">add_box</span> 버튼을 누르고 이름을 입력하세요.</li>
+                    <li><strong>메모 만들기:</strong> 가운데 위쪽의 ‘새 메모’를 누르세요. ‘모든 메모’에서는 첫 번째 일반 폴더에 저장됩니다.</li>
+                    <li><strong>내용 작성:</strong> 오른쪽 본문을 클릭해 입력하세요. 입력을 멈추면 1초 뒤 자동 저장되며, 아래 상태 표시줄에서 결과를 확인할 수 있습니다.</li>
+                    <li><strong>메모 찾기:</strong> 가운데 검색창에 제목이나 본문 내용을 입력하세요.</li>
+                </ol>
+            </section>
+
+            <section class="help-section">
+                <h3>편집 기능</h3>
+                <div class="help-feature-grid">
+                    <div class="help-feature"><strong>글자 꾸미기</strong>굵게, 밑줄, 기울임꼴과 대제목을 적용합니다.</div>
+                    <div class="help-feature"><strong>할 일 목록</strong>체크박스를 넣고 완료한 항목에 취소선을 표시합니다.</div>
+                    <div class="help-feature"><strong>코드 블록</strong>소스 코드나 고정폭 텍스트를 보기 좋게 삽입합니다.</div>
+                    <div class="help-feature"><strong>이미지 첨부</strong>PNG, JPEG, GIF, WebP 이미지를 압축해 메모 안에 저장합니다. 애니메이션과 투명도는 JPEG 변환 과정에서 사라질 수 있습니다.</div>
+                    <div class="help-feature"><strong>단 나누기</strong>본문을 1단, 2단, 3단 순서로 바꿉니다. 모바일 화면에서는 읽기 편하도록 1단으로 표시됩니다.</div>
+                    <div class="help-feature"><strong>글자·단어 수</strong>오른쪽 아래에서 현재 메모의 글자 수와 단어 수를 확인합니다.</div>
+                </div>
+            </section>
+
+            <section class="help-section">
+                <h3>정리와 보호</h3>
+                <ul>
+                    <li><strong>고정:</strong> 핀 버튼을 켜면 해당 폴더의 메모 목록 맨 위에 표시됩니다.</li>
+                    <li><strong>잠금:</strong> 자물쇠를 켜면 편집과 삭제를 막습니다. 비밀번호 암호화 기능은 아니므로 민감한 정보를 보관하는 용도로는 적합하지 않습니다.</li>
+                    <li><strong>삭제:</strong> 일반 메모는 먼저 ‘최근 삭제된 항목’으로 이동합니다. 그곳에서 다시 삭제하거나 ‘비우기’를 누르면 영구 삭제됩니다. 잠긴 메모는 영구 삭제되지 않습니다.</li>
+                    <li><strong>폴더 삭제:</strong> 폴더 안의 메모는 휴지통으로 이동합니다. 잠긴 메모가 있으면 폴더를 삭제할 수 없습니다.</li>
+                </ul>
+            </section>
+
+            <section class="help-section">
+                <h3>백업과 파일</h3>
+                <ul>
+                    <li><strong>백업:</strong> 왼쪽 아래 백업 버튼으로 모든 폴더와 메모를 JSON 파일로 저장합니다.</li>
+                    <li><strong>복원:</strong> 복원 버튼으로 이전 JSON 백업을 불러옵니다. 현재 데이터는 교체되므로 먼저 백업하는 것이 안전합니다.</li>
+                    <li><strong>텍스트 다운로드:</strong> 편집기 위 다운로드 버튼은 현재 메모를 TXT 파일로 저장합니다.</li>
+                    <li><strong>저장 위치:</strong> 메모는 이 브라우저의 로컬 저장소에만 보관됩니다. 브라우저 데이터를 삭제하거나 다른 브라우저·기기로 이동하면 자동으로 따라가지 않으므로 정기적으로 백업하세요.</li>
+                </ul>
+            </section>
+
+            <section class="help-section">
+                <h3>단축키</h3>
+                <table class="shortcut-table">
+                    <thead><tr><th>단축키</th><th>기능</th></tr></thead>
+                    <tbody>
+                        <tr><td><kbd>Ctrl/⌘</kbd> + <kbd>S</kbd></td><td>현재 메모 즉시 저장</td></tr>
+                        <tr><td><kbd>Ctrl/⌘</kbd> + <kbd>N</kbd></td><td>새 메모 만들기</td></tr>
+                        <tr><td><kbd>Ctrl/⌘</kbd> + <kbd>F</kbd></td><td>검색창으로 이동</td></tr>
+                        <tr><td><kbd>Esc</kbd></td><td>도움말 닫기</td></tr>
+                    </tbody>
+                </table>
+            </section>
+        </div>
+    </dialog>
+
+    <!-- ==========================================
+       5. JavaScript 로직
+       ========================================== -->
+    <script>
+        let state = { folders: [], notes: [], currentFolderId: 'all', currentNoteId: null, theme: null };
+        const STORAGE_KEY = 'macos_notes_data';
+        const HELP_SEEN_KEY = 'macos_notes_help_seen_v1';
+        let saveTimeout = null;
+        let pendingSave = null;
+        let storageErrorNotified = false;
+
+        const DEFAULT_DATA = {
+            folders: [
+                { id: 'f1', name: '기본 폴더', system: false },
+                { id: 'f2', name: '아이디어 폴더', system: false },
+                { id: 'trash', name: '최근 삭제된 항목', system: true }
+            ],
+            notes: [
+                {
+                    id: 'n1', folderId: 'f1',
+                    content: `<h1>🍎 사과 스타일 메모장 (다단 지원)</h1><p>상단 툴바의 <b>view_column</b> 아이콘을 클릭해 보세요.</p><p>클릭할 때마다 본문이 1단, 2단, 3단으로 실시간으로 나뉘어 신문이나 잡지 같은 레이아웃을 연출할 수 있습니다. 단 설정은 각각의 메모마다 개별적으로 저장됩니다.</p><p>이미지나 체크리스트 등은 반으로 잘리지 않도록 안전하게 보호됩니다.</p>`,
+                    updatedAt: new Date().toISOString(), isPinned: true, isLocked: false, columnCount: 1
+                }
+            ],
+            currentFolderId: 'all', currentNoteId: 'n1', theme: null
+        };
+
+        const ALLOWED_NOTE_TAGS = new Set([
+            'h1', 'h2', 'h3', 'p', 'br', 'ul', 'ol', 'li',
+            'b', 'strong', 'i', 'em', 'u', 'pre', 'code',
+            'div', 'span', 'input', 'img'
+        ]);
+        const ALLOWED_NOTE_CLASSES = new Set(['todo-item', 'todo-checkbox', 'todo-text', 'checked']);
+        const SAFE_IMAGE_DATA_URL = /^data:image\/(?:png|jpeg|gif|webp);base64,[a-z0-9+/=\s]+$/i;
+
+        function generateId(prefix, index = 0) {
+            return `${prefix}_${Date.now()}_${index}_${Math.random().toString(36).slice(2, 8)}`;
+        }
+        function generateUniqueId(prefix, existingIds) {
+            let id;
+            do { id = generateId(prefix); } while (existingIds.has(id));
+            return id;
+        }
+        function isObject(value) { return value !== null && typeof value === 'object' && !Array.isArray(value); }
+
+        function sanitizeNoteHTML(htmlStr) {
+            const doc = new DOMParser().parseFromString(String(htmlStr || ''), 'text/html');
+            const cleanRoot = document.createElement('div');
+
+            function cleanNode(node) {
+                if (node.nodeType === Node.TEXT_NODE) return document.createTextNode(node.textContent || '');
+                if (node.nodeType !== Node.ELEMENT_NODE) return document.createDocumentFragment();
+
+                const tagName = node.tagName.toLowerCase();
+                if (!ALLOWED_NOTE_TAGS.has(tagName)) {
+                    const fragment = document.createDocumentFragment();
+                    node.childNodes.forEach(child => fragment.appendChild(cleanNode(child)));
+                    return fragment;
+                }
+
+                const cleanElement = document.createElement(tagName);
+                const classList = Array.from(node.classList || []).filter(className => ALLOWED_NOTE_CLASSES.has(className));
+                if (classList.length > 0) cleanElement.className = classList.join(' ');
+
+                if (tagName === 'img') {
+                    const src = node.getAttribute('src');
+                    if (!src || !SAFE_IMAGE_DATA_URL.test(src)) return document.createDocumentFragment();
+                    cleanElement.setAttribute('src', src);
+                    const alt = node.getAttribute('alt');
+                    if (alt) cleanElement.setAttribute('alt', alt);
+                }
+
+                if (tagName === 'input') {
+                    const type = (node.getAttribute('type') || '').toLowerCase();
+                    if (type !== 'checkbox') return document.createDocumentFragment();
+                    cleanElement.setAttribute('type', 'checkbox');
+                    if (node.hasAttribute('checked')) cleanElement.setAttribute('checked', 'checked');
+                }
+
+                if (tagName === 'div' && node.getAttribute('contenteditable') === 'true') {
+                    cleanElement.setAttribute('contenteditable', 'true');
+                }
+
+                node.childNodes.forEach(child => cleanElement.appendChild(cleanNode(child)));
+                return cleanElement;
+            }
+            doc.body.childNodes.forEach(child => cleanRoot.appendChild(cleanNode(child)));
+            return cleanRoot.innerHTML;
+        }
+
+        function normalizeState(rawState) {
+            if (!isObject(rawState) || !Array.isArray(rawState.folders) || !Array.isArray(rawState.notes)) throw new Error('데이터 형식이 올바르지 않습니다.');
+            
+            const folders = []; const folderIds = new Set();
+            rawState.folders.forEach((folder, index) => {
+                if (!isObject(folder)) return;
+                const rawId = typeof folder.id === 'string' && folder.id.trim() ? folder.id.trim() : generateId('f', index);
+                const id = folderIds.has(rawId) ? generateId('f', index) : rawId;
+                const name = typeof folder.name === 'string' && folder.name.trim() ? folder.name.trim() : '이름 없는 폴더';
+                folders.push({ id, name, system: id === 'trash' || Boolean(folder.system) });
+                folderIds.add(id);
+            });
+            if (!folderIds.has('trash')) { folders.push({ id: 'trash', name: '최근 삭제된 항목', system: true }); folderIds.add('trash'); }
+            
+            const fallbackFolderId = folders.find(folder => folder.id !== 'trash')?.id || 'trash';
+            const notes = []; const noteIds = new Set();
+            rawState.notes.forEach((note, index) => {
+                if (!isObject(note)) return;
+                const rawId = typeof note.id === 'string' && note.id.trim() ? note.id.trim() : generateId('n', index);
+                const id = noteIds.has(rawId) ? generateId('n', index) : rawId;
+                const folderId = typeof note.folderId === 'string' && folderIds.has(note.folderId) ? note.folderId : fallbackFolderId;
+                const updatedAtDate = new Date(note.updatedAt);
+                const updatedAt = Number.isNaN(updatedAtDate.getTime()) ? new Date().toISOString() : updatedAtDate.toISOString();
+                
+                // columnCount 데이터 검증 및 기본값 부여
+                const columnCount = Number.isInteger(note.columnCount) && note.columnCount >= 1 && note.columnCount <= 3 ? note.columnCount : 1;
+
+                notes.push({ id, folderId, content: sanitizeNoteHTML(note.content), updatedAt, isPinned: Boolean(note.isPinned), isLocked: Boolean(note.isLocked), columnCount });
+                noteIds.add(id);
+            });
+            const currentFolderId = rawState.currentFolderId === 'all' || folderIds.has(rawState.currentFolderId) ? rawState.currentFolderId : 'all';
+            const currentNoteId = noteIds.has(rawState.currentNoteId) ? rawState.currentNoteId : (notes[0]?.id || null);
+            const theme = rawState.theme === 'dark' || rawState.theme === 'light' ? rawState.theme : null;
+            return { folders, notes, currentFolderId, currentNoteId, theme };
+        }
+
+        function createDefaultState() { return normalizeState(JSON.parse(JSON.stringify(DEFAULT_DATA))); }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const isFirstRun = !localStorage.getItem(STORAGE_KEY);
+            initApp(); setupShortcuts(); initClock();
+            const editorMain = document.getElementById('editorMain');
+            
+            editorMain.addEventListener('change', function(e) {
+                if (e.target && e.target.classList.contains('todo-checkbox')) {
+                    const todoItem = e.target.closest('.todo-item');
+                    if(todoItem) {
+                        if(e.target.checked) { todoItem.classList.add('checked'); e.target.setAttribute('checked', 'checked'); } 
+                        else { todoItem.classList.remove('checked'); e.target.removeAttribute('checked'); }
+                        handleEditorInput();
+                    }
+                }
+            });
+
+            editorMain.addEventListener('paste', function(e) {
+                e.preventDefault();
+                const clipboardData = e.clipboardData || window.clipboardData;
+                const html = clipboardData?.getData('text/html');
+                const text = clipboardData?.getData('text/plain') || '';
+                if (html) document.execCommand('insertHTML', false, sanitizeNoteHTML(html));
+                else if (text) document.execCommand('insertText', false, text);
+                handleEditorInput();
+            });
+
+            window.addEventListener('pagehide', () => flushPendingSave({ renderAfterSave: false, notifyOnError: false }));
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') flushPendingSave({ renderAfterSave: false, notifyOnError: false });
+            });
+
+            const helpDialog = document.getElementById('helpDialog');
+            helpDialog.addEventListener('click', event => {
+                if (event.target === helpDialog) closeHelp();
+            });
+            if (isFirstRun && !localStorage.getItem(HELP_SEEN_KEY)) showHelp();
+        });
+
+        function initClock() { updateClock(); setInterval(updateClock, 1000); }
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0'), m = String(now.getMinutes()).padStart(2, '0'), s = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('digitalClock').innerText = `${h}:${m}:${s}`;
+        }
+
+        function formatTimestampFull(isoString) {
+            if (!isoString) return '';
+            const d = new Date(isoString);
+            const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0'); const h = String(d.getHours()).padStart(2, '0'); const min = String(d.getMinutes()).padStart(2, '0');
+            return `${y}년 ${m}월 ${day}일 ${h}:${min}`;
+        }
+
+        function initApp() {
+            const localData = localStorage.getItem(STORAGE_KEY);
+            if (localData) {
+                try { state = normalizeState(JSON.parse(localData)); }
+                catch (e) {
+                    const recoveryKey = `${STORAGE_KEY}_corrupt_${new Date().toISOString().replace(/[:.]/g, '-')}`;
+                    try { localStorage.setItem(recoveryKey, localData); } catch (_) { /* 원본 키는 아래 저장 성공 전까지 유지 */ }
+                    state = createDefaultState();
+                    alert('저장 데이터가 손상되어 기본 메모로 시작합니다. 가능한 경우 손상된 원본은 브라우저 저장소에 복구용 사본으로 보관했습니다.');
+                }
+            }
+            else { state = createDefaultState(); }
+
+            if (!state.theme) { state.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
+            document.documentElement.setAttribute('data-theme', state.theme);
+            document.getElementById('themeIcon').innerText = state.theme === 'dark' ? 'light_mode' : 'dark_mode';
+            
+            updateFolderUI(); renderFolders(); renderNotes();
+            const visibleNotes = getFilteredAndSortedNotes();
+            const noteToSelect = visibleNotes.some(note => note.id === state.currentNoteId) ? state.currentNoteId : (visibleNotes[0]?.id || null);
+            if (noteToSelect) selectNote(noteToSelect); else { clearEditor(); saveToLocalStorage({ notifyOnError: false }); }
+        }
+
+        function setStatus(message) {
+            const status = document.getElementById('statusMessage');
+            if (status) status.innerText = message;
+        }
+
+        function saveToLocalStorage({ notifyOnError = true } = {}) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                storageErrorNotified = false;
+                return true;
+            }
+            catch (e) {
+                setStatus('저장 실패 — 저장 공간을 확인하세요');
+                if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+                    if (notifyOnError && !storageErrorNotified) {
+                        storageErrorNotified = true;
+                        alert('⚠️ 저장 공간이 가득 찼습니다. 현재 변경 사항은 브라우저를 닫으면 사라질 수 있습니다. 큰 이미지가 포함된 메모를 정리하거나 백업 후 휴지통을 비워주세요.');
+                    }
+                } else if (notifyOnError && !storageErrorNotified) {
+                    storageErrorNotified = true;
+                    alert('메모를 브라우저 저장소에 저장하지 못했습니다. 백업을 내려받고 브라우저 저장 설정을 확인해 주세요.');
+                }
+                return false;
+            }
+        }
+
+        function createMaterialIcon(iconName, extraClass = '') {
+            const icon = document.createElement('span');
+            icon.className = `material-icons-outlined${extraClass ? ` ${extraClass}` : ''}`;
+            icon.textContent = iconName; return icon;
+        }
+
+        function renderFolders() {
+            const folderList = document.getElementById('folderList'); folderList.replaceChildren();
+
+            function appendFolderItem({ folderId, name, iconName, count, canDelete = false, isTrash = false }) {
+                const item = document.createElement('li'); item.className = `folder-item${state.currentFolderId === folderId ? ' active' : ''}`;
+                if (isTrash) item.style.marginTop = '15px';
+                item.addEventListener('click', () => selectFolder(folderId));
+                 
+                const folderInfo = document.createElement('div'); folderInfo.className = 'folder-info';
+                folderInfo.setAttribute('role', 'button'); folderInfo.tabIndex = 0;
+                folderInfo.addEventListener('keydown', event => {
+                    if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); selectFolder(folderId); }
+                });
+                const icon = createMaterialIcon(iconName); if (isTrash) icon.style.color = '#ff5f56';
+                const nameEl = document.createElement('span'); nameEl.className = 'folder-name'; nameEl.textContent = name;
+                if (isTrash) nameEl.style.color = 'var(--text-muted)';
+                folderInfo.append(icon, nameEl); item.appendChild(folderInfo);
+
+                const actions = document.createElement('div'); actions.style.display = 'flex'; actions.style.alignItems = 'center'; actions.style.gap = '5px';
+                const countEl = document.createElement('span'); countEl.className = 'folder-count'; countEl.textContent = count; actions.appendChild(countEl);
+                if (canDelete) {
+                    const deleteIcon = createMaterialIcon('delete', 'delete-folder-btn');
+                    deleteIcon.setAttribute('role', 'button'); deleteIcon.tabIndex = 0; deleteIcon.setAttribute('aria-label', `${name} 폴더 삭제`);
+                    deleteIcon.addEventListener('click', event => deleteFolder(event, folderId));
+                    deleteIcon.addEventListener('keydown', event => {
+                        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); deleteFolder(event, folderId); }
+                    });
+                    actions.appendChild(deleteIcon);
+                }
+                item.appendChild(actions); folderList.appendChild(item);
+            }
+
+            const allCount = state.notes.filter(n => n.folderId !== 'trash').length;
+            appendFolderItem({ folderId: 'all', name: '모든 메모', iconName: 'inner_notes', count: allCount });
+            state.folders.filter(f => f.id !== 'trash').forEach(folder => {
+                const count = state.notes.filter(n => n.folderId === folder.id).length;
+                appendFolderItem({ folderId: folder.id, name: folder.name, iconName: 'folder', count, canDelete: true });
+            });
+            const trashFolder = state.folders.find(f => f.id === 'trash');
+            if (trashFolder) {
+                const trashCount = state.notes.filter(n => n.folderId === 'trash').length;
+                appendFolderItem({ folderId: 'trash', name: trashFolder.name, iconName: 'delete_outline', count: trashCount, isTrash: true });
+            }
+        }
+
+        function createNewFolder() {
+            const folderName = prompt('새로운 폴더의 이름을 입력하세요:');
+            if (!folderName || folderName.trim() === '') return;
+            const existingIds = new Set(state.folders.map(folder => folder.id));
+            state.folders.push({ id: generateUniqueId('f', existingIds), name: folderName.trim(), system: false });
+            saveToLocalStorage(); renderFolders();
+        }
+
+        function deleteFolder(event, folderId) {
+            event.stopPropagation(); 
+            const targetNotes = state.notes.filter(n => n.folderId === folderId);
+            if(targetNotes.some(n => n.isLocked)) { alert('⚠️ 폴더 안에 잠겨있는 메모가 포함되어 있습니다. 먼저 메모 잠금을 해제해 주세요.'); return; }
+            if (confirm('이 폴더를 삭제하시겠습니까? 내부의 모든 메모는 휴지통으로 이동합니다.')) {
+                state.notes.forEach(n => { if (n.folderId === folderId) { n.folderId = 'trash'; n.isPinned = false; n.updatedAt = new Date().toISOString(); } });
+                state.folders = state.folders.filter(f => f.id !== folderId);
+                saveToLocalStorage();
+                selectFolder('all');
+            }
+        }
+
+        function emptyTrash() {
+            const trashNotes = state.notes.filter(note => note.folderId === 'trash');
+            const deletableNotes = trashNotes.filter(note => !note.isLocked);
+            const lockedCount = trashNotes.length - deletableNotes.length;
+            if (deletableNotes.length === 0) {
+                alert(lockedCount > 0 ? '잠긴 메모만 남아 있어 휴지통을 비울 수 없습니다. 먼저 잠금을 해제해 주세요.' : '휴지통이 비어 있습니다.');
+                return;
+            }
+            const lockedNotice = lockedCount > 0 ? ` 잠긴 메모 ${lockedCount}개는 보존됩니다.` : '';
+            if(confirm(`휴지통을 비우시겠습니까? 삭제된 메모는 영구적으로 사라집니다.${lockedNotice}`)) {
+                state.notes = state.notes.filter(note => note.folderId !== 'trash' || note.isLocked);
+                state.currentNoteId = null; saveToLocalStorage(); renderFolders(); renderNotes(); clearEditor();
+            }
+        }
+
+        function updateFolderUI() {
+            const targetFolder = state.folders.find(f => f.id === state.currentFolderId);
+            document.getElementById('currentFolderName').innerText = state.currentFolderId === 'all' ? '모든 메모' : (targetFolder?.name || '모든 메모');
+            const newNoteBtn = document.getElementById('newNoteBtn'); const emptyTrashBtn = document.getElementById('emptyTrashBtn');
+            if (state.currentFolderId === 'trash') { newNoteBtn.style.display = 'none'; emptyTrashBtn.style.display = 'flex'; } 
+            else { newNoteBtn.style.display = 'flex'; emptyTrashBtn.style.display = 'none'; }
+        }
+
+        function selectFolder(folderId) {
+            state.currentFolderId = folderId; updateFolderUI(); renderFolders(); renderNotes();
+            const visibleNotes = getFilteredAndSortedNotes();
+            if (visibleNotes.length > 0) selectNote(visibleNotes[0].id);
+            else { clearEditor(); saveToLocalStorage(); }
+        }
+
+        const BLOCK_NOTE_TAGS = new Set(['h1', 'h2', 'h3', 'p', 'div', 'li', 'pre', 'ul', 'ol']);
+        function extractNoteText(htmlString, preserveLineBreaks = false) {
+            if (!htmlString) return '';
+            const doc = new DOMParser().parseFromString(String(htmlString), 'text/html');
+
+            function readNode(node) {
+                if (node.nodeType === Node.TEXT_NODE) return node.textContent || '';
+                if (node.nodeType !== Node.ELEMENT_NODE) return '';
+                const tagName = node.tagName.toLowerCase();
+                if (tagName === 'br') return '\n';
+                let text = Array.from(node.childNodes, readNode).join('');
+                if (BLOCK_NOTE_TAGS.has(tagName)) text += '\n';
+                return text;
+            }
+
+            const text = Array.from(doc.body.childNodes, readNode).join('').replace(/\u00a0/g, ' ');
+            if (!preserveLineBreaks) return text.replace(/\s+/g, ' ').trim();
+            return text.split('\n').map(line => line.replace(/[\t ]+/g, ' ').trim()).filter(Boolean).join('\n');
+        }
+        function extractTextFast(htmlString) { return extractNoteText(htmlString, false); }
+
+        function getFilteredAndSortedNotes() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            return state.notes.filter(note => {
+                if (state.currentFolderId === 'all') { if (note.folderId === 'trash') return false; }
+                else { if (note.folderId !== state.currentFolderId) return false; }
+                if (query !== '') return extractTextFast(note.content).toLowerCase().includes(query);
+                return true;
+            }).sort((a, b) => {
+                if (a.isPinned && !b.isPinned) return -1;
+                if (!a.isPinned && b.isPinned) return 1;
+                return new Date(b.updatedAt) - new Date(a.updatedAt);
+            });
+        }
+
+        function updateActiveNoteListItem() {
+            document.querySelectorAll('.note-item').forEach(item => { item.classList.toggle('active', item.dataset.noteId === state.currentNoteId); });
+        }
+
+        function renderNotes() {
+            const noteList = document.getElementById('noteList'); const filteredNotes = getFilteredAndSortedNotes();
+            noteList.replaceChildren();
+            filteredNotes.forEach(note => {
+                const textWithLines = extractNoteText(note.content, true);
+                const lines = textWithLines.split('\n').map(l => l.trim()).filter(l => l !== '');
+                const hasImage = note.content.includes('<img');
+                let titleText = lines.length > 0 ? lines[0].substring(0, 50) : (hasImage ? '[이미지 첨부됨]' : '새로운 메모');
+                let snippetText = lines.length > 1 ? lines[1].substring(0, 100) : (lines.length === 1 && hasImage ? '[이미지]' : (lines.length === 1 ? '추가 텍스트 없음' : '내용 없음'));
+
+                const dateObj = new Date(note.updatedAt); 
+                const y = dateObj.getFullYear(); const m = String(dateObj.getMonth() + 1).padStart(2, '0'); const d = String(dateObj.getDate()).padStart(2, '0');
+                const displayDate = `${y}.${m}.${d}`;
+                
+                const item = document.createElement('li'); item.className = `note-item${state.currentNoteId === note.id ? ' active' : ''}`; item.dataset.noteId = note.id;
+                item.setAttribute('role', 'button'); item.tabIndex = 0;
+                item.addEventListener('click', () => selectNote(note.id));
+                item.addEventListener('keydown', event => {
+                    if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectNote(note.id); }
+                });
+
+                const header = document.createElement('div'); header.className = 'note-item-header';
+                const title = document.createElement('span'); title.className = 'note-item-title'; title.textContent = titleText;
+                const icons = document.createElement('div'); icons.className = 'note-item-icons';
+                if (note.isPinned) icons.appendChild(createMaterialIcon('push_pin', 'icon-pin active'));
+                if (note.isLocked) icons.appendChild(createMaterialIcon('lock', 'icon-lock active'));
+                header.append(title, icons);
+
+                const meta = document.createElement('div'); meta.className = 'note-item-meta';
+                const date = document.createElement('span'); date.className = 'note-item-date'; date.textContent = displayDate;
+                const snippet = document.createElement('span'); snippet.className = 'note-item-snippet'; snippet.textContent = snippetText;
+                meta.append(date, snippet); item.append(header, meta); noteList.appendChild(item);
+            });
+        }
+
+        function createNewNote() {
+            flushPendingSave(); let targetFolder = state.currentFolderId;
+            if (targetFolder === 'all' || targetFolder === 'trash') {
+                const firstNormalFolder = state.folders.find(f => f.id !== 'trash'); targetFolder = firstNormalFolder ? firstNormalFolder.id : 'all';
+            }
+            if(targetFolder === 'all') { alert('메모를 생성하기 위해 먼저 일반 폴더를 하나 이상 추가해 주세요.'); return; }
+
+            // 새 메모 생성 시 단(column) 기본값은 1단
+            const existingIds = new Set(state.notes.map(note => note.id));
+            const newNote = { id: generateUniqueId('n', existingIds), folderId: targetFolder, content: '<h1>새로운 메모</h1><p><br></p>', updatedAt: new Date().toISOString(), isPinned: false, isLocked: false, columnCount: 1 };
+            state.notes.push(newNote); state.currentNoteId = newNote.id; saveToLocalStorage(); renderFolders(); renderNotes(); selectNote(newNote.id); document.getElementById('editorMain').focus();
+        }
+
+        function persistNoteSnapshot(noteId, contentSnapshot, options = {}) {
+            const { renderAfterSave = true, notifyOnError = true } = options;
+            const note = state.notes.find(n => n.id === noteId);
+            if (!note || note.isLocked) return false;
+            note.content = sanitizeNoteHTML(contentSnapshot); 
+            note.updatedAt = new Date().toISOString(); 
+            const didSave = saveToLocalStorage({ notifyOnError });
+            if (!didSave) return false;
+            
+            if (state.currentNoteId === noteId) {
+                document.getElementById('noteTimestamp').innerText = formatTimestampFull(note.updatedAt);
+            }
+
+            if (renderAfterSave) { renderNotes(); updateActiveNoteListItem(); } return true;
+        }
+
+        function flushPendingSave(options = {}) {
+            if (!pendingSave) return false;
+            clearTimeout(saveTimeout); const saveRequest = pendingSave; saveTimeout = null; pendingSave = null;
+            return persistNoteSnapshot(saveRequest.noteId, saveRequest.contentSnapshot, options);
+        }
+
+        function scheduleNoteSave(noteId, contentSnapshot) {
+            clearTimeout(saveTimeout); pendingSave = { noteId, contentSnapshot };
+            saveTimeout = setTimeout(() => {
+                const didSave = flushPendingSave();
+                if (didSave && state.currentNoteId === noteId) setStatus('자동 저장 완료');
+            }, 1000);
+        }
+
+        function selectNote(noteId) {
+            flushPendingSave(); state.currentNoteId = noteId; const note = state.notes.find(n => n.id === noteId);
+            if (!note) { clearEditor(); return; }
+            const editor = document.getElementById('editorMain');
+            const sanitizedContent = sanitizeNoteHTML(note.content); note.content = sanitizedContent; editor.innerHTML = sanitizedContent;
+            
+            document.getElementById('noteTimestamp').innerText = formatTimestampFull(note.updatedAt);
+            
+            // 다단(Column) CSS 적용
+            editor.style.columnCount = note.columnCount || 1;
+
+            updateToolbarState(note); calculateMetrics(); updateActiveNoteListItem(); saveToLocalStorage();
+        }
+
+        function clearEditor() {
+            const editor = document.getElementById('editorMain');
+            editor.innerHTML = '<div style="color:var(--text-muted); text-align:center; margin-top:40px;">선택된 메모가 없습니다. 폴더에서 메모를 선택하거나 새 메모를 만들어 주세요.</div>';
+            editor.setAttribute('contenteditable', 'false');
+            document.getElementById('charCount').innerText = '공백 포함: 0자 | 단어 수: 0개';
+            document.getElementById('noteTimestamp').innerText = ''; 
+            document.getElementById('colCountBadge').innerText = '1';
+            editor.style.columnCount = 1;
+            document.getElementById('toolbarPinBtn').classList.remove('active');
+            const lockBtn = document.getElementById('toolbarLockBtn');
+            lockBtn.classList.remove('active');
+            lockBtn.innerHTML = '<span class="material-icons-outlined">lock_open</span>';
+            document.getElementById('toolbarPinBtn').setAttribute('aria-pressed', 'false');
+            lockBtn.setAttribute('aria-pressed', 'false');
+            setEditorControlsEnabled(false);
+            state.currentNoteId = null;
+            setStatus('메모를 선택하거나 새 메모를 만들어 주세요.');
+        }
+
+        function setEditorControlsEnabled(enabled) {
+            document.querySelectorAll('.editor-toolbar .toolbar-btn').forEach(button => { button.disabled = !enabled; });
+        }
+
+        function updateToolbarState(note) {
+            const pinBtn = document.getElementById('toolbarPinBtn'); const lockBtn = document.getElementById('toolbarLockBtn');
+            const colBadge = document.getElementById('colCountBadge');
+            setEditorControlsEnabled(true);
+            
+            if(note.isPinned) pinBtn.classList.add('active'); else pinBtn.classList.remove('active');
+            if(note.isLocked) { lockBtn.classList.add('active'); lockBtn.innerHTML = '<span class="material-icons-outlined">lock</span>'; document.getElementById('editorMain').setAttribute('contenteditable', 'false'); } 
+            else { lockBtn.classList.remove('active'); lockBtn.innerHTML = '<span class="material-icons-outlined">lock_open</span>'; document.getElementById('editorMain').setAttribute('contenteditable', 'true'); }
+            pinBtn.setAttribute('aria-pressed', String(note.isPinned));
+            lockBtn.setAttribute('aria-pressed', String(note.isLocked));
+
+            // 현재 단수 뱃지 UI 업데이트
+            if (colBadge) colBadge.innerText = note.columnCount || 1;
+        }
+
+        function handleEditorInput() {
+            const currentNote = state.notes.find(n => n.id === state.currentNoteId);
+            if (!currentNote) return;
+            if (currentNote.isLocked) { alert('🔒 해당 노트는 잠겨있어 수정할 수 없습니다.'); document.getElementById('editorMain').innerHTML = sanitizeNoteHTML(currentNote.content); return; }
+            setStatus('변경 사항 감지됨...'); calculateMetrics();
+            scheduleNoteSave(state.currentNoteId, document.getElementById('editorMain').innerHTML);
+        }
+
+        function calculateMetrics() {
+            const rawText = document.getElementById('editorMain').innerText || '';
+            const wordsArray = rawText.trim().split(/\s+/).filter(w => w.length > 0);
+            document.getElementById('charCount').innerText = `공백 포함: ${rawText.length}자 | 단어 수: ${wordsArray.length}개`;
+        }
+
+        // 다단 토글 핸들러 추가
+        function toggleColumnCount() {
+            flushPendingSave({ renderAfterSave: false });
+            const currentNote = state.notes.find(n => n.id === state.currentNoteId);
+            if (!currentNote) return;
+            if (currentNote.isLocked) { alert('🔒 잠금 처리된 문서입니다.'); return; }
+
+            // 1단 -> 2단 -> 3단 -> 1단 순환
+            currentNote.columnCount = currentNote.columnCount >= 3 ? 1 : currentNote.columnCount + 1;
+            saveToLocalStorage();
+            
+            document.getElementById('editorMain').style.columnCount = currentNote.columnCount;
+            updateToolbarState(currentNote);
+        }
+
+        function togglePinCurrentNote() {
+            flushPendingSave({ renderAfterSave: false }); const currentNote = state.notes.find(n => n.id === state.currentNoteId); if (!currentNote) return;
+            currentNote.isPinned = !currentNote.isPinned; saveToLocalStorage(); updateToolbarState(currentNote); renderNotes();
+        }
+
+        function toggleLockCurrentNote() {
+            flushPendingSave({ renderAfterSave: false }); const currentNote = state.notes.find(n => n.id === state.currentNoteId); if (!currentNote) return;
+            currentNote.isLocked = !currentNote.isLocked; saveToLocalStorage(); updateToolbarState(currentNote); renderNotes();
+            document.getElementById('statusMessage').innerText = currentNote.isLocked ? '메모가 잠겼습니다.' : '메모 잠금이 해제되었습니다.';
+        }
+
+        function deleteCurrentNote() {
+            flushPendingSave({ renderAfterSave: false }); const currentNote = state.notes.find(n => n.id === state.currentNoteId); if (!currentNote) return;
+            if (currentNote.isLocked) { alert('⚠️ 이 메모는 잠겨있습니다. 삭제하려면 먼저 자물쇠를 풀어주세요.'); return; }
+            if (currentNote.folderId === 'trash') {
+                if (confirm('이 메모를 영구적으로 삭제하시겠습니까? 복구할 수 없습니다.')) {
+                    state.notes = state.notes.filter(n => n.id !== currentNote.id); state.currentNoteId = null; saveToLocalStorage(); renderFolders(); renderNotes(); clearEditor();
+                }
+            } else {
+                currentNote.folderId = 'trash'; currentNote.isPinned = false; currentNote.updatedAt = new Date().toISOString();
+                state.currentNoteId = null;
+                saveToLocalStorage(); renderFolders(); renderNotes(); clearEditor(); setStatus('메모가 최근 삭제된 항목으로 이동함');
+            }
+        }
+
+        function execCmd(command, value = null) {
+            const currentNote = state.notes.find(n => n.id === state.currentNoteId);
+            if (!currentNote) { setStatus('먼저 메모를 선택하거나 새 메모를 만들어 주세요.'); return; }
+            if (currentNote.isLocked) { alert('🔒 잠금 처리된 문서입니다.'); return; }
+            document.getElementById('editorMain').focus();
+            document.execCommand(command, false, value); handleEditorInput();
+        }
+
+        function insertTodoList() { execCmd('insertHTML', `<div class="todo-item"><input type="checkbox" class="todo-checkbox"><div class="todo-text" contenteditable="true">할 일</div></div><p>&nbsp;</p>`); }
+        function insertCodeBlock() { execCmd('insertHTML', `<pre><code>// 소스코드를 입력하세요.</code></pre><p>&nbsp;</p>`); }
+
+        function triggerImageUpload() {
+            const currentNote = state.notes.find(note => note.id === state.currentNoteId);
+            if (!currentNote) { setStatus('먼저 메모를 선택하거나 새 메모를 만들어 주세요.'); return; }
+            if (currentNote.isLocked) { alert('🔒 잠금 처리된 문서에는 이미지를 첨부할 수 없습니다.'); return; }
+            document.getElementById('imageUploadInput').click();
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            event.target.value = '';
+            const currentNote = state.notes.find(n => n.id === state.currentNoteId);
+            if (!currentNote) { setStatus('이미지를 넣을 메모를 먼저 선택해 주세요.'); return; }
+            if (currentNote.isLocked) { alert('🔒 잠금 처리된 문서에는 이미지를 첨부할 수 없습니다.'); return; }
+            if (!/^image\/(?:png|jpeg|gif|webp)$/i.test(file.type)) { alert('PNG, JPEG, GIF, WebP 이미지만 첨부할 수 있습니다.'); return; }
+            if (file.size > 12 * 1024 * 1024) { alert('12MB 이하의 이미지만 첨부할 수 있습니다.'); return; }
+            const targetNoteId = currentNote.id;
+            setStatus('이미지 압축 중...');
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const targetNote = state.notes.find(note => note.id === targetNoteId);
+                    if (!targetNote || targetNote.isLocked || state.currentNoteId !== targetNoteId) {
+                        setStatus('메모가 변경되어 이미지 첨부를 취소했습니다.');
+                        return;
+                    }
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) { setStatus('이미지를 처리하지 못했습니다.'); return; }
+                    const MAX_WIDTH = 800; const MAX_HEIGHT = 2400; const MAX_PIXELS = 2400000;
+                    let width = img.width; let height = img.height;
+                    const scale = Math.min(1, MAX_WIDTH / width, MAX_HEIGHT / height, Math.sqrt(MAX_PIXELS / (width * height)));
+                    width = Math.max(1, Math.round(width * scale)); height = Math.max(1, Math.round(height * scale));
+                    canvas.width = width; canvas.height = height; ctx.drawImage(img, 0, 0, width, height);
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    document.getElementById('editorMain').focus();
+                    const imgHtml = `<img src="${compressedBase64}" alt="첨부 이미지" />`;
+                    document.execCommand('insertHTML', false, imgHtml);
+                    handleEditorInput();
+                };
+                img.onerror = function() { setStatus('이미지 파일을 읽지 못했습니다.'); };
+                img.src = e.target.result;
+            };
+            reader.onerror = function() { setStatus('이미지 파일을 읽지 못했습니다.'); };
+            reader.readAsDataURL(file);
+        }
+
+        function exportData() {
+            flushPendingSave({ renderAfterSave: false });
+            const file = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json;charset=utf-8' });
+            const objectUrl = URL.createObjectURL(file);
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.href = objectUrl;
+            downloadAnchor.download = `macos_notes_backup_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(downloadAnchor); downloadAnchor.click(); downloadAnchor.remove();
+            setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+        }
+
+        function triggerImport() {
+            if (confirm('백업을 복원하면 현재 폴더와 메모가 백업 내용으로 교체됩니다. 계속하기 전에 현재 데이터를 백업하셨나요?')) {
+                document.getElementById('importFile').click();
+            }
+        }
+
+        function importData(event) {
+            flushPendingSave({ renderAfterSave: false });
+            const input = event.target; const reader = new FileReader();
+            reader.onload = function() {
+                const previousState = state;
+                try {
+                    const importedState = normalizeState(JSON.parse(reader.result));
+                    state = importedState;
+                    if (!saveToLocalStorage()) {
+                        state = previousState;
+                        setStatus('백업 복원 실패 — 현재 데이터가 유지되었습니다.');
+                        return;
+                    }
+                    initApp();
+                    alert('🎉 백업 데이터가 정상 복원되었습니다.');
+                }
+                catch(e) { state = previousState; alert('올바르지 않은 백업 파일입니다.'); }
+                finally { input.value = ''; }
+            };
+            reader.onerror = function() { input.value = ''; alert('백업 파일을 읽지 못했습니다.'); };
+            const file = input.files[0];
+            if (!file) return;
+            if (file.size > 20 * 1024 * 1024) { input.value = ''; alert('20MB 이하의 백업 파일만 복원할 수 있습니다.'); return; }
+            reader.readAsText(file);
+        }
+
+        function downloadSingleNote(extension = 'txt') {
+            flushPendingSave({ renderAfterSave: false }); const note = state.notes.find(n => n.id === state.currentNoteId); if (!note) return;
+            const pureText = extractNoteText(note.content, true); const element = document.createElement('a');
+            const file = new Blob([pureText], {type: 'text/plain;charset=utf-8'}); const objectUrl = URL.createObjectURL(file);
+            const title = extractNoteText(note.content, true).split('\n')[0]?.slice(0, 40).replace(/[\\/:*?"<>|]/g, '_') || `Note_${note.id}`;
+            element.href = objectUrl; element.download = `${title}.${extension}`;
+            document.body.appendChild(element); element.click(); element.remove();
+            setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+        }
+
+        function setupShortcuts() {
+            window.addEventListener('keydown', function(e) {
+                const isMeta = e.ctrlKey || e.metaKey;
+                if (isMeta && e.key.toLowerCase() === 's') {
+                    e.preventDefault(); const currentNote = state.notes.find(n => n.id === state.currentNoteId);
+                    if (currentNote && !currentNote.isLocked) {
+                        clearTimeout(saveTimeout); saveTimeout = null; pendingSave = null;
+                        if (persistNoteSnapshot(currentNote.id, document.getElementById('editorMain').innerHTML)) setStatus('⚡ 즉시 저장됨');
+                    }
+                }
+                if (isMeta && e.key.toLowerCase() === 'n') { e.preventDefault(); createNewNote(); }
+                if (isMeta && e.key.toLowerCase() === 'f') { e.preventDefault(); document.getElementById('searchInput').focus(); }
+                if (e.key === 'Escape' && document.getElementById('helpDialog').open) closeHelp();
+            });
+        }
+
+        function showHelp() {
+            const dialog = document.getElementById('helpDialog');
+            if (!dialog.open) dialog.showModal();
+            try { localStorage.setItem(HELP_SEEN_KEY, 'true'); } catch (_) { /* 도움말 표시 자체는 계속 진행 */ }
+        }
+
+        function closeHelp() {
+            const dialog = document.getElementById('helpDialog');
+            if (dialog.open) dialog.close();
+        }
+
+        function toggleTheme() {
+            const targetTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', targetTheme); state.theme = targetTheme; saveToLocalStorage();
+            document.getElementById('themeIcon').innerText = targetTheme === 'dark' ? 'light_mode' : 'dark_mode';
+        }
+    </script>
+</body>
+</html>
