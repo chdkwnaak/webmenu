@@ -1,0 +1,2423 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Custom Text Editor Core</title>
+  <style>
+    :root {
+      --page-bg: #ece9e2;
+      --panel-bg: #fbfaf7;
+      --editor-bg: #fffefa;
+      --gutter-bg: #eef0f2;
+      --gutter-active: #dbe8ff;
+      --line-active: #eef5ff;
+      --text: #1e2329;
+      --muted: #667085;
+      --border: #cfd4dc;
+      --accent: #1d62d8;
+      --shadow: 0 18px 45px rgba(31, 35, 41, 0.16);
+      --editor-font: "Cascadia Code", Consolas, "Courier New", monospace;
+      --line-height: 22px;
+      --char-width: 8px;
+      --gutter-width: 56px;
+      --content-width: 100%;
+      --content-height: 100%;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0) 44%),
+        var(--page-bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .app {
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      width: min(1180px, calc(100vw - 36px));
+      height: min(760px, calc(100vh - 36px));
+      overflow: hidden;
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .topbar,
+    .statusbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-width: 0;
+      padding: 10px 14px;
+      border-color: var(--border);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .topbar {
+      border-bottom: 1px solid var(--border);
+      background: #f7f5ef;
+    }
+
+    .topbar-left,
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .toolbar {
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .tool-button,
+    .find-button {
+      height: 28px;
+      padding: 0 10px;
+      border: 1px solid #b9c1cc;
+      border-radius: 4px;
+      background: #ffffff;
+      color: #1f2933;
+      font: inherit;
+      line-height: 26px;
+      cursor: pointer;
+    }
+
+    .tool-button:hover,
+    .find-button:hover {
+      background: #eef5ff;
+      border-color: #8fb4ef;
+    }
+
+    .tool-button:active,
+    .find-button:active {
+      background: #dfeeff;
+    }
+
+    .tool-button[aria-pressed="true"] {
+      background: #dbeafe;
+      border-color: #3b82f6;
+      color: #1d4ed8;
+    }
+
+    .tool-button:disabled,
+    .find-button:disabled {
+      cursor: default;
+      opacity: 0.46;
+    }
+
+    .statusbar {
+      border-top: 1px solid var(--border);
+      background: #f3f4f4;
+      font-family: var(--editor-font);
+    }
+
+    .file-title {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 650;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .status-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+      white-space: nowrap;
+    }
+
+    .find-panel {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      max-height: 0;
+      overflow: hidden;
+      border-bottom: 0 solid var(--border);
+      background: #fbfcfe;
+      transition: max-height 160ms ease, border-width 160ms ease;
+    }
+
+    .find-panel.open {
+      max-height: 52px;
+      border-bottom-width: 1px;
+    }
+
+    .find-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      min-width: 0;
+      padding: 8px 14px;
+    }
+
+    .find-input {
+      width: min(260px, 28vw);
+      min-width: 130px;
+      height: 30px;
+      padding: 0 8px;
+      border: 1px solid #b9c1cc;
+      border-radius: 4px;
+      outline: none;
+      background: #ffffff;
+      color: var(--text);
+      font: inherit;
+    }
+
+    .find-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(29, 98, 216, 0.14);
+    }
+
+    .find-count {
+      min-width: 54px;
+      color: var(--muted);
+      font-family: var(--editor-font);
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .replace-control {
+      display: none;
+    }
+
+    .find-panel.replace-mode .find-input.replace-control {
+      display: block;
+    }
+
+    .find-panel.replace-mode .find-button.replace-control {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    #editor {
+      --gutter-width: 56px;
+      --content-width: 100%;
+      --content-height: 100%;
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      background: var(--editor-bg);
+      font-family: var(--editor-font);
+      font-size: 14px;
+      line-height: var(--line-height);
+    }
+
+    #editor.drag-over {
+      outline: 2px solid rgba(29, 98, 216, 0.55);
+      outline-offset: -2px;
+    }
+
+    #editor-viewport {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: var(--gutter-width) auto;
+      align-content: start;
+      overflow: auto;
+      background: var(--editor-bg);
+      outline: none;
+      scrollbar-color: #9ba3af #eef0f2;
+      scrollbar-width: thin;
+    }
+
+    #line-numbers {
+      position: sticky;
+      left: 0;
+      z-index: 8;
+      width: var(--gutter-width);
+      min-height: var(--content-height);
+      overflow: hidden;
+      border-right: 1px solid var(--border);
+      background: var(--gutter-bg);
+      color: #78808b;
+      user-select: none;
+    }
+
+    .line-number {
+      height: var(--line-height);
+      padding: 0 12px 0 6px;
+      font-variant-numeric: tabular-nums;
+      line-height: var(--line-height);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .line-number.active {
+      background: var(--gutter-active);
+      color: #1f3f77;
+    }
+
+    #content-wrap {
+      position: relative;
+      z-index: 1;
+      min-width: var(--content-width);
+      min-height: var(--content-height);
+      background: var(--editor-bg);
+    }
+
+    #editor-content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      min-width: var(--content-width);
+      min-height: var(--content-height);
+      overflow: hidden;
+      color: var(--text);
+      contain: layout paint style;
+      pointer-events: none;
+      tab-size: 4;
+      white-space: pre;
+    }
+
+    #column-selection-box {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 6;
+      display: none;
+      width: 0;
+      height: 0;
+      background: rgba(0, 120, 215, 0.3);
+      pointer-events: none;
+    }
+
+    .line {
+      width: 100%;
+      height: var(--line-height);
+      padding: 0 0 0 0;
+      overflow: visible;
+      line-height: var(--line-height);
+      white-space: pre;
+    }
+
+    .line.active {
+      background: var(--line-active);
+    }
+
+    .search-highlight {
+      background: yellow;
+    }
+
+    #cursor {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 12;
+      width: 2px;
+      height: var(--line-height);
+      background: var(--accent);
+      box-shadow: 0 0 0 1px rgba(29, 98, 216, 0.08);
+      pointer-events: none;
+      transform: translate(0, 0);
+      will-change: transform, opacity;
+    }
+
+    #cursor.blink {
+      animation: cursor-blink 1.05s steps(2, start) infinite;
+    }
+
+    @keyframes cursor-blink {
+      0%,
+      45% {
+        opacity: 1;
+      }
+
+      46%,
+      100% {
+        opacity: 0;
+      }
+    }
+
+    #hidden-input {
+      position: absolute;
+      inset: 0 auto auto 0;
+      z-index: 10;
+      width: var(--content-width);
+      height: var(--content-height);
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      border: 0;
+      outline: 0;
+      resize: none;
+      background: transparent;
+      color: transparent;
+      caret-color: transparent;
+      font: inherit;
+      line-height: var(--line-height);
+      opacity: 0;
+      tab-size: 4;
+      user-select: none;
+      white-space: pre;
+    }
+
+    #hidden-input::selection {
+      background: transparent;
+      color: transparent;
+    }
+
+    .metric-probe {
+      position: absolute;
+      visibility: hidden;
+      white-space: pre;
+      pointer-events: none;
+    }
+
+    .unsaved-dialog {
+      width: min(420px, calc(100vw - 32px));
+      padding: 0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--panel-bg);
+      color: var(--text);
+      box-shadow: var(--shadow);
+    }
+
+    .unsaved-dialog::backdrop {
+      background: rgba(15, 23, 42, 0.52);
+    }
+
+    .unsaved-dialog form {
+      display: grid;
+      gap: 18px;
+      padding: 22px;
+    }
+
+    .unsaved-dialog h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .unsaved-dialog p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .help-dialog {
+      width: min(560px, calc(100vw - 32px));
+    }
+
+    .help-content {
+      display: grid;
+      gap: 16px;
+    }
+
+    .help-section {
+      display: grid;
+      gap: 6px;
+    }
+
+    .help-section h3 {
+      margin: 0;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .help-section ul {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .shortcut-list {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      gap: 7px 14px;
+      margin: 0;
+    }
+
+    .shortcut-list dt,
+    .shortcut-list dd {
+      margin: 0;
+    }
+
+    .shortcut-list dd {
+      color: var(--muted);
+    }
+
+    kbd {
+      display: inline-block;
+      min-width: 24px;
+      padding: 2px 6px;
+      border: 1px solid var(--border);
+      border-bottom-width: 2px;
+      border-radius: 4px;
+      background: var(--editor-bg);
+      color: var(--text);
+      font: 12px/1.4 var(--editor-font);
+      text-align: center;
+    }
+
+    @media (max-width: 720px) {
+      .app {
+        width: 100vw;
+        height: 100vh;
+        border-width: 0;
+        border-radius: 0;
+      }
+
+      .topbar,
+      .statusbar {
+        padding-inline: 10px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .toolbar {
+        justify-content: flex-start;
+      }
+
+      .find-panel.open {
+        max-height: 112px;
+      }
+
+      .find-row {
+        flex-wrap: wrap;
+        padding-inline: 10px;
+      }
+
+      .find-input {
+        width: calc(50vw - 18px);
+        min-width: 120px;
+      }
+
+      .status-group.metrics {
+        display: none;
+      }
+    }
+    /* 한글/중국어 등 조합 중일 때 임시로 보여주는 스타일 */
+    #hidden-input.composing {
+      opacity: 1 !important;
+      color: var(--text) !important;
+      caret-color: var(--accent) !important;
+      background: var(--line-active) !important; /* 현재 줄의 배경색과 동일하게 */
+      width: auto !important;
+      min-width: 100px; /* 입력창이 너무 작아지는 것 방지 */
+      height: var(--line-height) !important;
+      padding: 0 !important;
+      border: none !important;
+      z-index: 20 !important;
+    }
+
+
+    html.dark {
+      --page-bg: #020617;
+      --panel-bg: #0f172a;
+      --editor-bg: #020617;
+      --gutter-bg: #1e293b;
+      --gutter-active: #334155;
+      --line-active: #1e293b;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: #334155;
+      --accent: #3b82f6;
+      --shadow: 0 18px 45px rgba(0, 0, 0, 0.4);
+    }
+    html.dark .topbar, html.dark .statusbar, html.dark .find-panel { background: #0f172a; }
+    html.dark .tool-button, html.dark .find-button { background: #1e293b; color: #f1f5f9; border-color: #334155; }
+    html.dark .tool-button:hover, html.dark .find-button:hover { background: #334155; border-color: #475569; }
+    html.dark .tool-button:active, html.dark .find-button:active { background: #475569; }
+    html.dark .tool-button[aria-pressed="true"] { background: #0369a1; color: #f1f5f9; border-color: #38bdf8; }
+    html.dark .find-input, html.dark .replace-input { background: #1e293b; color: #f1f5f9; border-color: #334155; }
+    html.dark #line-numbers { color: #64748b; }
+    html.dark .line-number.active { color: #38bdf8; }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="file-title" id="file-title">untitled.txt</div>
+      </div>
+      <div class="toolbar" aria-label="Editor toolbar">
+        <button class="tool-button" id="open-file-btn" type="button">Open</button>
+        <button class="tool-button" id="save-file-btn" type="button">Save</button>
+        <button class="tool-button" id="undo-btn" type="button">Undo</button>
+        <button class="tool-button" id="redo-btn" type="button">Redo</button>
+        <button class="tool-button" id="column-mode-btn" type="button" aria-pressed="false">Column</button>
+        <button class="tool-button" id="help-btn" type="button">Help</button>
+        <input id="file-input" type="file" accept=".txt,.js,.html,.csv,.log,.py" hidden>
+      </div>
+    </header>
+
+    <div class="find-panel" id="find-panel" aria-hidden="true">
+      <div class="find-row">
+        <input class="find-input" id="find-input" type="text" placeholder="Find" autocomplete="off" spellcheck="false">
+        <input class="find-input replace-control" id="replace-input" type="text" placeholder="Replace" autocomplete="off" spellcheck="false">
+        <button class="find-button" id="find-next-btn" type="button">Next</button>
+        <button class="find-button replace-control" id="replace-btn" type="button">Replace</button>
+        <button class="find-button replace-control" id="replace-all-btn" type="button">All</button>
+        <span class="find-count" id="find-count">0/0</span>
+        <button class="find-button" id="find-close-btn" type="button" aria-label="Close find panel">&times;</button>
+      </div>
+    </div>
+
+    <section id="editor" aria-label="Custom text editor">
+      <div id="editor-viewport">
+        <div id="line-numbers" aria-hidden="true"></div>
+        <div id="content-wrap">
+          <div id="editor-content" aria-hidden="true"></div>
+          <div id="column-selection-box" aria-hidden="true"></div>
+          <div id="cursor" class="blink" aria-hidden="true"></div>
+          <textarea id="hidden-input" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" aria-label="Editor input"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <footer class="statusbar">
+      <div class="status-group">
+        <span id="status-mode">Insert</span>
+        <span id="status-position">Ln 1, Col 1</span>
+        <span id="status-lines">Lines 0</span>
+        <span id="status-encoding">UTF-8</span>
+      </div>
+      <div class="status-group metrics">
+        <span id="status-char-width">Char 0px</span>
+        <span id="status-line-height">Line 0px</span>
+      </div>
+    </footer>
+  </main>
+
+  <dialog class="unsaved-dialog" id="unsaved-dialog">
+    <form method="dialog">
+      <div>
+        <h2>Unsaved changes</h2>
+        <p id="unsaved-message">Save changes before continuing?</p>
+      </div>
+      <div class="dialog-actions">
+        <button class="find-button" type="submit" value="cancel">Cancel</button>
+        <button class="find-button" type="submit" value="discard">Discard</button>
+        <button class="tool-button" type="submit" value="save">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="unsaved-dialog help-dialog" id="help-dialog" aria-labelledby="help-title">
+    <form method="dialog">
+      <div class="help-content">
+        <div>
+          <h2 id="help-title">간단한 사용법</h2>
+          <p>파일을 열고 편집한 다음 저장할 수 있는 간단한 텍스트 편집기입니다.</p>
+        </div>
+
+        <section class="help-section">
+          <h3>파일과 기본 편집</h3>
+          <ul>
+            <li><strong>Open</strong>으로 텍스트 파일을 열고 <strong>Save</strong>로 저장합니다.</li>
+            <li>파일명 뒤의 <strong>*</strong> 표시는 아직 저장하지 않은 변경사항이 있다는 뜻입니다.</li>
+            <li><strong>Undo</strong>와 <strong>Redo</strong>로 편집 내용을 되돌리거나 다시 적용합니다.</li>
+          </ul>
+        </section>
+
+        <section class="help-section">
+          <h3>찾기와 바꾸기</h3>
+          <ul>
+            <li><strong>Ctrl+F</strong>로 찾기, <strong>Ctrl+H</strong>로 찾아 바꾸기를 엽니다.</li>
+            <li><strong>Next</strong>를 누르면 다음 검색 결과로 이동합니다.</li>
+          </ul>
+        </section>
+
+        <section class="help-section">
+          <h3>열 편집</h3>
+          <ul>
+            <li><strong>Column</strong> 버튼을 켠 뒤 여러 줄을 드래그하여 같은 열을 선택합니다.</li>
+            <li>문자를 입력하거나 Backspace, Delete를 누르면 선택한 모든 줄에 적용됩니다.</li>
+            <li>다른 곳을 클릭하면 현재 열 선택만 해제됩니다. Column 버튼을 다시 누르면 열 모드가 종료됩니다.</li>
+          </ul>
+        </section>
+
+        <section class="help-section">
+          <h3>단축키</h3>
+          <dl class="shortcut-list">
+            <dt><kbd>Ctrl</kbd> + <kbd>S</kbd></dt><dd>저장</dd>
+            <dt><kbd>Ctrl</kbd> + <kbd>Z</kbd></dt><dd>실행 취소</dd>
+            <dt><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd></dt><dd>다시 실행</dd>
+            <dt><kbd>Esc</kbd></dt><dd>검색창 또는 열 선택 닫기</dd>
+          </dl>
+        </section>
+      </div>
+
+      <div class="dialog-actions">
+        <button class="tool-button" type="submit" value="close">Close</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    let lines = [""];
+
+    let curRow = 0;
+    let curCol = 0;
+    let desiredCol = null;
+    let charWidth = 8;
+    let lineHeight = 22;
+    let isComposing = false;
+    let columnModeEnabled = false;
+    let isColumnSelecting = false;
+    let isColumnDragging = false;
+    let colSelStartRow = null;
+    let colSelStartCol = null;
+    let colSelEndRow = null;
+    let colSelEndCol = null;
+    let columnSelectMoved = false;
+    let columnSelectStartClientX = 0;
+    let columnSelectStartClientY = 0;
+    let undoStack = [];
+    let redoStack = [];
+    let currentFileName = "untitled.txt";
+    let currentFileHandle = null;
+    let currentRevision = 0;
+    let savedRevision = 0;
+    let nextRevision = 1;
+    let searchQuery = "";
+    let searchMatches = [];
+    let activeSearchIndex = -1;
+    let isReplaceMode = false;
+    let lastRenderedStartRow = -1;
+    let lastRenderedEndRow = -1;
+    let fileLineEnding = "\n";
+    let searchDirty = true;
+    let textProbe = null;
+    let preEditSnapshot = null;
+
+    const TAB_TEXT = "    ";
+    const TEXT_ENCODING = "UTF-8";
+    const MAX_HISTORY = 200;
+    const COLUMN_SELECT_DRAG_THRESHOLD = 3;
+
+    function getTextWidth(text) {
+      if (!textProbe) {
+        textProbe = document.createElement("span");
+        textProbe.className = "metric-probe";
+        document.getElementById("content-wrap").appendChild(textProbe);
+      }
+      if (text.length === 0) return 0;
+      textProbe.textContent = text;
+      return textProbe.getBoundingClientRect().width;
+    }
+
+    const editor = document.getElementById("editor");
+    const viewport = document.getElementById("editor-viewport");
+    const lineNumbers = document.getElementById("line-numbers");
+    const contentWrap = document.getElementById("content-wrap");
+    const editorContent = document.getElementById("editor-content");
+    const columnSelectionBox = document.getElementById("column-selection-box");
+    const cursor = document.getElementById("cursor");
+    const hiddenInput = document.getElementById("hidden-input");
+    const fileTitle = document.getElementById("file-title");
+    const openFileBtn = document.getElementById("open-file-btn");
+    const saveFileBtn = document.getElementById("save-file-btn");
+    const undoBtn = document.getElementById("undo-btn");
+    const redoBtn = document.getElementById("redo-btn");
+    const columnModeBtn = document.getElementById("column-mode-btn");
+    const helpBtn = document.getElementById("help-btn");
+    const fileInput = document.getElementById("file-input");
+    const findPanel = document.getElementById("find-panel");
+    const findInput = document.getElementById("find-input");
+    const replaceInput = document.getElementById("replace-input");
+    const findNextBtn = document.getElementById("find-next-btn");
+    const replaceBtn = document.getElementById("replace-btn");
+    const replaceAllBtn = document.getElementById("replace-all-btn");
+    const findCloseBtn = document.getElementById("find-close-btn");
+    const findCount = document.getElementById("find-count");
+    const statusLines = document.getElementById("status-lines");
+    const statusPosition = document.getElementById("status-position");
+    const statusEncoding = document.getElementById("status-encoding");
+    const statusCharWidth = document.getElementById("status-char-width");
+    const statusLineHeight = document.getElementById("status-line-height");
+    const statusMode = document.getElementById("status-mode");
+    const unsavedDialog = document.getElementById("unsaved-dialog");
+    const unsavedMessage = document.getElementById("unsaved-message");
+    const helpDialog = document.getElementById("help-dialog");
+
+    function measureMetrics() {
+      const probe = document.createElement("span");
+      probe.className = "metric-probe";
+      probe.textContent = "0".repeat(100);
+      contentWrap.appendChild(probe);
+
+      const rect = probe.getBoundingClientRect();
+      const computed = getComputedStyle(editorContent);
+      const measuredCharWidth = rect.width / 100;
+      const measuredLineHeight = parseFloat(computed.lineHeight);
+
+      probe.remove();
+
+      if (Number.isFinite(measuredCharWidth) && measuredCharWidth > 0) {
+        charWidth = measuredCharWidth;
+      }
+
+      if (Number.isFinite(measuredLineHeight) && measuredLineHeight > 0) {
+        lineHeight = measuredLineHeight;
+      }
+
+      editor.style.setProperty("--char-width", charWidth + "px");
+      editor.style.setProperty("--line-height", lineHeight + "px");
+    }
+
+    function normalizeInputText(text) {
+      return text.replace(/\r\n?/g, "\n").replace(/\t/g, TAB_TEXT);
+    }
+
+    function clampCursor() {
+      if (lines.length === 0) {
+        lines = [""];
+      }
+
+      curRow = Math.max(0, Math.min(curRow, lines.length - 1));
+      curCol = Math.max(0, Math.min(curCol, lines[curRow].length));
+    }
+
+    function resetVerticalIntent() {
+      desiredCol = null;
+    }
+
+    function render() {
+      clampCursor();
+      if (searchDirty) syncSearchMatches(activeSearchIndex);
+      updateVirtualSize();
+      renderLines();
+      updateCursor();
+      renderColumnSelectionBox();
+      updateStatus();
+      keepCursorInView();
+      resetHiddenInput();
+    }
+
+    function renderLines() {
+      const viewportHeight = viewport.clientHeight || 800;
+      const visibleRows = Math.ceil(viewportHeight / lineHeight);
+      const startRow = Math.max(0, Math.floor(viewport.scrollTop / lineHeight) - 2);
+      const endRow = Math.min(lines.length - 1, startRow + visibleRows + 4);
+
+      if (startRow === lastRenderedStartRow && endRow === lastRenderedEndRow && !searchDirty) {
+        for (let i = 0; i < editorContent.children.length; i++) {
+          const row = startRow + i;
+          if (row >= lines.length) break;
+          const isActive = row === curRow;
+          editorContent.children[i].classList.toggle("active", isActive);
+          lineNumbers.children[i].classList.toggle("active", isActive);
+        }
+        return;
+      }
+
+      const textFragment = document.createDocumentFragment();
+      const numberFragment = document.createDocumentFragment();
+
+      for (let row = startRow; row <= endRow; row++) {
+        if (row >= lines.length) break;
+        const line = document.createElement("div");
+        line.className = "line";
+        if (row === curRow) line.classList.add("active");
+        renderLineText(line, lines[row]);
+        textFragment.appendChild(line);
+
+        const number = document.createElement("div");
+        number.className = "line-number";
+        if (row === curRow) number.classList.add("active");
+        number.textContent = String(row + 1);
+        numberFragment.appendChild(number);
+      }
+
+      editorContent.replaceChildren(textFragment);
+      lineNumbers.replaceChildren(numberFragment);
+      
+      editorContent.style.paddingTop = (startRow * lineHeight) + "px";
+      lineNumbers.style.paddingTop = (startRow * lineHeight) + "px";
+
+      lastRenderedStartRow = startRow;
+      lastRenderedEndRow = endRow;
+      searchDirty = false;
+    }
+    function renderLineText(lineElement, text) {
+      if (!searchQuery) {
+        lineElement.textContent = text;
+        return;
+      }
+
+      const haystack = text.toLocaleLowerCase();
+      const needle = searchQuery.toLocaleLowerCase();
+      let offset = 0;
+      let matchCol = haystack.indexOf(needle, offset);
+
+      if (matchCol === -1) {
+        lineElement.textContent = text;
+        return;
+      }
+
+      while (matchCol !== -1) {
+        if (matchCol > offset) {
+          lineElement.appendChild(document.createTextNode(text.slice(offset, matchCol)));
+        }
+
+        const highlight = document.createElement("span");
+        highlight.className = "search-highlight";
+        highlight.style.background = "yellow";
+        highlight.textContent = text.slice(matchCol, matchCol + searchQuery.length);
+        lineElement.appendChild(highlight);
+
+        offset = matchCol + searchQuery.length;
+        matchCol = haystack.indexOf(needle, offset);
+      }
+
+      if (offset < text.length) {
+        lineElement.appendChild(document.createTextNode(text.slice(offset)));
+      }
+    }
+
+    function updateVirtualSize() {
+      const maxLineLength = lines.reduce((max, line) => Math.max(max, line.length), curCol);
+      const gutterDigits = Math.max(2, String(lines.length).length);
+      const gutterWidth = Math.max(54, Math.ceil(gutterDigits * charWidth + 28));
+      const visibleContentWidth = Math.max(0, viewport.clientWidth - gutterWidth);
+      const contentWidth = Math.max(visibleContentWidth, Math.ceil((maxLineLength + 4) * charWidth));
+      const contentHeight = Math.max(viewport.clientHeight, Math.ceil(lines.length * lineHeight));
+
+      editor.style.setProperty("--gutter-width", gutterWidth + "px");
+      editor.style.setProperty("--content-width", contentWidth + "px");
+      editor.style.setProperty("--content-height", contentHeight + "px");
+      lineNumbers.style.minHeight = contentHeight + "px";
+      contentWrap.style.minWidth = contentWidth + "px";
+      contentWrap.style.minHeight = contentHeight + "px";
+      hiddenInput.style.width = contentWidth + "px";
+      hiddenInput.style.height = contentHeight + "px";
+    }
+
+    function updateCursor() {
+      const line = lines[curRow] || "";
+      const x = Math.round(getTextWidth(line.slice(0, curCol)));
+      const y = Math.round(curRow * lineHeight);
+      cursor.style.transform = "translate(" + x + "px, " + y + "px)";
+
+      cursor.classList.remove("blink");
+      void cursor.offsetWidth;
+      cursor.classList.add("blink");
+    }
+
+    function updateStatus() {
+      statusMode.textContent = columnModeEnabled ? "Column" : "Insert";
+      statusLines.textContent = "Lines " + lines.length;
+      statusPosition.textContent = "Ln " + (curRow + 1) + ", Col " + (curCol + 1);
+      statusEncoding.textContent = TEXT_ENCODING;
+      statusCharWidth.textContent = "Char " + charWidth.toFixed(2) + "px";
+      statusLineHeight.textContent = "Line " + lineHeight.toFixed(2) + "px";
+      updateUndoRedoControls();
+      updateFindCount();
+    }
+
+    function keepCursorInView() {
+      const gutterWidth = parseFloat(getComputedStyle(editor).getPropertyValue("--gutter-width")) || 0;
+      const line = lines[curRow] || "";
+      const cursorX = gutterWidth + getTextWidth(line.slice(0, curCol));
+      const cursorY = curRow * lineHeight;
+      const rightPadding = charWidth * 2;
+      const bottomPadding = lineHeight;
+
+      if (cursorX < viewport.scrollLeft + gutterWidth) {
+        viewport.scrollLeft = Math.max(0, cursorX - gutterWidth);
+      } else if (cursorX + rightPadding > viewport.scrollLeft + viewport.clientWidth) {
+        viewport.scrollLeft = cursorX + rightPadding - viewport.clientWidth;
+      }
+
+      if (cursorY < viewport.scrollTop) {
+        viewport.scrollTop = cursorY;
+      } else if (cursorY + bottomPadding > viewport.scrollTop + viewport.clientHeight) {
+        viewport.scrollTop = cursorY + bottomPadding - viewport.clientHeight;
+      }
+    }
+
+    function resetHiddenInput() {
+      hiddenInput.value = "";
+      try {
+        hiddenInput.setSelectionRange(0, 0);
+      } catch (_) {
+        // Some virtual keyboards reject selection changes while composing.
+      }
+    }
+
+    function isModified() {
+      return currentRevision !== savedRevision;
+    }
+
+    function updateFileTitle() {
+      fileTitle.textContent = currentFileName + (isModified() ? " *" : "");
+    }
+
+    function markSaved() {
+      savedRevision = currentRevision;
+      updateFileTitle();
+    }
+
+    function beginEdit() {
+      preEditSnapshot = {
+        lines: lines.slice(),
+        curRow,
+        curCol,
+        revision: currentRevision
+      };
+    }
+
+    function commitEdit() {
+      if (!preEditSnapshot) return;
+      
+      let startRow = 0;
+      const oldLines = preEditSnapshot.lines;
+      const newLines = lines;
+      
+      while (startRow < newLines.length && startRow < oldLines.length && newLines[startRow] === oldLines[startRow]) {
+          startRow++;
+      }
+      
+      if (startRow === newLines.length && startRow === oldLines.length) {
+          preEditSnapshot = null;
+          return;
+      }
+      
+      let endRowNew = newLines.length - 1;
+      let endRowOld = oldLines.length - 1;
+      
+      while (endRowNew >= startRow && endRowOld >= startRow && newLines[endRowNew] === oldLines[endRowOld]) {
+          endRowNew--;
+          endRowOld--;
+      }
+      
+      const deletedLines = oldLines.slice(startRow, endRowOld + 1);
+      const addedLines = newLines.slice(startRow, endRowNew + 1);
+      
+      const afterRevision = nextRevision++;
+      undoStack.push({
+          startRow,
+          deletedLines,
+          addedLines,
+          beforeCursor: { row: preEditSnapshot.curRow, col: preEditSnapshot.curCol },
+          afterCursor: { row: curRow, col: curCol },
+          beforeRevision: preEditSnapshot.revision,
+          afterRevision
+      });
+      
+      if (undoStack.length > MAX_HISTORY) undoStack.shift();
+      redoStack = [];
+      currentRevision = afterRevision;
+      preEditSnapshot = null;
+      searchDirty = true;
+      updateUndoRedoControls();
+      updateFileTitle();
+    }
+
+    function performUndo() {
+      if (undoStack.length === 0) return;
+      const delta = undoStack.pop();
+      
+      lines = lines.slice(0, delta.startRow).concat(delta.deletedLines, lines.slice(delta.startRow + delta.addedLines.length));
+      curRow = delta.beforeCursor.row;
+      curCol = delta.beforeCursor.col;
+      currentRevision = delta.beforeRevision;
+      
+      redoStack.push(delta);
+      searchDirty = true;
+      updateUndoRedoControls();
+      updateFileTitle();
+      render();
+    }
+
+    function performRedo() {
+      if (redoStack.length === 0) return;
+      const delta = redoStack.pop();
+      
+      lines = lines.slice(0, delta.startRow).concat(delta.addedLines, lines.slice(delta.startRow + delta.deletedLines.length));
+      curRow = delta.afterCursor.row;
+      curCol = delta.afterCursor.col;
+      currentRevision = delta.afterRevision;
+      
+      undoStack.push(delta);
+      searchDirty = true;
+      updateUndoRedoControls();
+      updateFileTitle();
+      render();
+    }
+
+    function updateUndoRedoControls() {
+      undoBtn.disabled = undoStack.length === 0;
+      redoBtn.disabled = redoStack.length === 0;
+    }
+
+    function syncSearchMatches(preferredIndex = activeSearchIndex) {
+      searchQuery = findInput.value;
+      searchMatches = [];
+
+      if (searchQuery.length > 0) {
+        const needle = searchQuery.toLocaleLowerCase();
+        for (let row = 0; row < lines.length; row += 1) {
+          const haystack = lines[row].toLocaleLowerCase();
+          let col = haystack.indexOf(needle);
+
+          while (col !== -1) {
+            searchMatches.push({ row, col });
+            col = haystack.indexOf(needle, col + searchQuery.length);
+          }
+        }
+      }
+
+      if (searchMatches.length === 0) {
+        activeSearchIndex = -1;
+      } else if (preferredIndex < 0) {
+        activeSearchIndex = -1;
+      } else {
+        activeSearchIndex = Math.max(0, Math.min(preferredIndex, searchMatches.length - 1));
+      }
+
+      updateFindCount();
+    }
+
+    function updateSearchMatches(preferredIndex = -1) {
+      searchDirty = true;
+      syncSearchMatches(preferredIndex);
+      render();
+    }
+
+    function updateFindCount() {
+      if (!searchQuery || searchMatches.length === 0) {
+        findCount.textContent = "0/0";
+        return;
+      }
+
+      findCount.textContent = (activeSearchIndex < 0 ? 0 : activeSearchIndex + 1) + "/" + searchMatches.length;
+    }
+
+    function openFindPanel(replaceMode = false) {
+      isReplaceMode = replaceMode;
+      findPanel.classList.add("open");
+      findPanel.classList.toggle("replace-mode", isReplaceMode);
+      findPanel.setAttribute("aria-hidden", "false");
+      syncSearchMatches(activeSearchIndex);
+      render();
+      findInput.focus();
+      findInput.select();
+    }
+
+    function closeFindPanel() {
+      isReplaceMode = false;
+      findPanel.classList.remove("open", "replace-mode");
+      findPanel.setAttribute("aria-hidden", "true");
+      findInput.value = "";
+      replaceInput.value = "";
+      searchQuery = "";
+      searchMatches = [];
+      activeSearchIndex = -1;
+      updateFindCount();
+      render();
+      focusInput();
+    }
+
+    function goToSearchMatch(index) {
+      if (searchMatches.length === 0) {
+        updateFindCount();
+        return;
+      }
+
+      activeSearchIndex = (index + searchMatches.length) % searchMatches.length;
+      const match = searchMatches[activeSearchIndex];
+      resetVerticalIntent();
+      resetColumnSelection();
+      curRow = match.row;
+      curCol = match.col;
+      render();
+    }
+
+    function findNextMatch() {
+      syncSearchMatches(activeSearchIndex);
+
+      if (searchMatches.length === 0) {
+        render();
+        return;
+      }
+
+      goToSearchMatch(activeSearchIndex + 1);
+    }
+
+    function replaceCurrentMatch() {
+      if (searchDirty) syncSearchMatches(activeSearchIndex);
+
+      if (!searchQuery || searchMatches.length === 0) {
+        render();
+        return;
+      }
+
+      const matchIndex = activeSearchIndex < 0 ? 0 : activeSearchIndex;
+      const match = searchMatches[matchIndex];
+      const replacement = replaceInput.value;
+      const line = lines[match.row];
+
+      beginEdit();
+      lines[match.row] = line.slice(0, match.col) + replacement + line.slice(match.col + searchQuery.length);
+      resetVerticalIntent();
+      resetColumnSelection();
+      curRow = match.row;
+      curCol = match.col + replacement.length;
+      commitEdit();
+      
+      syncSearchMatches(matchIndex);
+      render();
+    }
+
+    function replaceAllMatches() {
+      if (searchDirty) syncSearchMatches(0);
+
+      if (!searchQuery || searchMatches.length === 0) {
+        render();
+        return;
+      }
+
+      const firstMatch = searchMatches[0];
+      const replacement = replaceInput.value;
+
+      beginEdit();
+
+      for (let index = searchMatches.length - 1; index >= 0; index -= 1) {
+        const match = searchMatches[index];
+        const line = lines[match.row];
+        lines[match.row] = line.slice(0, match.col)
+          + replacement
+          + line.slice(match.col + searchQuery.length);
+      }
+
+      resetVerticalIntent();
+      resetColumnSelection();
+      curRow = firstMatch.row;
+      curCol = firstMatch.col + replacement.length;
+      commitEdit();
+      
+      syncSearchMatches(0);
+      render();
+    }
+
+    function loadTextDocument(text, fileName = "untitled.txt", fileHandle = null) {
+      fileLineEnding = text.includes("\r\n") ? "\r\n" : "\n";
+      lines = text.replace(/\r\n?/g, "\n").split("\n");
+
+      if (lines.length === 0) {
+        lines = [""];
+      }
+
+      currentFileName = fileName;
+      currentFileHandle = fileHandle;
+      currentRevision = 0;
+      savedRevision = 0;
+      nextRevision = 1;
+      curRow = 0;
+      curCol = 0;
+      lastRenderedStartRow = -1;
+      resetVerticalIntent();
+      resetColumnSelection();
+      searchQuery = "";
+      searchMatches = [];
+      activeSearchIndex = -1;
+      searchDirty = true;
+      undoStack = [];
+      redoStack = [];
+      updateUndoRedoControls();
+      updateFileTitle();
+      render();
+    }
+
+    function requestUnsavedChoice() {
+      if (!unsavedDialog || typeof unsavedDialog.showModal !== "function") {
+        if (window.confirm("Save changes before continuing?")) {
+          return Promise.resolve("save");
+        }
+        return Promise.resolve(
+          window.confirm("Discard the unsaved changes?") ? "discard" : "cancel"
+        );
+      }
+
+      unsavedMessage.textContent = "Save changes to " + currentFileName + " before continuing?";
+      unsavedDialog.returnValue = "cancel";
+
+      return new Promise((resolve) => {
+        const handleCancel = (event) => {
+          event.preventDefault();
+          unsavedDialog.close("cancel");
+        };
+        const handleClose = () => {
+          unsavedDialog.removeEventListener("cancel", handleCancel);
+          resolve(unsavedDialog.returnValue || "cancel");
+        };
+
+        unsavedDialog.addEventListener("cancel", handleCancel);
+        unsavedDialog.addEventListener("close", handleClose, { once: true });
+        unsavedDialog.showModal();
+      });
+    }
+
+    async function confirmUnsavedChanges() {
+      if (!isModified()) {
+        return true;
+      }
+
+      const choice = await requestUnsavedChoice();
+      if (choice === "save") {
+        return saveTextFile();
+      }
+      return choice === "discard";
+    }
+
+    function readFileText(file) {
+      if (typeof file.text === "function") {
+        return file.text();
+      }
+
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.addEventListener("load", () => resolve(String(reader.result || "")));
+        reader.addEventListener("error", () => reject(reader.error));
+        reader.readAsText(file, TEXT_ENCODING.toLowerCase());
+      });
+    }
+
+    async function openTextFile(file, fileHandle = null) {
+      if (!file) {
+        return false;
+      }
+
+      if (!await confirmUnsavedChanges()) {
+        return false;
+      }
+
+      try {
+        const text = await readFileText(file);
+        loadTextDocument(text, file.name || "untitled.txt", fileHandle);
+        return true;
+      } catch (error) {
+        window.alert("Failed to open file: " + error);
+        return false;
+      }
+    }
+
+    async function openFileFromPicker() {
+      if (typeof window.showOpenFilePicker !== "function") {
+        fileInput.click();
+        return;
+      }
+
+      try {
+        const handles = await window.showOpenFilePicker({
+          multiple: false,
+          types: [{
+            description: "Text files",
+            accept: {
+              "text/plain": [".txt", ".py", ".js", ".html", ".csv", ".log"]
+            }
+          }]
+        });
+        const handle = handles[0];
+        await openTextFile(await handle.getFile(), handle);
+      } catch (error) {
+        if (error && error.name !== "AbortError") {
+          window.alert("Failed to open file: " + error);
+        }
+      }
+    }
+
+    async function writeToFileHandle(fileHandle, text) {
+      const writable = await fileHandle.createWritable();
+      await writable.write(text);
+      await writable.close();
+    }
+
+    async function saveTextFile() {
+      const text = lines.join(fileLineEnding);
+      let fileHandle = currentFileHandle;
+
+      if (!fileHandle && typeof window.showSaveFilePicker === "function") {
+        try {
+          fileHandle = await window.showSaveFilePicker({
+            suggestedName: currentFileName || "untitled.txt",
+            types: [{
+              description: "Text files",
+              accept: {
+                "text/plain": [".txt", ".py", ".js", ".html", ".csv", ".log"]
+              }
+            }]
+          });
+        } catch (error) {
+          if (!error || error.name !== "AbortError") {
+            window.alert("Failed to save file: " + error);
+          }
+          return false;
+        }
+      }
+
+      if (fileHandle) {
+        try {
+          await writeToFileHandle(fileHandle, text);
+          currentFileHandle = fileHandle;
+          currentFileName = fileHandle.name || currentFileName;
+        } catch (error) {
+          window.alert("Failed to save file: " + error);
+          return false;
+        }
+      } else {
+        const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = currentFileName || "untitled.txt";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      markSaved();
+      focusInput();
+      return true;
+    }
+
+    function handleEditorShortcut(event) {
+      const usesShortcut = event.ctrlKey || event.metaKey;
+
+      if (!usesShortcut) {
+        return false;
+      }
+
+      const key = event.key.toLowerCase();
+
+      if (key === "z") {
+        event.preventDefault();
+
+        if (event.shiftKey) {
+          performRedo();
+        } else {
+          performUndo();
+        }
+
+        return true;
+      }
+
+      if (key === "y") {
+        event.preventDefault();
+        performRedo();
+        return true;
+      }
+
+      if (key === "f") {
+        event.preventDefault();
+        openFindPanel(false);
+        return true;
+      }
+
+      if (key === "h") {
+        event.preventDefault();
+        openFindPanel(true);
+        return true;
+      }
+
+      if (key === "s") {
+        event.preventDefault();
+        saveTextFile();
+        return true;
+      }
+
+      return false;
+    }
+
+    function insertText(text) {
+      const normalized = normalizeInputText(text);
+      if (normalized.length === 0) return;
+
+      beginEdit();
+
+      const parts = normalized.split("\n");
+      const current = lines[curRow];
+      const before = current.slice(0, curCol);
+      const after = current.slice(curCol);
+
+      resetVerticalIntent();
+
+      if (parts.length === 1) {
+        lines[curRow] = before + parts[0] + after;
+        curCol += parts[0].length;
+      } else {
+        const first = before + parts[0];
+        const last = parts[parts.length - 1] + after;
+        const middle = parts.slice(1, -1);
+        
+        lines = lines.slice(0, curRow).concat([first], middle, [last], lines.slice(curRow + 1));
+        
+        curRow += parts.length - 1;
+        curCol = parts[parts.length - 1].length;
+      }
+
+      commitEdit();
+      render();
+    }
+
+    function insertLineBreak() {
+      const current = lines[curRow];
+      const before = current.slice(0, curCol);
+      const after = current.slice(curCol);
+
+      beginEdit();
+      resetVerticalIntent();
+      
+      lines = lines.slice(0, curRow).concat([before, after], lines.slice(curRow + 1));
+      
+      curRow += 1;
+      curCol = 0;
+      commitEdit();
+      render();
+    }
+
+    function deleteBackward() {
+      if (curCol === 0 && curRow === 0) return;
+
+      beginEdit();
+      resetVerticalIntent();
+
+      if (curCol > 0) {
+        const current = lines[curRow];
+        lines[curRow] = current.slice(0, curCol - 1) + current.slice(curCol);
+        curCol -= 1;
+      } else if (curRow > 0) {
+        const previousLength = lines[curRow - 1].length;
+        lines[curRow - 1] += lines[curRow];
+        lines = lines.slice(0, curRow - 1).concat([lines[curRow - 1]], lines.slice(curRow + 1));
+        curRow -= 1;
+        curCol = previousLength;
+      }
+
+      commitEdit();
+      render();
+    }
+
+    function deleteForward() {
+      if (curCol >= lines[curRow].length && curRow >= lines.length - 1) return;
+
+      beginEdit();
+      resetVerticalIntent();
+
+      if (curCol < lines[curRow].length) {
+        const current = lines[curRow];
+        lines[curRow] = current.slice(0, curCol) + current.slice(curCol + 1);
+      } else if (curRow < lines.length - 1) {
+        lines[curRow] += lines[curRow + 1];
+        lines = lines.slice(0, curRow + 1).concat(lines.slice(curRow + 2));
+      }
+
+      commitEdit();
+      render();
+    }
+
+    function moveLeft() {
+      resetVerticalIntent();
+
+      if (curCol > 0) {
+        curCol -= 1;
+      } else if (curRow > 0) {
+        curRow -= 1;
+        curCol = lines[curRow].length;
+      }
+
+      render();
+    }
+
+    function moveRight() {
+      resetVerticalIntent();
+
+      if (curCol < lines[curRow].length) {
+        curCol += 1;
+      } else if (curRow < lines.length - 1) {
+        curRow += 1;
+        curCol = 0;
+      }
+
+      render();
+    }
+
+    function moveUp() {
+      const targetCol = desiredCol === null ? curCol : desiredCol;
+      desiredCol = targetCol;
+
+      if (curRow > 0) {
+        curRow -= 1;
+        curCol = Math.min(targetCol, lines[curRow].length);
+      }
+
+      render();
+    }
+
+    function moveDown() {
+      const targetCol = desiredCol === null ? curCol : desiredCol;
+      desiredCol = targetCol;
+
+      if (curRow < lines.length - 1) {
+        curRow += 1;
+        curCol = Math.min(targetCol, lines[curRow].length);
+      }
+
+      render();
+    }
+
+    function moveHome() {
+      resetVerticalIntent();
+      curCol = 0;
+      render();
+    }
+
+    function moveEnd() {
+      resetVerticalIntent();
+      curCol = lines[curRow].length;
+      render();
+    }
+
+    function movePage(delta) {
+      const rowsPerPage = Math.max(1, Math.floor(viewport.clientHeight / lineHeight) - 1);
+      const targetCol = desiredCol === null ? curCol : desiredCol;
+      desiredCol = targetCol;
+      curRow = Math.max(0, Math.min(lines.length - 1, curRow + delta * rowsPerPage));
+      curCol = Math.min(targetCol, lines[curRow].length);
+      render();
+    }
+
+    function placeCursorFromPointer(event) {
+      const position = getPointerGridPosition(event);
+      resetVerticalIntent();
+      curRow = position.row;
+      curCol = position.col;
+      render();
+      focusInput();
+    }
+
+    function getPointerGridPosition(event) {
+      const rect = viewport.getBoundingClientRect();
+      const gutterWidth = parseFloat(getComputedStyle(editor).getPropertyValue("--gutter-width")) || 0;
+      const x = Math.max(0, event.clientX - rect.left + viewport.scrollLeft - gutterWidth);
+      const y = Math.max(0, event.clientY - rect.top + viewport.scrollTop);
+      const row = Math.max(0, Math.min(lines.length - 1, Math.floor(y / lineHeight)));
+      
+      const line = lines[row] || "";
+      let col = 0;
+      let minDiff = Infinity;
+      
+      for (let i = 0; i <= line.length; i++) {
+          const width = getTextWidth(line.slice(0, i));
+          const diff = Math.abs(width - x);
+          if (diff < minDiff) {
+              minDiff = diff;
+              col = i;
+          } else if (width > x + charWidth) {
+              break;
+          }
+      }
+
+      return { row, col };
+    }
+
+    function hasColumnSelection() {
+      return isColumnSelecting
+        && colSelStartRow !== null
+        && colSelStartCol !== null
+        && colSelEndRow !== null
+        && colSelEndCol !== null;
+    }
+
+    function setColumnMode(enabled) {
+      columnModeEnabled = Boolean(enabled);
+      columnModeBtn.setAttribute("aria-pressed", String(columnModeEnabled));
+      resetColumnSelection();
+      updateStatus();
+      focusInput();
+    }
+
+    function getColumnSelectionBounds() {
+      if (!hasColumnSelection()) {
+        return null;
+      }
+
+      return {
+        startRow: Math.min(colSelStartRow, colSelEndRow),
+        endRow: Math.max(colSelStartRow, colSelEndRow),
+        startCol: Math.min(colSelStartCol, colSelEndCol),
+        endCol: Math.max(colSelStartCol, colSelEndCol)
+      };
+    }
+
+    function renderColumnSelectionBox() {
+      const bounds = getColumnSelectionBounds();
+
+      if (!bounds) {
+        columnSelectionBox.style.display = "none";
+        return;
+      }
+
+      const top = bounds.startRow * lineHeight;
+      const left = bounds.startCol * charWidth;
+      const width = Math.max(2, (bounds.endCol - bounds.startCol) * charWidth);
+      const height = (bounds.endRow - bounds.startRow + 1) * lineHeight;
+
+      columnSelectionBox.style.display = "block";
+      columnSelectionBox.style.top = top + "px";
+      columnSelectionBox.style.left = left + "px";
+      columnSelectionBox.style.width = width + "px";
+      columnSelectionBox.style.height = height + "px";
+    }
+
+    function resetColumnSelection() {
+      isColumnSelecting = false;
+      isColumnDragging = false;
+      colSelStartRow = null;
+      colSelStartCol = null;
+      colSelEndRow = null;
+      colSelEndCol = null;
+      columnSelectMoved = false;
+      columnSelectStartClientX = 0;
+      columnSelectStartClientY = 0;
+      renderColumnSelectionBox();
+    }
+
+    function updateColumnSelectionFromPointer(event) {
+      const position = getPointerGridPosition(event);
+      colSelEndRow = position.row;
+      colSelEndCol = position.col;
+      renderColumnSelectionBox();
+    }
+
+    function padLineToColumn(line, column) {
+      if (line.length >= column) {
+        return line;
+      }
+
+      return line + " ".repeat(column - line.length);
+    }
+
+    function finishColumnEdit(startRow, endRow, col) {
+      resetVerticalIntent();
+      isColumnSelecting = true;
+      isColumnDragging = false;
+      colSelStartRow = Math.max(0, Math.min(startRow, lines.length - 1));
+      colSelEndRow = Math.max(0, Math.min(endRow, lines.length - 1));
+      colSelStartCol = Math.max(0, col);
+      colSelEndCol = Math.max(0, col);
+      curRow = colSelStartRow;
+      curCol = Math.max(0, col);
+      resetHiddenInput();
+      render();
+    }
+
+    function normalizeColumnInput(text) {
+      return normalizeInputText(text).replace(/\n/g, "");
+    }
+
+    function insertTextIntoColumnSelection(text) {
+      const bounds = getColumnSelectionBounds();
+      const inputText = normalizeColumnInput(text);
+
+      if (!bounds || inputText.length === 0) {
+        resetHiddenInput();
+        return;
+      }
+
+      beginEdit();
+
+      for (let row = bounds.startRow; row <= bounds.endRow; row += 1) {
+        const paddedLine = padLineToColumn(lines[row] || "", bounds.startCol);
+        const replaceEnd = Math.min(bounds.endCol, paddedLine.length);
+        lines[row] = paddedLine.slice(0, bounds.startCol)
+          + inputText
+          + paddedLine.slice(replaceEnd);
+      }
+
+      curRow = bounds.startRow;
+      curCol = bounds.startCol + inputText.length;
+      commitEdit();
+      finishColumnEdit(bounds.startRow, bounds.endRow, curCol);
+    }
+
+    function deleteColumnSelectionText(forward = false) {
+      const bounds = getColumnSelectionBounds();
+
+      if (!bounds) {
+        resetHiddenInput();
+        return;
+      }
+
+      beginEdit();
+      const hasRange = bounds.startCol !== bounds.endCol;
+
+      for (let row = bounds.startRow; row <= bounds.endRow; row += 1) {
+        const line = lines[row] || "";
+        const deleteStart = hasRange
+          ? Math.min(bounds.startCol, line.length)
+          : Math.min(forward ? bounds.startCol : bounds.startCol - 1, line.length);
+        const deleteEnd = hasRange
+          ? Math.min(bounds.endCol, line.length)
+          : Math.min(deleteStart + 1, line.length);
+
+        if (deleteStart < 0 || deleteStart >= deleteEnd) {
+          continue;
+        }
+
+        lines[row] = line.slice(0, deleteStart) + line.slice(deleteEnd);
+      }
+
+      curRow = bounds.startRow;
+      curCol = hasRange || forward
+        ? bounds.startCol
+        : Math.max(0, bounds.startCol - 1);
+      commitEdit();
+      finishColumnEdit(bounds.startRow, bounds.endRow, curCol);
+    }
+
+    function getColumnSelectionText() {
+      const bounds = getColumnSelectionBounds();
+
+      if (!bounds) {
+        return "";
+      }
+
+      const selectedLines = [];
+
+      for (let row = bounds.startRow; row <= bounds.endRow; row += 1) {
+        const paddedLine = padLineToColumn(lines[row] || "", bounds.endCol);
+        selectedLines.push(paddedLine.slice(bounds.startCol, bounds.endCol));
+      }
+
+      return selectedLines.join("\n");
+    }
+
+    async function copyColumnSelectionText() {
+      const text = getColumnSelectionText();
+      resetHiddenInput();
+
+      if (!navigator.clipboard || !navigator.clipboard.writeText) {
+        return false;
+      }
+
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (error) {
+        console.warn("Column selection copy failed.", error);
+        return false;
+      }
+    }
+
+    function pasteTextIntoColumnSelection(text) {
+      const bounds = getColumnSelectionBounds();
+      const normalized = normalizeInputText(text);
+
+      if (!bounds || normalized.length === 0) {
+        resetHiddenInput();
+        return;
+      }
+
+      const pastedLines = normalized.split("\n");
+      const targetCount = pastedLines.length === 1
+        ? bounds.endRow - bounds.startRow + 1
+        : pastedLines.length;
+
+      beginEdit();
+
+      for (let index = 0; index < targetCount; index += 1) {
+        const targetRow = bounds.startRow + index;
+
+        while (targetRow >= lines.length) {
+          lines.push("");
+        }
+
+        const pastedLine = pastedLines.length === 1
+          ? pastedLines[0]
+          : pastedLines[index];
+        const paddedLine = padLineToColumn(lines[targetRow], bounds.startCol);
+        const replaceEnd = Math.min(bounds.endCol, paddedLine.length);
+        lines[targetRow] = paddedLine.slice(0, bounds.startCol)
+          + pastedLine
+          + paddedLine.slice(replaceEnd);
+      }
+
+      curRow = bounds.startRow;
+      curCol = bounds.startCol + pastedLines[0].length;
+      commitEdit();
+      finishColumnEdit(
+        bounds.startRow,
+        bounds.startRow + targetCount - 1,
+        curCol
+      );
+    }
+
+    async function pasteClipboardIntoColumnSelection() {
+      resetHiddenInput();
+
+      if (!navigator.clipboard || !navigator.clipboard.readText) {
+        return;
+      }
+
+      try {
+        const text = await navigator.clipboard.readText();
+        pasteTextIntoColumnSelection(text);
+      } catch (error) {
+        console.warn("Column selection paste failed.", error);
+      }
+    }
+
+    async function handleColumnSelectionKeydown(event) {
+      const key = event.key.toLowerCase();
+      const usesClipboardShortcut = event.ctrlKey || event.metaKey;
+
+      if (event.key === "Escape") {
+        resetColumnSelection();
+        render();
+        return;
+      }
+
+      if (usesClipboardShortcut && key === "c") {
+        await copyColumnSelectionText();
+        return;
+      }
+
+      if (usesClipboardShortcut && key === "x") {
+        await copyColumnSelectionText();
+        deleteColumnSelectionText();
+        return;
+      }
+
+      if (usesClipboardShortcut && key === "v") {
+        await pasteClipboardIntoColumnSelection();
+        return;
+      }
+
+      const navigationActions = {
+        ArrowLeft: moveLeft,
+        ArrowRight: moveRight,
+        ArrowUp: moveUp,
+        ArrowDown: moveDown,
+        Home: moveHome,
+        End: moveEnd
+      };
+      if (navigationActions[event.key]) {
+        resetColumnSelection();
+        navigationActions[event.key]();
+        return;
+      }
+
+      if (event.key === "Tab") {
+        insertTextIntoColumnSelection(TAB_TEXT);
+        return;
+      }
+
+      if (event.key === "Backspace" || event.key === "Delete") {
+        deleteColumnSelectionText(event.key === "Delete");
+        return;
+      }
+
+      if (!event.ctrlKey && !event.metaKey && !event.altKey && event.key.length === 1) {
+        insertTextIntoColumnSelection(event.key);
+      }
+    }
+
+    function focusInput() {
+      hiddenInput.focus({ preventScroll: true });
+    }
+
+    function openHelpDialog() {
+      if (helpDialog && typeof helpDialog.showModal === "function") {
+        helpDialog.showModal();
+        return;
+      }
+
+      window.alert(
+        "Open으로 파일을 열고 Save로 저장합니다.\n"
+        + "Ctrl+F는 찾기, Ctrl+H는 찾아 바꾸기입니다.\n"
+        + "Column 버튼을 켜고 여러 줄을 드래그하면 같은 열을 함께 편집할 수 있습니다."
+      );
+    }
+
+    openFileBtn.addEventListener("click", () => {
+      openFileFromPicker();
+    });
+
+    saveFileBtn.addEventListener("click", () => {
+      saveTextFile();
+    });
+
+    undoBtn.addEventListener("click", () => {
+      performUndo();
+      focusInput();
+    });
+
+    redoBtn.addEventListener("click", () => {
+      performRedo();
+      focusInput();
+    });
+
+    columnModeBtn.addEventListener("click", () => {
+      setColumnMode(!columnModeEnabled);
+    });
+
+    helpBtn.addEventListener("click", () => {
+      openHelpDialog();
+    });
+
+    helpDialog.addEventListener("close", () => {
+      focusInput();
+    });
+
+    fileInput.addEventListener("change", async () => {
+      await openTextFile(fileInput.files[0]);
+      fileInput.value = "";
+    });
+
+    findInput.addEventListener("input", () => {
+      updateSearchMatches(-1);
+    });
+
+    findInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        findNextMatch();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        closeFindPanel();
+      } else if (handleEditorShortcut(event)) {
+        event.preventDefault();
+      }
+    });
+
+    replaceInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        replaceCurrentMatch();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        closeFindPanel();
+      } else if (handleEditorShortcut(event)) {
+        event.preventDefault();
+      }
+    });
+
+    findNextBtn.addEventListener("click", () => {
+      findNextMatch();
+      findInput.focus();
+    });
+
+    replaceBtn.addEventListener("click", () => {
+      replaceCurrentMatch();
+      replaceInput.focus();
+    });
+
+    replaceAllBtn.addEventListener("click", () => {
+      replaceAllMatches();
+      replaceInput.focus();
+    });
+
+    findCloseBtn.addEventListener("click", () => {
+      closeFindPanel();
+    });
+
+    editor.addEventListener("dragenter", (event) => {
+      event.preventDefault();
+      editor.classList.add("drag-over");
+    });
+
+    editor.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      editor.classList.add("drag-over");
+    });
+
+    editor.addEventListener("dragleave", (event) => {
+      if (!editor.contains(event.relatedTarget)) {
+        editor.classList.remove("drag-over");
+      }
+    });
+
+    editor.addEventListener("drop", async (event) => {
+      event.preventDefault();
+      editor.classList.remove("drag-over");
+      await openTextFile(event.dataTransfer.files[0]);
+    });
+
+    hiddenInput.addEventListener("keydown", async (event) => {
+      if (handleEditorShortcut(event)) {
+        return;
+      }
+
+      if (hasColumnSelection()) {
+        event.preventDefault();
+        await handleColumnSelectionKeydown(event);
+        return;
+      }
+
+      if (isComposing) {
+        return;
+      }
+
+      switch (event.key) {
+        case "ArrowLeft":
+          event.preventDefault();
+          moveLeft();
+          break;
+        case "ArrowRight":
+          event.preventDefault();
+          moveRight();
+          break;
+        case "ArrowUp":
+          event.preventDefault();
+          moveUp();
+          break;
+        case "ArrowDown":
+          event.preventDefault();
+          moveDown();
+          break;
+        case "Enter":
+          event.preventDefault();
+          insertLineBreak();
+          break;
+        case "Backspace":
+          event.preventDefault();
+          deleteBackward();
+          break;
+        case "Delete":
+          event.preventDefault();
+          deleteForward();
+          break;
+        case "Home":
+          event.preventDefault();
+          moveHome();
+          break;
+        case "End":
+          event.preventDefault();
+          moveEnd();
+          break;
+        case "PageUp":
+          event.preventDefault();
+          movePage(-1);
+          break;
+        case "PageDown":
+          event.preventDefault();
+          movePage(1);
+          break;
+        case "Tab":
+          event.preventDefault();
+          insertText(TAB_TEXT);
+          break;
+        default:
+          break;
+      }
+    });
+
+    hiddenInput.addEventListener("beforeinput", (event) => {
+      if (hasColumnSelection()) {
+        event.preventDefault();
+
+        if (event.inputType === "insertText" && event.data) {
+          insertTextIntoColumnSelection(event.data);
+        } else if (event.inputType === "deleteContentBackward" || event.inputType === "deleteContentForward") {
+          deleteColumnSelectionText(event.inputType === "deleteContentForward");
+        }
+
+        return;
+      }
+
+      if (isComposing || event.isComposing) {
+        return;
+      }
+
+      if (event.inputType === "insertText" && event.data) {
+        event.preventDefault();
+        insertText(event.data);
+      } else if (event.inputType === "insertLineBreak" || event.inputType === "insertParagraph") {
+        event.preventDefault();
+        insertLineBreak();
+      } else if (event.inputType === "deleteContentBackward") {
+        event.preventDefault();
+        deleteBackward();
+      } else if (event.inputType === "deleteContentForward") {
+        event.preventDefault();
+        deleteForward();
+      }
+    });
+
+    hiddenInput.addEventListener("input", () => {
+      if (hasColumnSelection()) {
+        resetHiddenInput();
+        return;
+      }
+
+      if (isComposing) {
+        return;
+      }
+
+      if (hiddenInput.value.length > 0) {
+        const pendingText = hiddenInput.value;
+        resetHiddenInput();
+        insertText(pendingText);
+      } else {
+        resetHiddenInput();
+      }
+    });
+
+    hiddenInput.addEventListener("paste", (event) => {
+      event.preventDefault();
+      const text = event.clipboardData.getData("text/plain");
+
+      if (hasColumnSelection()) {
+        pasteTextIntoColumnSelection(text);
+        return;
+      }
+
+      insertText(text);
+    });
+
+    hiddenInput.addEventListener("compositionstart", () => {
+      isComposing = true;
+      
+      // 주의: 기존에 있던 hiddenInput.value = ""; 코드는 반드시 지워야 합니다!
+      // IME가 조합할 텍스트를 넣지 못해 빈 화면만 나옵니다.
+
+      // 1. 현재 커서의 픽셀 위치 계산
+      const x = Math.round(curCol * charWidth);
+      const y = Math.round(curRow * lineHeight);
+      
+      // 2. 텍스트창을 커서 위치로 이동시키고 보이게 처리
+      hiddenInput.style.transform = `translate(${x}px, ${y}px)`;
+      hiddenInput.classList.add("composing");
+      
+      // 3. 포커스 확보
+      focusInput();
+    });
+
+    hiddenInput.addEventListener("compositionend", (event) => {
+      const text = event.data || hiddenInput.value;
+      isComposing = false;
+      
+      // 1. 텍스트창을 다시 숨김 상태로 복구
+      hiddenInput.classList.remove("composing");
+      hiddenInput.style.transform = "translate(0, 0)";
+      
+      // 2. 입력창 초기화 및 최종 텍스트 에디터에 삽입
+      resetHiddenInput();
+      if (text) {
+        insertText(text);
+      } else {
+        render();
+      }
+    });
+
+    hiddenInput.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (columnModeEnabled) {
+        resetColumnSelection();
+        const position = getPointerGridPosition(event);
+        isColumnSelecting = true;
+        isColumnDragging = true;
+        columnSelectMoved = false;
+        columnSelectStartClientX = event.clientX;
+        columnSelectStartClientY = event.clientY;
+        colSelStartRow = position.row;
+        colSelStartCol = position.col;
+        colSelEndRow = position.row;
+        colSelEndCol = position.col;
+        curRow = position.row;
+        curCol = position.col;
+        renderColumnSelectionBox();
+
+        if (hiddenInput.setPointerCapture) {
+          hiddenInput.setPointerCapture(event.pointerId);
+        }
+
+        focusInput();
+        return;
+      }
+
+      resetColumnSelection();
+      placeCursorFromPointer(event);
+    });
+
+    hiddenInput.addEventListener("pointermove", (event) => {
+      if (!isColumnDragging || (event.buttons & 1) !== 1) {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (!columnSelectMoved) {
+        const dragDistance = Math.hypot(
+          event.clientX - columnSelectStartClientX,
+          event.clientY - columnSelectStartClientY
+        );
+        columnSelectMoved = dragDistance >= COLUMN_SELECT_DRAG_THRESHOLD;
+      }
+
+      updateColumnSelectionFromPointer(event);
+    });
+
+    hiddenInput.addEventListener("pointerup", (event) => {
+      if (!isColumnDragging) {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (!columnSelectMoved) {
+        const dragDistance = Math.hypot(
+          event.clientX - columnSelectStartClientX,
+          event.clientY - columnSelectStartClientY
+        );
+        columnSelectMoved = dragDistance >= COLUMN_SELECT_DRAG_THRESHOLD;
+      }
+
+      updateColumnSelectionFromPointer(event);
+
+      if (!columnSelectMoved) {
+        const position = getPointerGridPosition(event);
+        resetColumnSelection();
+        curRow = position.row;
+        curCol = position.col;
+        render();
+      } else {
+        isColumnDragging = false;
+        renderColumnSelectionBox();
+      }
+
+      if (hiddenInput.releasePointerCapture && hiddenInput.hasPointerCapture(event.pointerId)) {
+        hiddenInput.releasePointerCapture(event.pointerId);
+      }
+    });
+
+    hiddenInput.addEventListener("pointercancel", (event) => {
+      isColumnDragging = false;
+      if (hiddenInput.releasePointerCapture && hiddenInput.hasPointerCapture(event.pointerId)) {
+        hiddenInput.releasePointerCapture(event.pointerId);
+      }
+    });
+
+    hiddenInput.addEventListener("selectstart", (event) => {
+      event.preventDefault();
+    });
+
+    hiddenInput.addEventListener("dragstart", (event) => {
+      event.preventDefault();
+    });
+
+    hiddenInput.addEventListener("wheel", (event) => {
+      let multiplier = 1;
+      if (event.deltaMode === 1) multiplier = lineHeight;
+      else if (event.deltaMode === 2) multiplier = viewport.clientHeight;
+      
+      viewport.scrollLeft += event.deltaX * multiplier;
+      viewport.scrollTop += event.deltaY * multiplier;
+      event.preventDefault();
+    }, { passive: false });
+
+    editor.addEventListener("pointerdown", (event) => {
+      if (event.button === 0 && !columnModeEnabled && event.target !== hiddenInput) {
+        resetColumnSelection();
+      }
+
+      focusInput();
+    });
+
+    viewport.addEventListener("scroll", () => {
+      renderLines();
+    });
+
+    window.addEventListener("resize", () => {
+      measureMetrics();
+      render();
+    });
+
+    window.addEventListener("beforeunload", (event) => {
+      if (!isModified()) {
+        return;
+      }
+
+      event.preventDefault();
+      event.returnValue = "";
+    });
+
+    if ("ResizeObserver" in window) {
+      const resizeObserver = new ResizeObserver(() => {
+        measureMetrics();
+        render();
+      });
+      resizeObserver.observe(viewport);
+    }
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => {
+        measureMetrics();
+        render();
+        focusInput();
+      });
+    }
+
+    measureMetrics();
+    render();
+    focusInput();
+
+    // External API for integration
+    window.getEditorText = function() {
+      return lines.join(fileLineEnding);
+    };
+    window.setEditorText = function(text) {
+      if (text == null) text = "";
+      beginEdit();
+      lines = normalizeInputText(text).split("\n");
+      if (lines.length === 0) lines = [""];
+      curRow = 0;
+      curCol = 0;
+      desiredCol = null;
+      resetColumnSelection();
+      commitEdit();
+      render();
+    };
+
+    if (window.parent && window.parent.document.documentElement.classList.contains('dark')) {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+</body>
+</html>
