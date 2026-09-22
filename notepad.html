@@ -22,6 +22,13 @@
             --list-hover: #e8e8ed;
             --list-selected: #fbeec8;
             --shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            --note-red: #c62828;
+            --note-orange: #b54708;
+            --note-yellow: #806000;
+            --note-green: #137333;
+            --note-blue: #075985;
+            --note-purple: #6b3fa0;
+            --note-gray: #5f6368;
         }
 
         :root[data-theme="dark"] {
@@ -37,11 +44,18 @@
             --list-hover: #2c2c2e;
             --list-selected: #41361c;
             --shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            --note-red: #ff6961;
+            --note-orange: #ff9f0a;
+            --note-yellow: #ffd60a;
+            --note-green: #30d158;
+            --note-blue: #64d2ff;
+            --note-purple: #bf5af2;
+            --note-gray: #aeaeb2;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Apple SD Gothic Neo", sans-serif; }
 
-        body { background-color: var(--bg-main); color: var(--text-main); display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        body { background-color: var(--bg-main); color: var(--text-main); display: flex; justify-content: center; align-items: center; height: 100vh; height: 100dvh; overflow: hidden; }
 
         .app-container { display: flex; width: 95vw; height: 90vh; max-width: 1400px; max-height: 900px; background: var(--bg-editor); border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); overflow: hidden; }
 
@@ -110,6 +124,11 @@
         .toolbar-btn { background: none; border: none; color: var(--text-main); padding: 6px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .toolbar-btn:hover { background: var(--list-hover); color: var(--accent-color); }
         .toolbar-btn.active { color: var(--accent-color); background: var(--list-selected); }
+        .mobile-panel-header { display: none; }
+        .mobile-nav-btn { min-width: 44px; height: 44px; padding: 0 8px; border: none; border-radius: 8px; background: transparent; color: var(--accent-hover); cursor: pointer; align-items: center; gap: 2px; font-size: 14px; }
+        .mobile-nav-btn:hover { background: var(--list-hover); }
+        .mobile-header-spacer { width: 60px; }
+        .sidebar-backdrop { display: none; padding: 0; border: none; }
         
         .note-timestamp { text-align: center; font-size: 12px; color: var(--text-muted); padding: 15px 0 0 0; background: var(--bg-editor); user-select: none; }
         
@@ -136,6 +155,16 @@
         .todo-checkbox { margin-top: 5px; cursor: pointer; }
         .todo-text { flex-grow: 1; outline: none; }
         .todo-item.checked .todo-text { text-decoration: line-through; color: var(--text-muted); }
+        .todo-item.checked .todo-text * { color: inherit !important; }
+
+        .text-color-default { color: var(--text-main); }
+        .text-color-red { color: var(--note-red); }
+        .text-color-orange { color: var(--note-orange); }
+        .text-color-yellow { color: var(--note-yellow); }
+        .text-color-green { color: var(--note-green); }
+        .text-color-blue { color: var(--note-blue); }
+        .text-color-purple { color: var(--note-purple); }
+        .text-color-gray { color: var(--note-gray); }
 
         .editor-footer { padding: 8px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-muted); background: var(--bg-editor); }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -164,20 +193,83 @@
         .shortcut-table th, .shortcut-table td { padding: 7px 9px; border-bottom: 1px solid var(--border-color); text-align: left; }
         kbd { padding: 2px 6px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-main); font-family: monospace; }
 
-        @media (max-width: 768px) {
-            body { padding: 0; }
-            .app-container { width: 100vw; height: 100vh; max-width: 100%; max-height: 100%; border-radius: 0; flex-direction: column; }
-            .sidebar { width: 100%; height: 180px; border-right: none; border-bottom: 1px solid var(--border-color); }
-            .note-list-container { width: 100%; height: 250px; border-right: none; border-bottom: 1px solid var(--border-color); }
-            .editor-main { padding: 15px 20px; column-count: 1 !important; /* 모바일에서는 무조건 1단 고정 */ }
+        .color-dialog { width: min(360px, calc(100vw - 32px)); margin: auto; padding: 0; border: 1px solid var(--border-color); border-radius: 14px; color: var(--text-main); background: var(--bg-editor); box-shadow: var(--shadow); }
+        .color-dialog::backdrop { background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(2px); }
+        .color-dialog-header { display: flex; align-items: center; justify-content: space-between; padding: 15px 18px; border-bottom: 1px solid var(--border-color); }
+        .color-dialog-header h2 { font-size: 17px; }
+        .color-dialog-body { padding: 18px; }
+        .color-dialog-hint { margin-bottom: 14px; color: var(--text-muted); font-size: 13px; }
+        .color-palette { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .color-swatch { min-width: 48px; min-height: 48px; border: 2px solid transparent; border-radius: 12px; background: var(--bg-main); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .color-swatch:hover, .color-swatch:focus-visible { border-color: var(--accent-color); outline: none; }
+        .color-swatch-dot { width: 26px; height: 26px; border: 1px solid rgba(127, 127, 127, 0.35); border-radius: 50%; background: var(--swatch-color); }
+        .color-swatch-default .color-swatch-dot { background: linear-gradient(135deg, #1d1d1f 50%, #f5f5f7 50%); }
+
+        @media (max-width: 1024px) {
+            body { padding: 0; align-items: stretch; }
+            .app-container { position: relative; width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none; border: none; border-radius: 0; }
+            .mobile-panel-header { display: flex; flex: 0 0 auto; min-height: 52px; padding: max(4px, env(safe-area-inset-top)) 8px 4px; border-bottom: 1px solid var(--border-color); align-items: center; justify-content: space-between; background: var(--bg-editor); }
+            .mobile-panel-header strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; }
+            .mobile-nav-btn { display: flex; }
+            .sidebar { position: absolute; z-index: 20; inset: 0 auto 0 0; width: min(300px, 82vw); height: 100%; padding-top: max(15px, env(safe-area-inset-top)); padding-bottom: max(15px, env(safe-area-inset-bottom)); box-shadow: var(--shadow); transform: translateX(-105%); transition: transform 0.22s ease; }
+            .app-container.sidebar-open .sidebar { transform: translateX(0); }
+            .sidebar-backdrop { position: absolute; z-index: 15; inset: 0; background: rgba(0, 0, 0, 0.35); }
+            .app-container.sidebar-open .sidebar-backdrop { display: block; }
+            .note-list-container { width: 300px; }
+            .search-bar-container { padding-top: 10px; background: var(--bg-note-list); }
+            .search-input { min-height: 44px; font-size: 16px; }
+            .note-list-actions { min-height: 48px; }
+            .action-text-btn, .footer-btn, .add-folder-btn, .delete-folder-btn { min-width: 44px; min-height: 44px; justify-content: center; }
+            .folder-item { min-height: 48px; padding: 8px 10px; }
+            .note-item { min-height: 68px; padding: 12px 14px; }
             .delete-folder-btn { visibility: visible; }
+            .editor-toolbar { flex-wrap: nowrap; flex: 0 0 auto; gap: 12px; padding: 6px 8px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+            .editor-toolbar::-webkit-scrollbar { display: none; }
+            .toolbar-group { flex: 0 0 auto; }
+            .toolbar-btn { min-width: 44px; min-height: 44px; padding: 8px; }
+            .editor-main { padding: 18px 22px max(28px, env(safe-area-inset-bottom)); font-size: 16px; column-count: 1 !important; }
+            .editor-footer { min-height: 38px; padding: 7px 12px max(7px, env(safe-area-inset-bottom)); gap: 8px; }
+            .column-toggle-btn { display: none; }
             .help-feature-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 640px) {
+            .app-container { display: block; }
+            .sidebar, .note-list-container, .editor-container { position: absolute; inset: 0; width: 100%; height: 100%; border: none; box-shadow: none; transform: none; }
+            .sidebar { z-index: 3; display: none; padding: max(15px, env(safe-area-inset-top)) 10px max(15px, env(safe-area-inset-bottom)); }
+            .note-list-container { z-index: 2; display: none; }
+            .editor-container { z-index: 1; display: none; }
+            .app-container[data-mobile-panel="folders"] .sidebar,
+            .app-container[data-mobile-panel="notes"] .note-list-container,
+            .app-container[data-mobile-panel="editor"] .editor-container { display: flex; }
+            .app-container.sidebar-open .sidebar { transform: none; }
+            .app-container.sidebar-open .sidebar-backdrop, .sidebar-backdrop { display: none; }
+            .sidebar-header { margin-bottom: 20px; }
+            .note-list-container { background: var(--bg-note-list); }
+            .editor-mobile-header { background: var(--bg-editor); }
+            .note-mobile-header { background: var(--bg-note-list); }
+            .note-timestamp { padding-top: 8px; }
+            .editor-main { padding-left: 16px; padding-right: 16px; }
+            .editor-main h1 { font-size: 22px; }
+            .editor-footer { font-size: 11px; }
+            .help-dialog { width: 100vw; height: 100vh; height: 100dvh; max-height: none; border: none; border-radius: 0; }
+            .help-dialog-header { padding-top: max(14px, env(safe-area-inset-top)); }
+            .help-dialog-body { max-height: calc(100dvh - 68px); padding: 18px 16px max(22px, env(safe-area-inset-bottom)); }
+            .color-dialog { width: calc(100vw - 24px); }
+        }
+
+        @media (min-width: 641px) and (max-width: 1024px) {
+            .editor-mobile-header { display: none; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .sidebar { transition: none; }
         }
     </style>
 </head>
 <body>
 
-    <div class="app-container">
+    <div class="app-container" id="appContainer" data-mobile-panel="folders">
         <!-- 1. 사이드바 -->
         <aside class="sidebar">
             <div class="sidebar-header">
@@ -203,9 +295,15 @@
                 <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
             </div>
         </aside>
+        <button class="sidebar-backdrop" type="button" onclick="showMobilePanel('notes')" aria-label="폴더 메뉴 닫기"></button>
 
         <!-- 2. 노트 목록 -->
         <section class="note-list-container">
+            <div class="mobile-panel-header note-mobile-header">
+                <button class="mobile-nav-btn" type="button" onclick="showMobilePanel('folders')" aria-label="폴더 목록 열기"><span class="material-icons-outlined">folder</span><span>폴더</span></button>
+                <strong>메모 목록</strong>
+                <span class="mobile-header-spacer" aria-hidden="true"></span>
+            </div>
             <div class="search-bar-container">
                 <div class="search-bar-wrapper">
                     <span class="material-icons-outlined">search</span>
@@ -228,11 +326,17 @@
 
         <!-- 3. 본문 편집기 -->
         <main class="editor-container">
+            <div class="mobile-panel-header editor-mobile-header">
+                <button class="mobile-nav-btn" type="button" onclick="showMobilePanel('notes')" aria-label="메모 목록으로 돌아가기"><span class="material-icons-outlined">chevron_left</span><span>목록</span></button>
+                <strong id="mobileNoteTitle">메모</strong>
+                <span class="mobile-header-spacer" aria-hidden="true"></span>
+            </div>
             <div class="editor-toolbar">
                 <div class="toolbar-group">
                     <button class="toolbar-btn" onclick="execCmd('bold')" title="굵게 (Ctrl+B)" aria-label="굵게"><span class="material-icons-outlined">format_bold</span></button>
                     <button class="toolbar-btn" onclick="execCmd('underline')" title="밑줄 (Ctrl+U)" aria-label="밑줄"><span class="material-icons-outlined">format_underlined</span></button>
                     <button class="toolbar-btn" onclick="execCmd('italic')" title="기울임꼴" aria-label="기울임꼴"><span class="material-icons-outlined">format_italic</span></button>
+                    <button class="toolbar-btn" id="textColorBtn" onpointerdown="saveEditorSelection()" onclick="showTextColorPicker()" title="글자색" aria-label="글자색 선택" aria-haspopup="dialog"><span class="material-icons-outlined">palette</span></button>
                     <span style="border-left: 1px solid var(--border-color); height: 16px; margin: 0 4px;"></span>
                     <button class="toolbar-btn" onclick="execCmd('formatBlock', '<h1>')" title="대제목" aria-label="대제목"><span class="material-icons-outlined">title</span></button>
                     <button class="toolbar-btn" onclick="insertTodoList()" title="할 일 목록" aria-label="할 일 목록"><span class="material-icons-outlined">assignment_turned_in</span></button>
@@ -245,7 +349,7 @@
                     <input type="file" id="imageUploadInput" accept="image/png, image/jpeg, image/gif, image/webp" style="display: none;" onchange="handleImageUpload(event)">
                     
                     <!-- 추가된 다단(Column) 설정 버튼 -->
-                    <button class="toolbar-btn" onclick="toggleColumnCount()" title="단 나누기 (1단/2단/3단)" aria-label="단 나누기">
+                    <button class="toolbar-btn column-toggle-btn" onclick="toggleColumnCount()" title="단 나누기 (1단/2단/3단)" aria-label="단 나누기">
                         <span class="material-icons-outlined">view_column</span>
                         <span id="colCountBadge" style="font-size: 11px; margin-left: 2px; font-weight: bold; width: 8px; text-align: center;">1</span>
                     </button>
@@ -274,7 +378,7 @@
             <button class="help-close-btn" type="button" onclick="closeHelp()" aria-label="도움말 닫기"><span class="material-icons-outlined">close</span></button>
         </div>
         <div class="help-dialog-body">
-            <p class="help-intro"><strong>처음 오셨나요?</strong><br>왼쪽에서 폴더를 만들고, 가운데에서 메모를 선택한 뒤, 오른쪽 편집기에서 내용을 작성하면 됩니다. 편집 내용은 입력을 멈춘 뒤 자동 저장됩니다.</p>
+            <p class="help-intro"><strong>처음 오셨나요?</strong><br>PC에서는 왼쪽에서 폴더를 고르고 가운데에서 메모를 선택합니다. 휴대폰에서는 폴더 → 메모 목록 → 편집기 순서로 화면이 전환됩니다. 편집 내용은 입력을 멈춘 뒤 자동 저장됩니다.</p>
 
             <section class="help-section">
                 <h3>빠른 시작</h3>
@@ -283,6 +387,7 @@
                     <li><strong>메모 만들기:</strong> 가운데 위쪽의 ‘새 메모’를 누르세요. ‘모든 메모’에서는 첫 번째 일반 폴더에 저장됩니다.</li>
                     <li><strong>내용 작성:</strong> 오른쪽 본문을 클릭해 입력하세요. 입력을 멈추면 1초 뒤 자동 저장되며, 아래 상태 표시줄에서 결과를 확인할 수 있습니다.</li>
                     <li><strong>메모 찾기:</strong> 가운데 검색창에 제목이나 본문 내용을 입력하세요.</li>
+                    <li><strong>모바일 이동:</strong> 화면 위의 ‘폴더’와 ‘목록’ 버튼으로 이전 화면으로 돌아갈 수 있습니다.</li>
                 </ol>
             </section>
 
@@ -290,6 +395,7 @@
                 <h3>편집 기능</h3>
                 <div class="help-feature-grid">
                     <div class="help-feature"><strong>글자 꾸미기</strong>굵게, 밑줄, 기울임꼴과 대제목을 적용합니다.</div>
+                    <div class="help-feature"><strong>글자색</strong>글자를 먼저 선택하고 팔레트 버튼을 눌러 색상을 적용합니다. 색상은 라이트·다크 테마에 맞게 표시됩니다.</div>
                     <div class="help-feature"><strong>할 일 목록</strong>체크박스를 넣고 완료한 항목에 취소선을 표시합니다.</div>
                     <div class="help-feature"><strong>코드 블록</strong>소스 코드나 고정폭 텍스트를 보기 좋게 삽입합니다.</div>
                     <div class="help-feature"><strong>이미지 첨부</strong>PNG, JPEG, GIF, WebP 이미지를 압축해 메모 안에 저장합니다. 애니메이션과 투명도는 JPEG 변환 과정에서 사라질 수 있습니다.</div>
@@ -333,6 +439,26 @@
         </div>
     </dialog>
 
+    <dialog class="color-dialog" id="textColorDialog" aria-labelledby="textColorDialogTitle">
+        <div class="color-dialog-header">
+            <h2 id="textColorDialogTitle">글자색 선택</h2>
+            <button class="help-close-btn" type="button" onclick="closeTextColorPicker()" aria-label="글자색 선택 닫기"><span class="material-icons-outlined">close</span></button>
+        </div>
+        <div class="color-dialog-body">
+            <p class="color-dialog-hint">색상을 바꿀 글자를 먼저 선택한 다음 색상을 눌러주세요.</p>
+            <div class="color-palette">
+                <button class="color-swatch color-swatch-default" type="button" onpointerdown="event.preventDefault()" onclick="applyTextColor('default')" aria-label="기본 글자색"><span class="color-swatch-dot"></span></button>
+                <button class="color-swatch" type="button" style="--swatch-color: var(--note-red)" onpointerdown="event.preventDefault()" onclick="applyTextColor('red')" aria-label="빨간색"><span class="color-swatch-dot"></span></button>
+                <button class="color-swatch" type="button" style="--swatch-color: var(--note-orange)" onpointerdown="event.preventDefault()" onclick="applyTextColor('orange')" aria-label="주황색"><span class="color-swatch-dot"></span></button>
+                <button class="color-swatch" type="button" style="--swatch-color: var(--note-yellow)" onpointerdown="event.preventDefault()" onclick="applyTextColor('yellow')" aria-label="노란색"><span class="color-swatch-dot"></span></button>
+                <button class="color-swatch" type="button" style="--swatch-color: var(--note-green)" onpointerdown="event.preventDefault()" onclick="applyTextColor('green')" aria-label="초록색"><span class="color-swatch-dot"></span></button>
+                <button class="color-swatch" type="button" style="--swatch-color: var(--note-blue)" onpointerdown="event.preventDefault()" onclick="applyTextColor('blue')" aria-label="파란색"><span class="color-swatch-dot"></span></button>
+                <button class="color-swatch" type="button" style="--swatch-color: var(--note-purple)" onpointerdown="event.preventDefault()" onclick="applyTextColor('purple')" aria-label="보라색"><span class="color-swatch-dot"></span></button>
+                <button class="color-swatch" type="button" style="--swatch-color: var(--note-gray)" onpointerdown="event.preventDefault()" onclick="applyTextColor('gray')" aria-label="회색"><span class="color-swatch-dot"></span></button>
+            </div>
+        </div>
+    </dialog>
+
     <!-- ==========================================
        5. JavaScript 로직
        ========================================== -->
@@ -343,6 +469,20 @@
         let saveTimeout = null;
         let pendingSave = null;
         let storageErrorNotified = false;
+        let savedEditorRange = null;
+
+        const PHONE_MEDIA_QUERY = '(max-width: 640px)';
+        const TABLET_MEDIA_QUERY = '(min-width: 641px) and (max-width: 1024px)';
+        const TEXT_COLORS = {
+            default: { className: 'text-color-default', light: '#1d1d1f', dark: '#f5f5f7' },
+            red: { className: 'text-color-red', light: '#c62828', dark: '#ff6961' },
+            orange: { className: 'text-color-orange', light: '#b54708', dark: '#ff9f0a' },
+            yellow: { className: 'text-color-yellow', light: '#806000', dark: '#ffd60a' },
+            green: { className: 'text-color-green', light: '#137333', dark: '#30d158' },
+            blue: { className: 'text-color-blue', light: '#075985', dark: '#64d2ff' },
+            purple: { className: 'text-color-purple', light: '#6b3fa0', dark: '#bf5af2' },
+            gray: { className: 'text-color-gray', light: '#5f6368', dark: '#aeaeb2' }
+        };
 
         const DEFAULT_DATA = {
             folders: [
@@ -365,7 +505,10 @@
             'b', 'strong', 'i', 'em', 'u', 'pre', 'code',
             'div', 'span', 'input', 'img'
         ]);
-        const ALLOWED_NOTE_CLASSES = new Set(['todo-item', 'todo-checkbox', 'todo-text', 'checked']);
+        const ALLOWED_NOTE_CLASSES = new Set([
+            'todo-item', 'todo-checkbox', 'todo-text', 'checked',
+            ...Object.values(TEXT_COLORS).map(color => color.className)
+        ]);
         const SAFE_IMAGE_DATA_URL = /^data:image\/(?:png|jpeg|gif|webp);base64,[a-z0-9+/=\s]+$/i;
 
         function generateId(prefix, index = 0) {
@@ -377,6 +520,38 @@
             return id;
         }
         function isObject(value) { return value !== null && typeof value === 'object' && !Array.isArray(value); }
+
+        function isPhoneView() { return window.matchMedia(PHONE_MEDIA_QUERY).matches; }
+        function isTabletView() { return window.matchMedia(TABLET_MEDIA_QUERY).matches; }
+
+        function showMobilePanel(panel) {
+            const app = document.getElementById('appContainer');
+            if (!app || !['folders', 'notes', 'editor'].includes(panel)) return;
+            if (app.dataset.mobilePanel === 'editor' && panel !== 'editor') flushPendingSave({ renderAfterSave: false });
+            app.dataset.mobilePanel = panel;
+            if (isPhoneView()) app.classList.remove('sidebar-open');
+            else if (isTabletView()) app.classList.toggle('sidebar-open', panel === 'folders');
+            else app.classList.remove('sidebar-open');
+        }
+
+        function setupResponsiveLayout() {
+            const syncLayout = () => {
+                const app = document.getElementById('appContainer');
+                if (!app) return;
+                if (isPhoneView()) {
+                    app.classList.remove('sidebar-open');
+                    if (!['folders', 'notes', 'editor'].includes(app.dataset.mobilePanel)) app.dataset.mobilePanel = 'folders';
+                } else {
+                    app.classList.remove('sidebar-open');
+                    if (isTabletView() && app.dataset.mobilePanel === 'folders') app.dataset.mobilePanel = 'notes';
+                }
+            };
+            syncLayout();
+            [window.matchMedia(PHONE_MEDIA_QUERY), window.matchMedia(TABLET_MEDIA_QUERY)].forEach(mediaQuery => {
+                if (typeof mediaQuery.addEventListener === 'function') mediaQuery.addEventListener('change', syncLayout);
+                else mediaQuery.addListener(syncLayout);
+            });
+        }
 
         function sanitizeNoteHTML(htmlStr) {
             const doc = new DOMParser().parseFromString(String(htmlStr || ''), 'text/html');
@@ -463,7 +638,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             const isFirstRun = !localStorage.getItem(STORAGE_KEY);
-            initApp(); setupShortcuts(); initClock();
+            initApp(); setupShortcuts(); setupResponsiveLayout(); initClock();
             const editorMain = document.getElementById('editorMain');
             
             editorMain.addEventListener('change', function(e) {
@@ -496,6 +671,11 @@
             helpDialog.addEventListener('click', event => {
                 if (event.target === helpDialog) closeHelp();
             });
+            const textColorDialog = document.getElementById('textColorDialog');
+            textColorDialog.addEventListener('click', event => {
+                if (event.target === textColorDialog) closeTextColorPicker();
+            });
+            textColorDialog.addEventListener('close', () => { savedEditorRange = null; });
             if (isFirstRun && !localStorage.getItem(HELP_SEEN_KEY)) showHelp();
         });
 
@@ -534,7 +714,7 @@
             updateFolderUI(); renderFolders(); renderNotes();
             const visibleNotes = getFilteredAndSortedNotes();
             const noteToSelect = visibleNotes.some(note => note.id === state.currentNoteId) ? state.currentNoteId : (visibleNotes[0]?.id || null);
-            if (noteToSelect) selectNote(noteToSelect); else { clearEditor(); saveToLocalStorage({ notifyOnError: false }); }
+            if (noteToSelect) selectNote(noteToSelect, { navigate: false }); else { clearEditor(); saveToLocalStorage({ notifyOnError: false }); }
         }
 
         function setStatus(message) {
@@ -660,8 +840,9 @@
         function selectFolder(folderId) {
             state.currentFolderId = folderId; updateFolderUI(); renderFolders(); renderNotes();
             const visibleNotes = getFilteredAndSortedNotes();
-            if (visibleNotes.length > 0) selectNote(visibleNotes[0].id);
+            if (visibleNotes.length > 0) selectNote(visibleNotes[0].id, { navigate: false });
             else { clearEditor(); saveToLocalStorage(); }
+            showMobilePanel('notes');
         }
 
         const BLOCK_NOTE_TAGS = new Set(['h1', 'h2', 'h3', 'p', 'div', 'li', 'pre', 'ul', 'ol']);
@@ -781,8 +962,8 @@
             }, 1000);
         }
 
-        function selectNote(noteId) {
-            flushPendingSave(); state.currentNoteId = noteId; const note = state.notes.find(n => n.id === noteId);
+        function selectNote(noteId, { navigate = true } = {}) {
+            flushPendingSave(); savedEditorRange = null; state.currentNoteId = noteId; const note = state.notes.find(n => n.id === noteId);
             if (!note) { clearEditor(); return; }
             const editor = document.getElementById('editorMain');
             const sanitizedContent = sanitizeNoteHTML(note.content); note.content = sanitizedContent; editor.innerHTML = sanitizedContent;
@@ -792,7 +973,18 @@
             // 다단(Column) CSS 적용
             editor.style.columnCount = note.columnCount || 1;
 
-            updateToolbarState(note); calculateMetrics(); updateActiveNoteListItem(); saveToLocalStorage();
+            updateToolbarState(note); updateMobileNoteTitle(note); calculateMetrics(); updateActiveNoteListItem(); saveToLocalStorage();
+            if (navigate) showMobilePanel('editor');
+        }
+
+        function getNoteTitle(note) {
+            if (!note) return '메모';
+            return extractNoteText(note.content, true).split('\n').find(Boolean)?.slice(0, 40) || '새로운 메모';
+        }
+
+        function updateMobileNoteTitle(note) {
+            const title = document.getElementById('mobileNoteTitle');
+            if (title) title.innerText = getNoteTitle(note);
         }
 
         function clearEditor() {
@@ -811,6 +1003,8 @@
             lockBtn.setAttribute('aria-pressed', 'false');
             setEditorControlsEnabled(false);
             state.currentNoteId = null;
+            savedEditorRange = null;
+            updateMobileNoteTitle(null);
             setStatus('메모를 선택하거나 새 메모를 만들어 주세요.');
         }
 
@@ -838,6 +1032,8 @@
             if (!currentNote) return;
             if (currentNote.isLocked) { alert('🔒 해당 노트는 잠겨있어 수정할 수 없습니다.'); document.getElementById('editorMain').innerHTML = sanitizeNoteHTML(currentNote.content); return; }
             setStatus('변경 사항 감지됨...'); calculateMetrics();
+            const liveTitle = (document.getElementById('editorMain').innerText || '').split('\n').find(line => line.trim())?.trim().slice(0, 40) || '새로운 메모';
+            document.getElementById('mobileNoteTitle').innerText = liveTitle;
             scheduleNoteSave(state.currentNoteId, document.getElementById('editorMain').innerHTML);
         }
 
@@ -879,11 +1075,13 @@
             if (currentNote.folderId === 'trash') {
                 if (confirm('이 메모를 영구적으로 삭제하시겠습니까? 복구할 수 없습니다.')) {
                     state.notes = state.notes.filter(n => n.id !== currentNote.id); state.currentNoteId = null; saveToLocalStorage(); renderFolders(); renderNotes(); clearEditor();
+                    showMobilePanel('notes');
                 }
             } else {
                 currentNote.folderId = 'trash'; currentNote.isPinned = false; currentNote.updatedAt = new Date().toISOString();
                 state.currentNoteId = null;
                 saveToLocalStorage(); renderFolders(); renderNotes(); clearEditor(); setStatus('메모가 최근 삭제된 항목으로 이동함');
+                showMobilePanel('notes');
             }
         }
 
@@ -893,6 +1091,90 @@
             if (currentNote.isLocked) { alert('🔒 잠금 처리된 문서입니다.'); return; }
             document.getElementById('editorMain').focus();
             document.execCommand(command, false, value); handleEditorInput();
+        }
+
+        function saveEditorSelection() {
+            const editor = document.getElementById('editorMain');
+            const selection = window.getSelection();
+            if (!editor || !selection || selection.rangeCount === 0) return false;
+            const range = selection.getRangeAt(0);
+            const commonNode = range.commonAncestorContainer.nodeType === Node.TEXT_NODE ? range.commonAncestorContainer.parentNode : range.commonAncestorContainer;
+            if (!editor.contains(commonNode)) return false;
+            savedEditorRange = range.cloneRange();
+            return true;
+        }
+
+        function restoreEditorSelection() {
+            if (!savedEditorRange) return false;
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(savedEditorRange);
+            return true;
+        }
+
+        function showTextColorPicker() {
+            const currentNote = state.notes.find(note => note.id === state.currentNoteId);
+            if (!currentNote) { setStatus('먼저 메모를 선택하거나 새 메모를 만들어 주세요.'); return; }
+            if (currentNote.isLocked) { alert('🔒 잠금 처리된 문서입니다.'); return; }
+            if (!savedEditorRange) saveEditorSelection();
+            const dialog = document.getElementById('textColorDialog');
+            if (!dialog.open) dialog.showModal();
+        }
+
+        function closeTextColorPicker() {
+            const dialog = document.getElementById('textColorDialog');
+            if (dialog.open) dialog.close();
+            savedEditorRange = null;
+        }
+
+        function normalizeCssColor(color) {
+            const context = document.createElement('canvas').getContext('2d');
+            if (!context || !color) return '';
+            context.fillStyle = '#000001';
+            context.fillStyle = color;
+            return String(context.fillStyle).toLowerCase();
+        }
+
+        function findTextColorClass(color) {
+            const normalized = normalizeCssColor(color);
+            for (const definition of Object.values(TEXT_COLORS)) {
+                if (normalized === normalizeCssColor(definition.light) || normalized === normalizeCssColor(definition.dark)) return definition.className;
+            }
+            return null;
+        }
+
+        function normalizeEditorColorMarkup() {
+            const editor = document.getElementById('editorMain');
+            const colorNodes = Array.from(editor.querySelectorAll('font[color], span[style*="color"]')).reverse();
+            colorNodes.forEach(node => {
+                const rawColor = node.tagName.toLowerCase() === 'font' ? node.getAttribute('color') : node.style.color;
+                const className = findTextColorClass(rawColor);
+                if (!className) return;
+                const replacement = document.createElement('span');
+                replacement.className = className;
+                while (node.firstChild) replacement.appendChild(node.firstChild);
+                node.replaceWith(replacement);
+            });
+        }
+
+        function applyTextColor(colorKey) {
+            const currentNote = state.notes.find(note => note.id === state.currentNoteId);
+            const definition = TEXT_COLORS[colorKey];
+            if (!currentNote || currentNote.isLocked || !definition) { closeTextColorPicker(); return; }
+            if (!savedEditorRange || savedEditorRange.collapsed || !restoreEditorSelection()) {
+                closeTextColorPicker();
+                setStatus('색상을 바꿀 글자를 먼저 선택해 주세요.');
+                savedEditorRange = null;
+                return;
+            }
+
+            const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+            document.getElementById('editorMain').focus();
+            document.execCommand('foreColor', false, definition[theme]);
+            normalizeEditorColorMarkup();
+            savedEditorRange = null;
+            closeTextColorPicker();
+            handleEditorInput();
         }
 
         function insertTodoList() { execCmd('insertHTML', `<div class="todo-item"><input type="checkbox" class="todo-checkbox"><div class="todo-text" contenteditable="true">할 일</div></div><p>&nbsp;</p>`); }
@@ -1013,7 +1295,10 @@
                 }
                 if (isMeta && e.key.toLowerCase() === 'n') { e.preventDefault(); createNewNote(); }
                 if (isMeta && e.key.toLowerCase() === 'f') { e.preventDefault(); document.getElementById('searchInput').focus(); }
-                if (e.key === 'Escape' && document.getElementById('helpDialog').open) closeHelp();
+                if (e.key === 'Escape') {
+                    if (document.getElementById('textColorDialog').open) { e.preventDefault(); closeTextColorPicker(); }
+                    else if (document.getElementById('helpDialog').open) { e.preventDefault(); closeHelp(); }
+                }
             });
         }
 
