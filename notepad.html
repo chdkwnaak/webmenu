@@ -1104,11 +1104,15 @@
             return true;
         }
 
-        function restoreEditorSelection() {
-            if (!savedEditorRange) return false;
+        function restoreEditorSelection(range = savedEditorRange) {
+            if (!range) return false;
+            const editor = document.getElementById('editorMain');
+            const commonNode = range.commonAncestorContainer.nodeType === Node.TEXT_NODE ? range.commonAncestorContainer.parentNode : range.commonAncestorContainer;
+            if (!commonNode || !editor.contains(commonNode)) return false;
             const selection = window.getSelection();
+            if (!selection) return false;
             selection.removeAllRanges();
-            selection.addRange(savedEditorRange);
+            selection.addRange(range);
             return true;
         }
 
@@ -1161,20 +1165,33 @@
             const currentNote = state.notes.find(note => note.id === state.currentNoteId);
             const definition = TEXT_COLORS[colorKey];
             if (!currentNote || currentNote.isLocked || !definition) { closeTextColorPicker(); return; }
-            if (!savedEditorRange || savedEditorRange.collapsed || !restoreEditorSelection()) {
+            if (!savedEditorRange || savedEditorRange.collapsed) {
                 closeTextColorPicker();
                 setStatus('색상을 바꿀 글자를 먼저 선택해 주세요.');
-                savedEditorRange = null;
                 return;
             }
 
+            const rangeToRestore = savedEditorRange.cloneRange();
             const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-            document.getElementById('editorMain').focus();
-            document.execCommand('foreColor', false, definition[theme]);
+            const editor = document.getElementById('editorMain');
+
+            // 모달이 열린 동안에는 본문이 inert 상태이므로 먼저 닫은 뒤 포커스와 선택 범위를 복원한다.
+            closeTextColorPicker();
+            editor.focus({ preventScroll: true });
+            if (!restoreEditorSelection(rangeToRestore)) {
+                setStatus('선택 영역을 다시 찾지 못했습니다. 글자를 다시 선택해 주세요.');
+                return;
+            }
+
+            const didApply = document.execCommand('foreColor', false, definition[theme]);
+            if (!didApply) {
+                setStatus('이 브라우저에서는 글자색을 적용하지 못했습니다.');
+                return;
+            }
             normalizeEditorColorMarkup();
             savedEditorRange = null;
-            closeTextColorPicker();
             handleEditorInput();
+            setStatus('글자색을 적용했습니다.');
         }
 
         function insertTodoList() { execCmd('insertHTML', `<div class="todo-item"><input type="checkbox" class="todo-checkbox"><div class="todo-text" contenteditable="true">할 일</div></div><p>&nbsp;</p>`); }
