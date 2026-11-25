@@ -4,7 +4,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GPS 좌표 변환기</title>
+  <title>GPS 좌표 변환기 v2.0.0 · 오프라인</title>
+  <link rel="icon" href="coordinate_converter.ico" />
+  <link rel="stylesheet" href="assets/app.css" />
 
   <script>
     // Tailwind CDN 로드 전 darkMode 설정을 미리 선언합니다.
@@ -27,24 +29,20 @@
   </script>
 
   <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/vendor/tailwind.js"></script>
   <script>
     window.tailwind.config = { darkMode: 'class' };
   </script>
 
   <!-- proj4js CDN: 좌표 변환은 반드시 이 라이브러리로 처리 -->
-  <script src="https://cdn.jsdelivr.net/npm/proj4@2.11.0/dist/proj4.js"
-    integrity="sha384-BIsA8GBrihzaRmijjpqTCihj8D5Vox3hyBFg9sJiTGAEOv6KusZ8QOCKbTFEAfhm"
-    crossorigin="anonymous"></script>
+  <script src="assets/vendor/proj4.js"></script>
 
   <!-- SheetJS CDN: xlsx, xls 파일 파싱 -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"
-    integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw"
-    crossorigin="anonymous"></script>
+  <script src="assets/vendor/xlsx.full.min.js"></script>
 
   <!-- Leaflet CDN: 변환 결과 지도 미리보기 -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <link rel="stylesheet" href="assets/vendor/leaflet.css" />
+  <script src="assets/vendor/leaflet.js"></script>
 </head>
 
 <body class="min-h-screen bg-slate-50 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
@@ -52,13 +50,16 @@
     <header
       class="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-start sm:justify-between dark:border-slate-800">
       <div class="flex flex-col gap-2">
-        <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">GPS 좌표 변환기</h1>
+        <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">GPS 좌표 변환기 <span class="cc-version">v2.0.0 · 오프라인</span></h1>
         <p class="text-sm text-slate-600 dark:text-slate-400">
-          단일 좌표를 바로 변환하거나 txt, csv, xlsx, xls 파일을 불러와 대량 변환할 수 있습니다.
+          원본 열과 행을 유지하는 좌표 변환 · 빌드 2026-11-24 · 기본 변환은 인터넷 없이 실행됩니다.
         </p>
       </div>
 
       <div class="flex flex-wrap gap-2">
+        <button id="exportSettingsBtn" class="cc-button" type="button">설정 내보내기</button>
+        <button id="importSettingsBtn" class="cc-button" type="button">설정 불러오기</button>
+        <input id="settingsFile" type="file" accept=".json" hidden />
         <button id="resetBtn"
           class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-red-600 transition hover:bg-red-50 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-100 dark:border-slate-700 dark:bg-slate-900 dark:text-red-400 dark:hover:bg-red-950/30 dark:focus:ring-red-900/50"
           type="button">
@@ -138,6 +139,10 @@
     <section class="grid flex-1 gap-5 lg:grid-cols-2">
       <section
         class="flex min-h-[620px] flex-col gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="cc-toolbar">
+          <strong id="inputModeLabel">직접 입력 모드</strong>
+          <button id="directInputBtn" class="cc-button" type="button">직접 입력으로 전환</button>
+        </div>
         <div id="dropZone"
           class="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center transition hover:border-blue-400 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-950 dark:hover:border-blue-500 dark:hover:bg-blue-950/30"
           tabindex="0" role="button" aria-label="좌표 파일 업로드">
@@ -157,13 +162,13 @@
         <div id="mappingPanel"
           class="hidden grid gap-3 rounded-lg border border-blue-100 bg-blue-50 p-3 sm:grid-cols-2 dark:border-blue-900/60 dark:bg-blue-950/30">
           <label class="flex flex-col gap-2">
-            <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">1번째 좌표 열 선택</span>
+            <span id="firstColumnLabel" class="text-sm font-semibold text-slate-700 dark:text-slate-300">1번째 좌표 열 (경도/Easting)</span>
             <select id="xColumnSelect"
               class="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/50"></select>
           </label>
 
           <label class="flex flex-col gap-2">
-            <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">2번째 좌표 열 선택</span>
+            <span id="secondColumnLabel" class="text-sm font-semibold text-slate-700 dark:text-slate-300">2번째 좌표 열 (위도/Northing)</span>
             <select id="yColumnSelect"
               class="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/50"></select>
           </label>
@@ -180,14 +185,14 @@
         <section class="grid gap-3 border-b border-slate-200 pb-4 dark:border-slate-800">
           <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_8rem]">
             <label class="flex flex-col gap-2">
-              <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">단일 1번째 값 (경도/Easting)</span>
+            <span id="singleFirstLabel" class="text-sm font-semibold text-slate-700 dark:text-slate-300">단일 1번째 값 (경도/Easting)</span>
               <input id="singleXInput"
                 class="h-11 rounded-md border border-slate-300 bg-white px-3 font-mono text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-900/50"
                 type="text" inputmode="decimal" placeholder="126.9784147" />
             </label>
 
             <label class="flex flex-col gap-2">
-              <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">단일 2번째 값 (위도/Northing)</span>
+              <span id="singleSecondLabel" class="text-sm font-semibold text-slate-700 dark:text-slate-300">단일 2번째 값 (위도/Northing)</span>
               <input id="singleYInput"
                 class="h-11 rounded-md border border-slate-300 bg-white px-3 font-mono text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-900/50"
                 type="text" inputmode="decimal" placeholder="37.5666805" />
@@ -206,6 +211,7 @@
               class="h-11 rounded-md border border-slate-300 bg-slate-50 px-3 font-mono text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/50"
               type="text" readonly />
           </label>
+          <label class="cc-check"><input id="singleSwapAxis" type="checkbox" /> 단일 변환 입력 순서 바꾸기 (위도/Northing → 경도/Easting)</label>
         </section>
 
         <label
@@ -214,14 +220,15 @@
             class="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950"
             type="checkbox" />
           <span>
-            입력 좌표 순서 바꾸기
+            대량 변환 입력 좌표 순서 바꾸기
             <span class="mt-1 block text-xs leading-5 text-slate-500 dark:text-slate-400">첫 번째 값이 위도/Northing, 두 번째 값이
               경도/Easting인 입력을 변환 순서에 맞게 바꿉니다.</span>
           </span>
         </label>
 
         <label class="flex flex-1 flex-col gap-2">
-          <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">대량 좌표 입력</span>
+          <span id="inputDataLabel" class="text-sm font-semibold text-slate-700 dark:text-slate-300">대량 좌표 입력</span>
+          <pre id="fileDataPreview" class="cc-file-preview" tabindex="0" aria-label="파일 좌표 미리보기 (읽기 전용)" hidden></pre>
           <iframe id="inputText" srcdoc="<!doctype html>
 <html lang=&quot;en&quot;>
 <head>
@@ -2510,11 +2517,10 @@ function saveTextFile() {
     };
     window.setEditorText = function(text) {
       if (text == null) text = &quot;&quot;;
-      lines = normalizeInputText(text).split(/\r?\n/);
-      if (lines.length === 0) lines = [&quot;&quot;];
-      curRow = 0;
-      curCol = 0;
-      desiredCol = null;
+      loadTextDocument(normalizeInputText(text), &quot;좌표 입력.txt&quot;);
+      resetNormalSelection();
+      viewport.scrollTop = 0;
+      viewport.scrollLeft = 0;
       render();
     };
 
@@ -2528,6 +2534,7 @@ function saveTextFile() {
         </label>
 
         <div class="flex gap-3">
+          <button id="previewBtn" type="button" class="cc-button">앞 5건 미리보기</button>
           <button id="convertBtn"
             class="h-12 flex-1 rounded-md bg-blue-600 px-5 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400">
             변환하기
@@ -2542,8 +2549,21 @@ function saveTextFile() {
 
       <section
         class="flex min-h-[620px] flex-col gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <label class="flex flex-1 flex-col gap-2">
-          <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">결과 Textarea</span>
+        <div class="cc-toolbar"><strong>변환 결과</strong><div>
+          <button id="tableViewBtn" type="button" class="cc-button" aria-pressed="true">표 보기</button>
+          <button id="textViewBtn" type="button" class="cc-button" aria-pressed="false">텍스트 보기</button>
+        </div></div>
+        <p id="resultSummary" role="status">아직 완료된 결과가 없습니다.</p>
+        <div id="resultTableView" class="cc-table-wrap cc-results" tabindex="0" aria-label="변환 결과 표">
+          <table id="resultTable" class="cc-table"></table>
+        </div>
+        <p id="resultPageInfo" class="cc-muted"></p>
+        <div id="resultPager" class="cc-toolbar" hidden>
+          <button id="previousPageBtn" type="button" class="cc-button">이전 100행</button>
+          <button id="nextPageBtn" type="button" class="cc-button">다음 100행</button>
+        </div>
+        <label id="resultTextView" class="flex flex-1 flex-col gap-2" hidden>
+          <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">좌표 텍스트 (성공 행만, 전체 행은 CSV에 포함)</span>
           <textarea id="outputText"
             class="min-h-[500px] flex-1 resize-none rounded-lg border border-slate-300 bg-slate-50 p-3 font-mono text-sm leading-6 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-900/50"
             placeholder="변환 결과가 여기에 표시됩니다." spellcheck="false" readonly></textarea>
@@ -2557,12 +2577,18 @@ function saveTextFile() {
 
           <button id="csvBtn"
             class="h-11 rounded-md border border-emerald-600 bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700">
-            CSV 다운로드
+            CSV 저장
           </button>
         </div>
       </section>
     </section>
 
+    <section class="cc-panel" aria-label="진행 상태 및 로그">
+      <div class="cc-toolbar"><strong>진행 상태 및 로그</strong><span id="progressLabel" role="status">대기</span></div>
+      <progress id="conversionProgress" value="0" max="100" aria-label="대량 변환 진행률"></progress>
+      <pre id="conversionLog" class="cc-log" tabindex="0" aria-label="변환 로그"></pre>
+      <p class="cc-muted">완료 결과를 CSV 저장 버튼으로 저장하세요. 저장 위치는 브라우저의 저장 창 또는 다운로드 설정을 따릅니다.</p>
+    </section>
     <section id="mapPreviewPanel"
       class="hidden rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <div class="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -2586,6 +2612,7 @@ function saveTextFile() {
         </div>
       </div>
 
+      <button id="onlineMapBtn" type="button" class="cc-button">온라인 지도 보기 (인터넷 필요)</button>
       <div id="mapPreview"
         class="h-64 w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-950">
       </div>
@@ -2594,6 +2621,16 @@ function saveTextFile() {
 
     </main>
 
+  <dialog id="conversionPreview" class="cc-dialog" aria-labelledby="conversionPreviewTitle">
+    <h2 id="conversionPreviewTitle">변환 전 확인 · 앞 5건</h2>
+    <p id="previewContext"></p>
+    <div class="cc-table-wrap"><table id="conversionPreviewTable" class="cc-table"></table></div>
+    <p class="cc-muted">선택한 좌표계가 원본 자료와 일치하는지 알려진 위치와 대조해주세요.</p>
+    <div class="cc-toolbar">
+      <button id="closePreviewBtn" type="button" class="cc-button">돌아가기</button>
+      <button id="confirmConversionBtn" type="button" class="cc-button cc-primary">이 설정으로 변환 시작</button>
+    </div>
+  </dialog>
   <div id="helpModal"
     class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/50 px-4 py-6 dark:bg-slate-950/75"
     role="dialog" aria-modal="true" aria-labelledby="helpTitle">
@@ -2601,7 +2638,7 @@ function saveTextFile() {
       <div class="flex items-start justify-between gap-4 border-b border-slate-200 pb-3 dark:border-slate-800">
         <div>
           <h2 id="helpTitle" class="text-lg font-bold text-slate-900 dark:text-slate-100">사용방법</h2>
-          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">좌표계 선택 후 단일 좌표 또는 여러 좌표를 변환합니다.</p>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">v2.0.0 · 빌드 2026-11-24 · 로컬 오프라인 실행</p>
         </div>
 
         <button id="closeHelpBtn"
@@ -2631,7 +2668,8 @@ function saveTextFile() {
           <ol class="mt-1 list-decimal space-y-1 pl-5">
             <li>좌표를 한 줄에 하나씩 입력합니다. 예: 126.9784147 37.5666805</li>
             <li>txt, csv, xlsx, xls 파일은 드래그하거나 클릭해서 불러올 수 있습니다.</li>
-            <li>csv, xlsx, xls 파일은 1번째/2번째 좌표 열과 첫 행 헤더 사용 여부를 선택한 뒤 변환하기를 누릅니다.</li>
+            <li>파일 모드는 원본 행 연결을 위해 읽기 전용입니다. 좌표 열과 헤더 여부를 확인하고 앞 5건 미리보기 후 변환합니다.</li>
+            <li>직접 입력 버튼으로 파일 연결을 해제하면 기존 편집기를 사용할 수 있습니다.</li>
           </ol>
         </section>
 
@@ -2643,7 +2681,12 @@ function saveTextFile() {
 
         <section>
           <h3 class="font-semibold text-slate-900 dark:text-slate-100">5. 결과 사용</h3>
-          <p class="mt-1">결과는 클립보드로 복사하거나 CSV 파일로 다운로드할 수 있습니다.</p>
+          <p class="mt-1">CSV에는 원본 열과 모든 데이터 행을 보존하고 원본행·변환X·변환Y·처리상태·오류내용을 추가합니다. 빈 좌표나 실패 행도 남습니다. 취소한 작업의 부분 결과는 저장할 수 없습니다. 기존 완료 결과는 유지됩니다.</p>
+        </section>
+        <section>
+          <h3 class="font-semibold">6. 설정과 오프라인 실행</h3>
+          <p>좌표계·Proj4·단일/대량 입력 순서·헤더 설정을 이 브라우저에 기억합니다. 저장소가 제한되거나 다른 브라우저로 옮길 때는 설정 내보내기/불러오기를 사용하세요. 저장 폴더 접근은 브라우저 권한을 따릅니다.</p>
+          <p>HTML과 assets 폴더를 함께 보관하세요. 변환과 엑셀 처리는 오프라인에서 동작하며 지도 배경만 온라인 지도 보기 버튼을 눌러 불러옵니다. 데이터는 서버로 전송하지 않습니다. 온라인 지도 요청에는 표시 위치에 해당하는 지도 타일 주소가 사용됩니다.</p>
         </section>
       </div>
     </section>
@@ -2653,1359 +2696,8 @@ function saveTextFile() {
   <div id="toastContainer" class="fixed bottom-5 right-5 z-[100] flex flex-col gap-2 pointer-events-none"
     aria-live="polite"></div>
 
-  <script>
-    'use strict';
-
-    /******************************************************************
-     * 좌표계 정의
-     * - 실제 변환 계산은 직접 구현하지 않고 proj4js에 위임합니다.
-     * - WGS84 DMS는 문자열 파싱/포맷만 수행하고 내부 변환은 EPSG:4326으로 처리합니다.
-     ******************************************************************/
-    const CRS_LIST = [
-      {
-        id: 'EPSG:4326',
-        label: 'WGS84 경위도 (DD) - EPSG:4326',
-        proj: '+proj=longlat +datum=WGS84 +no_defs',
-        type: 'dd'
-      },
-      {
-        id: 'WGS84_DMS',
-        label: 'WGS84 경위도 (DMS)',
-        proj: '+proj=longlat +datum=WGS84 +no_defs',
-        type: 'dms'
-      },
-      {
-        id: 'EPSG:32652',
-        label: 'UTM 한국 Zone 52N - EPSG:32652',
-        proj: '+proj=utm +zone=52 +datum=WGS84 +units=m +no_defs +type=crs',
-        type: 'projected'
-      },
-      {
-        id: 'KATEC_TM128',
-        label: 'KATEC / TM128 (비 EPSG 사용자 정의)',
-        proj: '+proj=tmerc +lat_0=38 +lon_0=128 +k=0.9999 +x_0=400000 +y_0=600000 +ellps=bessel +towgs84=-115.80,474.99,674.11,1.16,-2.31,-1.09,1.92 +units=m +no_defs',
-        type: 'projected'
-      },
-
-      {
-        id: 'EPSG:5173',
-        label: 'Korean 1985 / Modified West Belt - EPSG:5173',
-        proj: '+proj=tmerc +lat_0=38 +lon_0=125.002890277778 +k=1 +x_0=200000 +y_0=500000 +ellps=bessel +towgs84=-145.907,505.034,685.756,-1.162,2.347,1.592,6.342 +units=m +no_defs +type=crs',
-        type: 'projected'
-      },
-      {
-        id: 'EPSG:5174',
-        label: 'Korean 1985 / Modified Central Belt - EPSG:5174',
-        proj: '+proj=tmerc +lat_0=38 +lon_0=127.002890277778 +k=1 +x_0=200000 +y_0=500000 +ellps=bessel +towgs84=-145.907,505.034,685.756,-1.162,2.347,1.592,6.342 +units=m +no_defs +type=crs',
-        type: 'projected'
-      },
-      {
-        id: 'EPSG:5175',
-        label: 'Korean 1985 / Modified Central Belt Jeju - EPSG:5175',
-        proj: '+proj=tmerc +lat_0=38 +lon_0=127.002890277778 +k=1 +x_0=200000 +y_0=550000 +ellps=bessel +towgs84=-145.907,505.034,685.756,-1.162,2.347,1.592,6.342 +units=m +no_defs +type=crs',
-        type: 'projected'
-      },
-      {
-        id: 'EPSG:5176',
-        label: 'Korean 1985 / Modified East Belt - EPSG:5176',
-        proj: '+proj=tmerc +lat_0=38 +lon_0=129.002890277778 +k=1 +x_0=200000 +y_0=500000 +ellps=bessel +towgs84=-145.907,505.034,685.756,-1.162,2.347,1.592,6.342 +units=m +no_defs +type=crs',
-        type: 'projected'
-      },
-      {
-        id: 'EPSG:5178',
-        label: 'Korean 1985 / Unified CS - EPSG:5178',
-        proj: '+proj=tmerc +lat_0=38 +lon_0=127.5 +k=0.9996 +x_0=1000000 +y_0=2000000 +ellps=bessel +towgs84=-145.907,505.034,685.756,-1.162,2.347,1.592,6.342 +units=m +no_defs +type=crs',
-        type: 'projected'
-      },
-
-      {
-        id: 'EPSG:5179',
-        label: 'KGD2002 / Unified CS - EPSG:5179',
-        proj: '+proj=tmerc +lat_0=38 +lon_0=127.5 +k=0.9996 +x_0=1000000 +y_0=2000000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
-        type: 'projected'
-      },
-      {
-        id: 'EPSG:5180',
-        label: 'KGD2002 / West Belt - EPSG:5180',
-        proj: '+proj=tmerc +lat_0=38 +lon_0=125 +k=1 +x_0=200000 +y_0=500000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
-        type: 'projected'
-      },
-      {
-        id: 'EPSG:5181',
-        label: 'KGD2002 / Central Belt - EPSG:5181',
-        proj: '+proj=tmerc +lat_0=38 +lon_0=127 +k=1 +x_0=200000 +y_0=500000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
-        type: 'projected'
-      },
-      {
-        id: 'EPSG:5183',
-        label: 'KGD2002 / East Belt - EPSG:5183',
-        proj: '+proj=tmerc +lat_0=38 +lon_0=129 +k=1 +x_0=200000 +y_0=500000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
-        type: 'projected'
-      },
-      {
-        id: 'EPSG:5185',
-        label: 'KGD2002 / West Belt 2010 - EPSG:5185',
-        proj: '+proj=tmerc +lat_0=38 +lon_0=125 +k=1 +x_0=200000 +y_0=600000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
-        type: 'projected'
-      },
-      {
-        id: 'EPSG:5186',
-        label: 'KGD2002 / Central Belt 2010 - EPSG:5186',
-        proj: '+proj=tmerc +lat_0=38 +lon_0=127 +k=1 +x_0=200000 +y_0=600000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
-        type: 'projected'
-      },
-      {
-        id: 'EPSG:5187',
-        label: 'KGD2002 / East Belt 2010 - EPSG:5187',
-        proj: '+proj=tmerc +lat_0=38 +lon_0=129 +k=1 +x_0=200000 +y_0=600000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
-        type: 'projected'
-      }
-    ];
-
-    const crsMap = new Map(CRS_LIST.map((crs) => [crs.id, crs]));
-    const CUSTOM_CRS_VALUE = 'CUSTOM_PROJ4';
-    const CUSTOM_SOURCE_CRS_ID = 'CUSTOM_SOURCE_PROJ4';
-    const CUSTOM_TARGET_CRS_ID = 'CUSTOM_TARGET_PROJ4';
-    const THEME_STORAGE_KEY = 'coordinate-theme';
-
-    // DOM 요소 참조
-    const themeToggleBtn = document.getElementById('themeToggleBtn');
-    const themeLabel = document.getElementById('themeLabel');
-    const helpBtn = document.getElementById('helpBtn');
-    const helpModal = document.getElementById('helpModal');
-    const closeHelpBtn = document.getElementById('closeHelpBtn');
-    const sourceCrs = document.getElementById('sourceCrs');
-    const targetCrs = document.getElementById('targetCrs');
-    const customProjPanel = document.getElementById('customProjPanel');
-    const sourceCustomProjField = document.getElementById('sourceCustomProjField');
-    const targetCustomProjField = document.getElementById('targetCustomProjField');
-    const sourceCustomProj = document.getElementById('sourceCustomProj');
-    const targetCustomProj = document.getElementById('targetCustomProj');
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-    const fileName = document.getElementById('fileName');
-    const mappingPanel = document.getElementById('mappingPanel');
-    const xColumnSelect = document.getElementById('xColumnSelect');
-    const yColumnSelect = document.getElementById('yColumnSelect');
-    const firstRowHeaderToggle = document.getElementById('firstRowHeaderToggle');
-    const singleXInput = document.getElementById('singleXInput');
-    const singleYInput = document.getElementById('singleYInput');
-    const singleConvertBtn = document.getElementById('singleConvertBtn');
-    const singleResult = document.getElementById('singleResult');
-    const swapInputAxis = document.getElementById('swapInputAxis');
-    const inputText = document.getElementById('inputText');
-    const outputText = document.getElementById('outputText');
-    const convertBtn = document.getElementById('convertBtn');
-    const cancelBtn = document.getElementById('cancelBtn');
-    const copyBtn = document.getElementById('copyBtn');
-    const csvBtn = document.getElementById('csvBtn');
-    const mapPreviewPanel = document.getElementById('mapPreviewPanel');
-    const mapPreview = document.getElementById('mapPreview');
-    const mapCoordinateLabel = document.getElementById('mapCoordinateLabel');
-    const mapFirstBtn = document.getElementById('mapFirstBtn');
-    const mapLastBtn = document.getElementById('mapLastBtn');
-    const mapStatus = document.getElementById('mapStatus');
-    const toastContainer = document.getElementById('toastContainer');
-
-    // CSV/엑셀 파일 매핑에 필요한 원본 행 데이터
-    let tabularRows = [];
-
-    // 대량 변환 취소를 위한 AbortController
-    let convertAbortController = null;
-    let previewMap = null;
-    let previewMarker = null;
-    let previewMapPoints = {
-      first: null,
-      last: null,
-      activeKey: 'first'
-    };
-
-    init();
-
-    function init() {
-      registerProj4Definitions();
-      renderCrsOptions();
-      bindEvents();
-      updateCustomProj4Panel();
-      syncThemeButton();
-    }
-
-    function registerProj4Definitions() {
-      CRS_LIST.forEach((crs) => {
-        proj4.defs(crs.id, crs.proj);
-      });
-    }
-
-    function renderCrsOptions() {
-      const customOptionHtml = `<option value="${CUSTOM_CRS_VALUE}">사용자 지정 Proj4 직접 입력</option>`;
-      const optionsHtml = CRS_LIST
-        .map((crs) => `<option value="${escapeHtml(crs.id)}">${escapeHtml(crs.label)}</option>`)
-        .join('') + customOptionHtml;
-
-      sourceCrs.innerHTML = optionsHtml;
-      targetCrs.innerHTML = optionsHtml;
-
-      sourceCrs.value = 'EPSG:4326';
-      targetCrs.value = 'EPSG:5186';
-    }
-
-    function bindEvents() {
-      themeToggleBtn.addEventListener('click', toggleTheme);
-      helpBtn.addEventListener('click', openHelpModal);
-      closeHelpBtn.addEventListener('click', closeHelpModal);
-      sourceCrs.addEventListener('change', updateCustomProj4Panel);
-      targetCrs.addEventListener('change', updateCustomProj4Panel);
-
-      helpModal.addEventListener('click', (event) => {
-        if (event.target === helpModal) {
-          closeHelpModal();
-        }
-      });
-
-      document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && !helpModal.classList.contains('hidden')) {
-          closeHelpModal();
-        }
-      });
-
-      dropZone.addEventListener('click', () => fileInput.click());
-
-      dropZone.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          fileInput.click();
-        }
-      });
-
-      fileInput.addEventListener('change', (event) => {
-        const file = event.target.files && event.target.files[0];
-        if (file) handleFile(file);
-      });
-
-      dropZone.addEventListener('dragover', (event) => {
-        event.preventDefault();
-        dropZone.classList.add('border-blue-500', 'bg-blue-50');
-      });
-
-      dropZone.addEventListener('dragleave', () => {
-        dropZone.classList.remove('border-blue-500', 'bg-blue-50');
-      });
-
-      dropZone.addEventListener('drop', (event) => {
-        event.preventDefault();
-        dropZone.classList.remove('border-blue-500', 'bg-blue-50');
-
-        const file = event.dataTransfer.files && event.dataTransfer.files[0];
-        if (file) handleFile(file);
-      });
-
-      xColumnSelect.addEventListener('change', fillTextareaFromTabularMapping);
-      yColumnSelect.addEventListener('change', fillTextareaFromTabularMapping);
-      firstRowHeaderToggle.addEventListener('change', () => {
-        updateColumnMappingOptions();
-        fillTextareaFromTabularMapping();
-      });
-
-      singleConvertBtn.addEventListener('click', convertSingleCoordinate);
-      singleXInput.addEventListener('keydown', handleSingleInputKeydown);
-      singleYInput.addEventListener('keydown', handleSingleInputKeydown);
-
-      convertBtn.addEventListener('click', convertCoordinates);
-      cancelBtn.addEventListener('click', cancelConversion);
-      copyBtn.addEventListener('click', copyResultToClipboard);
-      csvBtn.addEventListener('click', downloadCsv);
-      mapFirstBtn.addEventListener('click', () => setActiveMapPreviewPoint('first'));
-      mapLastBtn.addEventListener('click', () => setActiveMapPreviewPoint('last'));
-    }
-
-    function toggleTheme() {
-      setTheme(document.documentElement.classList.contains('dark') ? 'light' : 'dark');
-    }
-
-    function setTheme(theme) {
-      const isDark = theme === 'dark';
-
-      document.documentElement.classList.toggle('dark', isDark);
-      if (typeof inputText !== 'undefined' && inputText && inputText.tagName.toLowerCase() === 'iframe' && inputText.contentDocument) {
-        inputText.contentDocument.documentElement.classList.toggle('dark', isDark);
-      }
-
-      try {
-        localStorage.setItem(THEME_STORAGE_KEY, isDark ? 'dark' : 'light');
-      } catch (error) {
-        // 저장소를 사용할 수 없는 환경에서는 현재 화면에만 적용합니다.
-      }
-
-      syncThemeButton();
-    }
-
-    function syncThemeButton() {
-      const isDark = document.documentElement.classList.contains('dark');
-
-      themeToggleBtn.setAttribute('aria-pressed', String(isDark));
-      themeToggleBtn.setAttribute('aria-label', isDark ? '라이트 모드로 변경' : '다크 모드로 변경');
-      themeLabel.textContent = isDark ? '라이트 모드' : '다크 모드';
-    }
-
-    function openHelpModal() {
-      helpModal.classList.remove('hidden');
-      helpModal.classList.add('flex');
-      helpBtn.setAttribute('aria-expanded', 'true');
-      closeHelpBtn.focus();
-    }
-
-    function closeHelpModal() {
-      helpModal.classList.add('hidden');
-      helpModal.classList.remove('flex');
-      helpBtn.setAttribute('aria-expanded', 'false');
-      helpBtn.focus();
-    }
-
-    function updateCustomProj4Panel() {
-      const useCustomSource = sourceCrs.value === CUSTOM_CRS_VALUE;
-      const useCustomTarget = targetCrs.value === CUSTOM_CRS_VALUE;
-      const useAnyCustom = useCustomSource || useCustomTarget;
-
-      customProjPanel.classList.toggle('hidden', !useAnyCustom);
-      customProjPanel.classList.toggle('grid', useAnyCustom);
-      sourceCustomProjField.classList.toggle('hidden', !useCustomSource);
-      sourceCustomProjField.classList.toggle('flex', useCustomSource);
-      targetCustomProjField.classList.toggle('hidden', !useCustomTarget);
-      targetCustomProjField.classList.toggle('flex', useCustomTarget);
-    }
-
-    /******************************************************************
-     * 토스트 알림 시스템
-     * - alert() 대신 인라인 토스트 알림을 표시합니다.
-     * - success(3초), info(3초), warning(4초), error(5초) 후 자동 사라짐.
-     ******************************************************************/
-    function showToast(message, type = 'info') {
-      const colorMap = {
-        success: {
-          bg: 'bg-emerald-600 dark:bg-emerald-700',
-          icon: '✓'
-        },
-        error: {
-          bg: 'bg-red-600 dark:bg-red-700',
-          icon: '✕'
-        },
-        warning: {
-          bg: 'bg-amber-500 dark:bg-amber-600',
-          icon: '⚠'
-        },
-        info: {
-          bg: 'bg-blue-600 dark:bg-blue-700',
-          icon: 'ℹ'
-        }
-      };
-
-      const durationMap = {
-        success: 3000,
-        info: 3000,
-        warning: 4000,
-        error: 5000
-      };
-
-      const config = colorMap[type] || colorMap.info;
-      const duration = durationMap[type] || 3000;
-
-      const toast = document.createElement('div');
-      toast.className = `pointer-events-auto flex items-start gap-3 rounded-lg ${config.bg} px-4 py-3 text-sm text-white shadow-lg transition-all duration-300 translate-y-2 opacity-0 max-w-sm`;
-      toast.setAttribute('role', 'alert');
-
-      const iconSpan = document.createElement('span');
-      iconSpan.className = 'flex-shrink-0 text-base leading-5 font-bold';
-      iconSpan.textContent = config.icon;
-
-      const messageSpan = document.createElement('span');
-      messageSpan.className = 'flex-1 leading-5 whitespace-pre-line break-words';
-      messageSpan.textContent = message;
-
-      const closeBtn = document.createElement('button');
-      closeBtn.className = 'flex-shrink-0 ml-1 text-white/70 hover:text-white text-base leading-5 font-bold focus:outline-none';
-      closeBtn.textContent = '×';
-      closeBtn.setAttribute('aria-label', '알림 닫기');
-
-      toast.appendChild(iconSpan);
-      toast.appendChild(messageSpan);
-      toast.appendChild(closeBtn);
-      toastContainer.appendChild(toast);
-
-      // 등장 애니메이션
-      requestAnimationFrame(() => {
-        toast.classList.remove('translate-y-2', 'opacity-0');
-      });
-
-      function removeToast() {
-        toast.classList.add('translate-y-2', 'opacity-0');
-        setTimeout(() => toast.remove(), 300);
-      }
-
-      closeBtn.addEventListener('click', removeToast);
-
-      const autoRemoveTimer = setTimeout(removeToast, duration);
-
-      // 닫기 버튼으로 수동 제거 시 자동 타이머도 정리
-      closeBtn.addEventListener('click', () => clearTimeout(autoRemoveTimer), { once: true });
-    }
-
-    /******************************************************************
-     * 파일 업로드 처리
-     ******************************************************************/
-    async function handleFile(file) {
-      try {
-        const extension = getFileExtension(file.name);
-        fileName.textContent = file.name;
-        outputText.value = '';
-        resetMapPreview();
-
-        if (!extension || !['txt', 'csv', 'xlsx', 'xls'].includes(extension)) {
-          throw new Error('지원하지 않는 파일 형식입니다. txt, csv, xlsx, xls 파일만 사용할 수 있습니다.');
-        }
-
-        if (extension === 'txt') {
-          resetTabularMapping();
-          await handleTextLikeFile(file);
-          return;
-        }
-
-        if (extension === 'csv') {
-          await handleCsvFile(file);
-          return;
-        }
-
-        await handleExcelFile(file);
-      } catch (error) {
-        showToast(error.message || '파일을 읽는 중 오류가 발생했습니다.', 'error');
-      } finally {
-        fileInput.value = '';
-      }
-    }
-
-    async function handleTextLikeFile(file) {
-      const text = await file.text();
-      const rows = text
-        .split(/\r?\n/)
-        .map((line) => parseDelimitedLine(line))
-        .filter((columns) => columns.length >= 2 && normalizeCellText(columns[0]) && normalizeCellText(columns[1]))
-        .map((columns) => `${columns[0]} ${columns[1]}`);
-
-      (inputText.tagName.toLowerCase() === 'iframe' && inputText.contentWindow.setEditorText) ? inputText.contentWindow.setEditorText(rows.join('\n')) : inputText.value = rows.join('\n');
-    }
-
-    async function handleCsvFile(file) {
-      const text = await file.text();
-
-      tabularRows = text
-        .split(/\r?\n/)
-        .map((line) => parseCsvLine(line).map(normalizeCellText))
-        .filter((row) => row.some(Boolean));
-
-      if (!tabularRows.length) {
-        throw new Error('CSV 파일에 데이터가 없습니다.');
-      }
-
-      renderColumnMapping(!isLikelyCoordinateRow(tabularRows[0]));
-      fillTextareaFromTabularMapping();
-    }
-
-    async function handleExcelFile(file) {
-      const buffer = await file.arrayBuffer();
-      const workbook = XLSX.read(buffer, { type: 'array' });
-      const firstSheetName = workbook.SheetNames[0];
-
-      if (!firstSheetName) {
-        throw new Error('엑셀 파일에 시트가 없습니다.');
-      }
-
-      const sheet = workbook.Sheets[firstSheetName];
-
-      // header: 1 옵션으로 2차원 배열 형태를 얻고, raw 값으로 좌표 정밀도를 보존합니다.
-      tabularRows = XLSX.utils.sheet_to_json(sheet, {
-        header: 1,
-        raw: true,
-        defval: ''
-      });
-
-      if (!tabularRows.length) {
-        throw new Error('엑셀 파일에 데이터가 없습니다.');
-      }
-
-      // CSV와 동일하게 첫 행이 좌표 데이터인지 헤더인지 자동 감지합니다.
-      renderColumnMapping(!isLikelyCoordinateRow(tabularRows[0]));
-      fillTextareaFromTabularMapping();
-    }
-
-    function resetTabularMapping() {
-      tabularRows = [];
-      mappingPanel.classList.add('hidden');
-      xColumnSelect.innerHTML = '';
-      yColumnSelect.innerHTML = '';
-      firstRowHeaderToggle.checked = false;
-    }
-
-    function renderColumnMapping(useHeaderRow) {
-      const maxLength = getTabularColumnCount();
-
-      if (maxLength < 2) {
-        throw new Error('파일에서 최소 2개 이상의 열을 찾을 수 없습니다.');
-      }
-
-      firstRowHeaderToggle.checked = useHeaderRow;
-      updateColumnMappingOptions(false);
-      mappingPanel.classList.remove('hidden');
-    }
-
-    function updateColumnMappingOptions(preserveSelection = true) {
-      const maxLength = getTabularColumnCount();
-      const oldXValue = xColumnSelect.value;
-      const oldYValue = yColumnSelect.value;
-      const headerRow = firstRowHeaderToggle.checked ? tabularRows[0] || [] : [];
-      const options = Array.from({ length: maxLength }, (_, index) => {
-        const columnLetter = XLSX.utils.encode_col(index);
-        const headerName = normalizeCellText(headerRow[index]) || `열 ${index + 1}`;
-        return `<option value="${index}">${columnLetter}열 (${escapeHtml(headerName)})</option>`;
-      }).join('');
-
-      xColumnSelect.innerHTML = options;
-      yColumnSelect.innerHTML = options;
-
-      const detectedIndexes = detectDefaultCoordinateColumns();
-      const oldXIndex = Number(oldXValue);
-      const oldYIndex = Number(oldYValue);
-      const canPreserveX = preserveSelection && Number.isInteger(oldXIndex) && oldXIndex >= 0 && oldXIndex < maxLength;
-      const canPreserveY = preserveSelection && Number.isInteger(oldYIndex) && oldYIndex >= 0 && oldYIndex < maxLength;
-
-      xColumnSelect.value = canPreserveX ? oldXValue : String(detectedIndexes[0]);
-      yColumnSelect.value = canPreserveY ? oldYValue : String(detectedIndexes[1]);
-    }
-
-    function fillTextareaFromTabularMapping() {
-      if (!tabularRows.length) return;
-
-      const xIndex = Number(xColumnSelect.value);
-      const yIndex = Number(yColumnSelect.value);
-
-      if (!Number.isInteger(xIndex) || !Number.isInteger(yIndex)) return;
-
-      const startRowIndex = firstRowHeaderToggle.checked ? 1 : 0;
-      const lines = [];
-
-      for (let rowIndex = startRowIndex; rowIndex < tabularRows.length; rowIndex += 1) {
-        const row = tabularRows[rowIndex] || [];
-        const x = normalizeCellText(row[xIndex]);
-        const y = normalizeCellText(row[yIndex]);
-
-        if (x && y) {
-          lines.push(`${x} ${y}`);
-        }
-      }
-
-      (inputText.tagName.toLowerCase() === 'iframe' && inputText.contentWindow.setEditorText) ? inputText.contentWindow.setEditorText(lines.join('\n')) : inputText.value = lines.join('\n');
-    }
-
-    function getTabularColumnCount() {
-      return tabularRows.length ? Math.max(...tabularRows.map((row) => row.length), 0) : 0;
-    }
-
-    function isLikelyCoordinateRow(row) {
-      return (row || []).filter((value) => Number.isFinite(parseNumber(value))).length >= 2;
-    }
-
-    function detectDefaultCoordinateColumns() {
-      const maxLength = getTabularColumnCount();
-      const fallback = [0, Math.min(1, maxLength - 1)];
-      const headerRow = firstRowHeaderToggle.checked ? tabularRows[0] || [] : [];
-
-      if (headerRow.length) {
-        const xIndex = findHeaderIndex(headerRow, [/경도/i, /\blon(?:gitude)?\b/i, /\beast(?:ing)?\b/i, /^x(?:\b|_|-)/i]);
-        const yIndex = findHeaderIndex(headerRow, [/위도/i, /\blat(?:itude)?\b/i, /\bnorth(?:ing)?\b/i, /^y(?:\b|_|-)/i], xIndex);
-
-        if (xIndex >= 0 && yIndex >= 0) {
-          return [xIndex, yIndex];
-        }
-      }
-
-      const startRowIndex = firstRowHeaderToggle.checked ? 1 : 0;
-      const sampleRow = tabularRows.slice(startRowIndex).find((row) => row.some((value) => normalizeCellText(value)));
-
-      if (sampleRow) {
-        const numericIndexes = sampleRow
-          .map((value, index) => Number.isFinite(parseNumber(value)) ? index : -1)
-          .filter((index) => index >= 0);
-
-        if (numericIndexes.length >= 2) {
-          return [numericIndexes[0], numericIndexes[1]];
-        }
-      }
-
-      return fallback;
-    }
-
-    function findHeaderIndex(headerRow, patterns, excludedIndex = -1) {
-      return headerRow.findIndex((value, index) => {
-        const headerName = normalizeCellText(value);
-        return index !== excludedIndex && patterns.some((pattern) => pattern.test(headerName));
-      });
-    }
-
-    /******************************************************************
-     * 좌표 변환
-     * - 대용량 데이터에서 브라우저가 멈추지 않도록 chunk 단위로 처리합니다.
-     * - 취소 버튼으로 진행 중인 변환을 중단할 수 있습니다.
-     ******************************************************************/
-    function handleSingleInputKeydown(event) {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        convertSingleCoordinate();
-      }
-    }
-
-    function convertSingleCoordinate() {
-      const x = singleXInput.value.trim();
-      const y = singleYInput.value.trim();
-
-      if (!x || !y) {
-        showToast('단일 변환할 1번째/2번째 좌표 값을 입력해 주세요.', 'warning');
-        return;
-      }
-
-      try {
-        const { source, target } = getSelectedCoordinateSystems();
-        const result = convertCoordinateForOutput(`${x}\t${y}`, source, target, {
-          swapInputAxis: shouldSwapInputAxis()
-        });
-
-        singleResult.value = result.output;
-        outputText.value = result.output;
-        updateMapPreview({
-          first: result.mapPoint,
-          last: result.mapPoint,
-          count: result.mapPoint ? 1 : 0
-        });
-      } catch (error) {
-        resetMapPreview();
-        showToast(error.message || '단일 좌표 변환 중 오류가 발생했습니다.', 'error');
-      }
-    }
-
-    function getSelectedCoordinateSystems() {
-      const source = getSelectedCoordinateSystem(sourceCrs.value, 'source');
-      const target = getSelectedCoordinateSystem(targetCrs.value, 'target');
-
-      if (!source || !target) {
-        throw new Error('좌표계를 올바르게 선택해 주세요.');
-      }
-
-      return { source, target };
-    }
-
-    function getSelectedCoordinateSystem(value, role) {
-      if (value !== CUSTOM_CRS_VALUE) {
-        return crsMap.get(value);
-      }
-
-      return createCustomCoordinateSystem(role);
-    }
-
-    function createCustomCoordinateSystem(role) {
-      const isSource = role === 'source';
-      const projInput = isSource ? sourceCustomProj : targetCustomProj;
-      const projText = normalizeProj4Text(projInput.value);
-
-      if (!projText) {
-        throw new Error(isSource ? '원본 Proj4 정의를 입력해 주세요.' : '변환할 Proj4 정의를 입력해 주세요.');
-      }
-
-      const customId = isSource ? CUSTOM_SOURCE_CRS_ID : CUSTOM_TARGET_CRS_ID;
-
-      try {
-        proj4.defs(customId, projText);
-        proj4(customId);
-      } catch (error) {
-        throw new Error(isSource ? '원본 Proj4 정의가 올바르지 않습니다.' : '변환할 Proj4 정의가 올바르지 않습니다.');
-      }
-
-      return {
-        id: customId,
-        label: isSource ? '사용자 지정 원본 Proj4' : '사용자 지정 변환 Proj4',
-        proj: projText,
-        type: detectProj4Type(projText)
-      };
-    }
-
-    function normalizeProj4Text(value) {
-      return String(value || '').replace(/\s+/g, ' ').trim();
-    }
-
-    function detectProj4Type(projText) {
-      return /\+proj=(longlat|latlong|lonlat)\b/i.test(projText) ? 'dd' : 'projected';
-    }
-
-    function convertCoordinateForOutput(line, source, target, options = {}) {
-      const parsed = parseInputCoordinate(line, source, options);
-      const converted = transformCoordinate(parsed, source, target);
-
-      return {
-        output: formatOutputCoordinate(converted, target),
-        mapPoint: getMapPreviewPoint(converted, target)
-      };
-    }
-
-    function cancelConversion() {
-      if (convertAbortController) {
-        convertAbortController.abort();
-      }
-    }
-
-    async function convertCoordinates() {
-      const textVal = (inputText.tagName.toLowerCase() === 'iframe' && inputText.contentWindow.getEditorText) ? inputText.contentWindow.getEditorText() : inputText.value;
-        const rawLines = textVal.split(/\r?\n/).filter((line) => line.trim());
-      let source;
-      let target;
-
-      try {
-        ({ source, target } = getSelectedCoordinateSystems());
-      } catch (error) {
-        showToast(error.message || '좌표계를 올바르게 선택해 주세요.', 'error');
-        return;
-      }
-
-      if (!rawLines.length) {
-        showToast('변환할 좌표를 입력하거나 파일을 업로드해 주세요.', 'warning');
-        return;
-      }
-
-      convertAbortController = new AbortController();
-      cancelBtn.classList.remove('hidden');
-      setConvertingState(true, 0, rawLines.length);
-      outputText.value = '';
-      resetMapPreview();
-
-      const results = [];
-      let errorCount = 0;
-      const errors = [];
-      const maxErrorDetails = 10;
-      const chunkSize = 500;
-      const conversionOptions = {
-        swapInputAxis: shouldSwapInputAxis()
-      };
-      const previewCandidates = {
-        first: null,
-        last: null,
-        count: 0
-      };
-      let wasCancelled = false;
-
-      try {
-        for (let start = 0; start < rawLines.length; start += chunkSize) {
-          // 취소 확인
-          if (convertAbortController.signal.aborted) {
-            wasCancelled = true;
-            break;
-          }
-
-          const chunk = rawLines.slice(start, start + chunkSize);
-
-          for (let chunkIndex = 0; chunkIndex < chunk.length; chunkIndex += 1) {
-            try {
-              const converted = convertCoordinateForOutput(chunk[chunkIndex], source, target, conversionOptions);
-              results.push(converted.output);
-
-              if (converted.mapPoint) {
-                if (!previewCandidates.first) {
-                  previewCandidates.first = converted.mapPoint;
-                }
-                previewCandidates.last = converted.mapPoint;
-                previewCandidates.count += 1;
-              }
-            } catch (error) {
-              errorCount += 1;
-              if (errors.length < maxErrorDetails) {
-                errors.push({ line: start + chunkIndex + 1, message: error.message });
-              }
-            }
-          }
-
-          const processed = Math.min(start + chunk.length, rawLines.length);
-          setConvertingState(true, processed, rawLines.length);
-
-          // 렌더링과 사용자 입력 처리 시간을 브라우저에 돌려줍니다.
-          await sleep(0);
-        }
-
-        outputText.value = results.join('\n');
-        updateMapPreview(previewCandidates);
-
-        if (wasCancelled) {
-          showToast(`변환이 취소되었습니다. (${results.length}개 처리됨)`, 'info');
-        } else {
-          let summary = `총 ${results.length}개 처리 완료`;
-          if (errorCount > 0) {
-            const errorDetails = errors.map((e) => `${e.line}행: ${e.message}`).join('\n');
-            summary += ` (${errorCount}개 오류)\n${errorDetails}`;
-            if (errorCount > errors.length) {
-              summary += `\n... 외 ${errorCount - errors.length}건`;
-            }
-          }
-          showToast(summary, errorCount > 0 ? 'warning' : 'success');
-        }
-      } catch (error) {
-        showToast(error.message || '변환 중 오류가 발생했습니다.', 'error');
-      } finally {
-        setConvertingState(false, rawLines.length, rawLines.length);
-        cancelBtn.classList.add('hidden');
-        convertAbortController = null;
-      }
-    }
-
-    function parseInputCoordinate(line, source, options = {}) {
-      if (source.type === 'dms') {
-        return applyInputAxisOrder(parseDmsCoordinatePair(line), options);
-      }
-
-      const columns = parseDelimitedLine(line);
-
-      if (columns.length < 2) {
-        throw new Error('좌표 값이 부족합니다.');
-      }
-
-      const x = parseNumber(columns[0]);
-      const y = parseNumber(columns[1]);
-
-      if (!Number.isFinite(x) || !Number.isFinite(y)) {
-        throw new Error('숫자 좌표가 아닙니다.');
-      }
-
-      return applyInputAxisOrder([x, y], options);
-    }
-
-    function applyInputAxisOrder(coordinate, options = {}) {
-      return options.swapInputAxis ? [coordinate[1], coordinate[0]] : coordinate;
-    }
-
-    function shouldSwapInputAxis() {
-      return swapInputAxis.checked;
-    }
-
-    function transformCoordinate(coordinate, source, target) {
-      const sourceId = getProj4TransformId(source);
-      const targetId = getProj4TransformId(target);
-
-      // 실제 좌표 변환은 proj4js가 수행합니다.
-      const converted = proj4(sourceId, targetId, coordinate);
-
-      if (!Array.isArray(converted) || converted.length < 2) {
-        throw new Error('좌표 변환 결과가 올바르지 않습니다.');
-      }
-
-      return converted;
-    }
-
-    function getProj4TransformId(coordinateSystem) {
-      return coordinateSystem.type === 'dms' ? 'EPSG:4326' : coordinateSystem.id;
-    }
-
-    function getMapPreviewPoint(coordinate, target) {
-      try {
-        const targetId = getProj4TransformId(target);
-        const wgs84Coordinate = targetId === 'EPSG:4326'
-          ? coordinate
-          : proj4(targetId, 'EPSG:4326', coordinate);
-        const lon = wgs84Coordinate[0];
-        const lat = wgs84Coordinate[1];
-
-        if (!isValidLongitudeLatitude(lon, lat)) {
-          return null;
-        }
-
-        return { lon, lat };
-      } catch (error) {
-        return null;
-      }
-    }
-
-    function isValidLongitudeLatitude(lon, lat) {
-      return Number.isFinite(lon) &&
-        Number.isFinite(lat) &&
-        lon >= -180 &&
-        lon <= 180 &&
-        lat >= -90 &&
-        lat <= 90;
-    }
-
-    function formatOutputCoordinate(coordinate, target) {
-      const x = coordinate[0];
-      const y = coordinate[1];
-
-      if (!Number.isFinite(x) || !Number.isFinite(y)) {
-        throw new Error('변환 결과가 숫자가 아닙니다.');
-      }
-
-      if (target.type === 'dms') {
-        return `${toDms(x, 'lon')} ${toDms(y, 'lat')}`;
-      }
-
-      if (target.type === 'dd') {
-        return `${formatNumber(x, 8)} ${formatNumber(y, 8)}`;
-      }
-
-      return `${formatNumber(x, 3)} ${formatNumber(y, 3)}`;
-    }
-
-    function setConvertingState(isConverting, processed, total) {
-      convertBtn.disabled = isConverting;
-      singleConvertBtn.disabled = isConverting;
-
-      if (isConverting) {
-        convertBtn.textContent = `변환 중... (${processed}/${total})`;
-      } else {
-        convertBtn.textContent = '변환하기';
-      }
-    }
-
-    /******************************************************************
-     * 지도 미리보기
-     ******************************************************************/
-    function updateMapPreview(points) {
-      const first = points.first || null;
-      const last = points.last || first;
-
-      if (!first && !last) {
-        resetMapPreview();
-        return;
-      }
-
-      previewMapPoints = {
-        first: first || last,
-        last,
-        activeKey: 'first'
-      };
-
-      mapFirstBtn.disabled = !previewMapPoints.first;
-      mapLastBtn.disabled = !previewMapPoints.last || points.count < 2;
-      mapPreviewPanel.classList.remove('hidden');
-      setActiveMapPreviewPoint('first');
-    }
-
-    function setActiveMapPreviewPoint(key) {
-      const nextKey = key === 'last' && previewMapPoints.last ? 'last' : 'first';
-      const point = previewMapPoints[nextKey];
-
-      if (!point) return;
-
-      previewMapPoints.activeKey = nextKey;
-      syncMapPreviewButtons(nextKey);
-      updateMapCoordinateLabel(nextKey, point);
-      renderMapPreviewPoint(nextKey, point);
-    }
-
-    function syncMapPreviewButtons(activeKey) {
-      const buttonStates = [
-        { button: mapFirstBtn, key: 'first' },
-        { button: mapLastBtn, key: 'last' }
-      ];
-
-      buttonStates.forEach(({ button, key }) => {
-        const isActive = activeKey === key && !button.disabled;
-        button.classList.toggle('bg-blue-600', isActive);
-        button.classList.toggle('text-white', isActive);
-        button.classList.toggle('dark:text-white', isActive);
-      });
-    }
-
-    function updateMapCoordinateLabel(key, point) {
-      const label = key === 'last' ? '마지막 좌표' : '첫 번째 좌표';
-      mapCoordinateLabel.textContent = `${label}: 경도 ${formatNumber(point.lon, 8)}, 위도 ${formatNumber(point.lat, 8)}`;
-    }
-
-    function renderMapPreviewPoint(key, point) {
-      const label = key === 'last' ? '마지막 좌표' : '첫 번째 좌표';
-      const latLng = [point.lat, point.lon];
-
-      if (!window.L) {
-        mapStatus.textContent = '지도 라이브러리를 불러오지 못했습니다.';
-        return;
-      }
-
-      if (!previewMap) {
-        previewMap = L.map(mapPreview, {
-          scrollWheelZoom: false
-        }).setView(latLng, 15);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-          attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(previewMap);
-      } else {
-        previewMap.setView(latLng, 15);
-      }
-
-      if (!previewMarker) {
-        previewMarker = L.marker(latLng).addTo(previewMap);
-      } else {
-        previewMarker.setLatLng(latLng);
-      }
-
-      previewMarker.bindPopup(`${label}<br>경도 ${formatNumber(point.lon, 8)}<br>위도 ${formatNumber(point.lat, 8)}`);
-      mapStatus.textContent = '지도 기준: WGS84 경위도';
-
-      requestAnimationFrame(() => {
-        previewMap.invalidateSize();
-        previewMap.setView(latLng, previewMap.getZoom() || 15);
-      });
-    }
-
-    function resetMapPreview() {
-      previewMapPoints = {
-        first: null,
-        last: null,
-        activeKey: 'first'
-      };
-
-      mapPreviewPanel.classList.add('hidden');
-      mapCoordinateLabel.textContent = '';
-      mapStatus.textContent = '';
-      mapFirstBtn.disabled = true;
-      mapLastBtn.disabled = true;
-      syncMapPreviewButtons('first');
-
-      if (previewMarker) {
-        previewMarker.remove();
-        previewMarker = null;
-      }
-    }
-
-    /******************************************************************
-     * DMS 파싱/포맷
-     ******************************************************************/
-    function parseDmsCoordinatePair(line) {
-      const trimmed = line.trim();
-
-      // 쉼표 또는 탭으로 분리된 DMS는 가장 안정적으로 파싱할 수 있습니다.
-      const strongDelimiterParts = trimmed
-        .split(/\t|,/)
-        .map((part) => part.trim())
-        .filter(Boolean);
-
-      if (strongDelimiterParts.length >= 2) {
-        return [
-          parseDmsValue(strongDelimiterParts[0]),
-          parseDmsValue(strongDelimiterParts[1])
-        ];
-      }
-
-      // 공백만 있는 DMS 입력도 최대한 지원합니다.
-      const matches = trimmed.match(/[NSWE동서남북]?\s*-?\d+(?:\.\d+)?(?:[°도\s]+)\d+(?:\.\d+)?(?:['분\s]+)\d+(?:\.\d+)?(?:"|초)?\s*[NSWE동서남북]?/gi);
-
-      if (matches && matches.length >= 2) {
-        return [
-          parseDmsValue(matches[0]),
-          parseDmsValue(matches[1])
-        ];
-      }
-
-      // 마지막 보조 방식: 숫자 6개를 lonD lonM lonS latD latM latS로 해석합니다.
-      const numbers = trimmed.match(/-?\d+(?:\.\d+)?/g);
-
-      if (numbers && numbers.length >= 6) {
-        const lon = `${numbers[0]} ${numbers[1]} ${numbers[2]}`;
-        const lat = `${numbers[3]} ${numbers[4]} ${numbers[5]}`;
-        return [parseDmsValue(lon), parseDmsValue(lat)];
-      }
-
-      throw new Error('DMS 좌표를 파싱할 수 없습니다.');
-    }
-
-    function parseDmsValue(value) {
-      const text = String(value).trim();
-      const directionMatch = text.match(/[NSEW동서남북]/i);
-      const direction = directionMatch ? directionMatch[0].toUpperCase() : '';
-      const numbers = text.match(/-?\d+(?:\.\d+)?/g);
-
-      if (!numbers || numbers.length < 1) {
-        throw new Error('DMS 값이 비어 있습니다.');
-      }
-
-      const degrees = Math.abs(Number(numbers[0]));
-      const minutes = Number(numbers[1] || 0);
-      const seconds = Number(numbers[2] || 0);
-
-      if (![degrees, minutes, seconds].every(Number.isFinite)) {
-        throw new Error('DMS 값이 숫자가 아닙니다.');
-      }
-
-      let decimal = degrees + minutes / 60 + seconds / 3600;
-
-      if (
-        Number(numbers[0]) < 0 ||
-        direction === 'S' ||
-        direction === 'W' ||
-        direction === '남' ||
-        direction === '서'
-      ) {
-        decimal *= -1;
-      }
-
-      return decimal;
-    }
-
-    /**
-     * 10진 경위도를 DMS(도분초) 문자열로 변환합니다.
-     * seconds를 toFixed(3)으로 반올림했을 때 60.000이 되는 경계값을 보정합니다.
-     */
-    function toDms(decimalDegree, axis) {
-      const abs = Math.abs(decimalDegree);
-      let degrees = Math.floor(abs);
-      let minutesFloat = (abs - degrees) * 60;
-      let minutes = Math.floor(minutesFloat);
-      let seconds = parseFloat(((minutesFloat - minutes) * 60).toFixed(3));
-
-      // 반올림으로 60초가 되면 분에 올림, 60분이 되면 도에 올림
-      if (seconds >= 60) {
-        seconds = 0;
-        minutes += 1;
-      }
-      if (minutes >= 60) {
-        minutes = 0;
-        degrees += 1;
-      }
-
-      const direction = axis === 'lon'
-        ? decimalDegree >= 0 ? 'E' : 'W'
-        : decimalDegree >= 0 ? 'N' : 'S';
-
-      return `${degrees}°${pad2(minutes)}'${seconds.toFixed(3)}"${direction}`;
-    }
-
-    /******************************************************************
-     * 결과 복사 및 CSV 다운로드
-     ******************************************************************/
-    async function copyResultToClipboard() {
-      try {
-        if (!outputText.value.trim()) {
-          showToast('복사할 결과가 없습니다.', 'warning');
-          return;
-        }
-
-        const copied = await writeClipboardText(outputText.value);
-
-        if (!copied) {
-          throw new Error('clipboard-copy-failed');
-        }
-
-        showToast('클립보드에 복사했습니다.', 'success');
-      } catch (error) {
-        showToast('클립보드 복사에 실패했습니다.', 'error');
-      }
-    }
-
-    async function writeClipboardText(text) {
-      try {
-        if (navigator.clipboard && window.isSecureContext) {
-          await navigator.clipboard.writeText(text);
-          return true;
-        }
-      } catch (error) {
-        // file:// 환경 등에서는 아래 fallback을 시도합니다.
-      }
-
-      return copyTextWithSelectionFallback(text);
-    }
-
-    /**
-     * navigator.clipboard API를 사용할 수 없는 환경(file://, 비보안 컨텍스트)을 위한 폴백.
-     * ⚠️ document.execCommand('copy')는 deprecated이며, 향후 브라우저에서 제거될 수 있습니다.
-     * navigator.clipboard가 보편화되면 이 폴백을 제거해야 합니다.
-     */
-    function copyTextWithSelectionFallback(text) {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.setAttribute('readonly', '');
-      textarea.style.position = 'fixed';
-      textarea.style.top = '-9999px';
-      textarea.style.left = '-9999px';
-      document.body.appendChild(textarea);
-      textarea.select();
-
-      try {
-        return document.execCommand('copy');
-      } catch (error) {
-        return false;
-      } finally {
-        textarea.remove();
-      }
-    }
-
-    function downloadCsv() {
-      const lines = outputText.value
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter(Boolean);
-
-      if (!lines.length) {
-        showToast('다운로드할 결과가 없습니다.', 'warning');
-        return;
-      }
-
-      const csvRows = ['X,Y'];
-
-      for (const line of lines) {
-        const columns = parseDelimitedLine(line);
-
-        if (columns.length >= 2) {
-          csvRows.push(`${escapeCsv(columns[0])},${escapeCsv(columns.slice(1).join(' '))}`);
-        }
-      }
-
-      if (csvRows.length === 1) {
-        showToast('CSV로 변환할 수 있는 결과가 없습니다.', 'warning');
-        return;
-      }
-
-      // 엑셀 한글 깨짐 방지를 위해 UTF-8 BOM을 최상단에 추가합니다.
-      const csvContent = '\uFEFF' + csvRows.join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-
-      anchor.href = url;
-      anchor.download = `변환결과_${getTimestamp()}.csv`;
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-
-      URL.revokeObjectURL(url);
-    }
-
-    /******************************************************************
-     * 공통 유틸리티
-     ******************************************************************/
-    function parseDelimitedLine(line) {
-      const trimmed = String(line).trim();
-
-      if (!trimmed) return [];
-
-      const whitespaceParts = trimmed.split(/\s+/).map(normalizeCellText).filter(Boolean);
-
-      if (whitespaceParts.length >= 2 && whitespaceParts.slice(0, 2).every((value) => Number.isFinite(parseNumber(value)))) {
-        return whitespaceParts;
-      }
-
-      // CSV의 단순 따옴표 필드를 지원합니다.
-      if (trimmed.includes(',')) {
-        return parseCsvLine(trimmed).map(normalizeCellText);
-      }
-
-      return whitespaceParts;
-    }
-
-    function parseCsvLine(line) {
-      const result = [];
-      let current = '';
-      let insideQuote = false;
-
-      for (let index = 0; index < line.length; index += 1) {
-        const char = line[index];
-        const nextChar = line[index + 1];
-
-        if (char === '"' && insideQuote && nextChar === '"') {
-          current += '"';
-          index += 1;
-          continue;
-        }
-
-        if (char === '"') {
-          insideQuote = !insideQuote;
-          continue;
-        }
-
-        if (char === ',' && !insideQuote) {
-          result.push(current);
-          current = '';
-          continue;
-        }
-
-        current += char;
-      }
-
-      result.push(current);
-      return result;
-    }
-
-    function parseNumber(value) {
-      const normalized = normalizeCellText(value).replace(/,/g, '');
-      return normalized ? Number(normalized) : NaN;
-    }
-
-    function normalizeCellText(value) {
-      return String(value ?? '').trim();
-    }
-
-    function formatNumber(value, digits) {
-      return Number(value).toFixed(digits).replace(/\.?0+$/, '');
-    }
-
-    function escapeCsv(value) {
-      const text = String(value ?? '');
-
-      if (/[",\n\r]/.test(text)) {
-        return `"${text.replace(/"/g, '""')}"`;
-      }
-
-      return text;
-    }
-
-    function escapeHtml(value) {
-      return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    /**
-     * 파일 이름에서 확장자를 추출합니다.
-     * 확장자가 없는 파일(점이 없는 이름)은 빈 문자열을 반환합니다.
-     */
-    function getFileExtension(fileNameValue) {
-      const name = String(fileNameValue);
-      const dotIndex = name.lastIndexOf('.');
-      return dotIndex >= 0 ? name.slice(dotIndex + 1).toLowerCase() : '';
-    }
-
-    function getTimestamp() {
-      const now = new Date();
-      const yyyy = now.getFullYear();
-      const mm = pad2(now.getMonth() + 1);
-      const dd = pad2(now.getDate());
-      const hh = pad2(now.getHours());
-      const mi = pad2(now.getMinutes());
-      const ss = pad2(now.getSeconds());
-
-      return `${yyyy}${mm}${dd}_${hh}${mi}${ss}`;
-    }
-
-    function pad2(value) {
-      return String(value).padStart(2, '0');
-    }
-
-    function sleep(ms) {
-      return new Promise((resolve) => {
-        setTimeout(resolve, ms);
-      });
-    }
-
-    const resetBtn = document.getElementById('resetBtn');
-    if (resetBtn) {
-      resetBtn.addEventListener('click', () => {
-        if (confirm('모든 입력 내용과 결과가 초기화됩니다. 계속하시겠습니까?')) {
-          location.reload();
-        }
-      });
-    }
-  </script>
+  <script src="assets/crs.js"></script>
+  <script src="assets/app.js"></script>
 </body>
 
 </html>
